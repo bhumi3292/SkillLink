@@ -26,12 +26,12 @@ const authenticateUser = (req, res, next) => {
     }
 };
 
-// Define isLandlord function
-const isLandlord = (req, res, next) => {
-    if (req.user && req.user.role === "Landlord") {
+// Define isworker function
+const isworker = (req, res, next) => {
+    if (req.user && req.user.role === "worker") {
         return next();
     }
-    return res.status(403).json({ success: false, message: "Access denied: Landlord only" });
+    return res.status(403).json({ success: false, message: "Access denied: worker only" });
 };
 
 // Define isPropertyOwner function
@@ -42,7 +42,7 @@ const isPropertyOwner = async (req, res, next) => {
             return res.status(404).json({ success: false, message: "Property not found" });
         }
 
-        if (property.landlord.toString() !== req.user._id) {
+        if (property.worker.toString() !== req.user._id) {
             return res.status(403).json({ success: false, message: "Access denied: You do not own this property" });
         }
 
@@ -56,6 +56,6 @@ const isPropertyOwner = async (req, res, next) => {
 // Export the functions AFTER they have been defined
 module.exports = {
     authenticateUser,
-    isLandlord,
+    isworker,
     isPropertyOwner,
 };
