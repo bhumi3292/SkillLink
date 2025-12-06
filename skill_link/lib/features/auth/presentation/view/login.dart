@@ -89,7 +89,9 @@ class _LoginState extends State<Login> {
             );
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => const HomeView()),
+              MaterialPageRoute(
+                builder: (context) => const HomeView(initialIndex: 0),
+              ),
             );
           } else if (state.shouldNavigateToRegister) {
             Navigator.pushReplacementNamed(context, '/signup');

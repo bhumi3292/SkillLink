@@ -28,7 +28,7 @@ class PropertyRemoteDatasource {
           final List<dynamic> jsonList = responseData['data'] ?? [];
           print('Properties from data field: $jsonList');
           return jsonList.map((json) {
-            print('Processing property JSON: $json');
+            print('Processing WorkerJSON: $json');
             return PropertyApiModel.fromJson(
               json as Map<String, dynamic>,
             ).toEntity();
@@ -37,7 +37,7 @@ class PropertyRemoteDatasource {
           // Fallback for direct array response
           print('Properties as direct array: $responseData');
           return responseData.map((json) {
-            print('Processing property JSON: $json');
+            print('Processing WorkerJSON: $json');
             return PropertyApiModel.fromJson(
               json as Map<String, dynamic>,
             ).toEntity();
@@ -68,16 +68,16 @@ class PropertyRemoteDatasource {
     }
   }
 
-  /// Fetch a single property by ID
+  /// Fetch a single Workerby ID
   Future<PropertyEntity> getPropertyById(String propertyId) async {
     try {
-      print('=== GET PROPERTY BY ID API CALL ===');
+      print('=== GET WorkerBY ID API CALL ===');
       final url = '${ApiEndpoints.getPropertyById}$propertyId';
-      print('Fetching property from: $url');
+      print('Fetching Workerfrom: $url');
 
       final response = await _dio.get(url);
 
-      print('Property API Response: ${response.data}');
+      print('WorkerAPI Response: ${response.data}');
       print('Response status: ${response.statusCode}');
 
       if (response.statusCode == 200) {
@@ -87,11 +87,11 @@ class PropertyRemoteDatasource {
         if (responseData is Map<String, dynamic> &&
             responseData['success'] == true) {
           final json = responseData['data'] as Map<String, dynamic>;
-          print('Property from data field: $json');
+          print('Workerfrom data field: $json');
           return PropertyApiModel.fromJson(json).toEntity();
         } else if (responseData is Map) {
           // Fallback for direct object response
-          print('Property as direct object: $responseData');
+          print('Workeras direct object: $responseData');
           return PropertyApiModel.fromJson(
             responseData as Map<String, dynamic>,
           ).toEntity();
@@ -123,19 +123,19 @@ class PropertyRemoteDatasource {
     }
   }
 
-  /// Add a new property with images and videos
+  /// Add a new Workerwith images and videos
   Future<void> addProperty(
     PropertyEntity property,
     List<String> imagePaths,
     List<String> videoPaths,
   ) async {
     try {
-      print('=== ADD PROPERTY API CALL ===');
-      print('Adding property to: ${ApiEndpoints.createProperty}');
+      print('=== ADD WorkerAPI CALL ===');
+      print('Adding Workerto: ${ApiEndpoints.createProperty}');
 
       final formData = FormData();
 
-      // Add property fields
+      // Add Workerfields
       formData.fields.addAll([
         MapEntry('title', property.title ?? ''),
         MapEntry('description', property.description ?? ''),
@@ -168,13 +168,13 @@ class PropertyRemoteDatasource {
         formData.files.add(MapEntry('videos', videoFile));
       }
 
-      print('Adding property with form data');
+      print('Adding Workerwith form data');
       final response = await _dio.post(
         ApiEndpoints.createProperty,
         data: formData,
       );
 
-      print('Add property response: ${response.data}');
+      print('Add Workerresponse: ${response.data}');
       print('Response status: ${response.statusCode}');
 
       if (response.statusCode != 201 && response.statusCode != 200) {
@@ -183,12 +183,12 @@ class PropertyRemoteDatasource {
         );
       }
 
-      print('Property added successfully');
-      print('=== END ADD PROPERTY API CALL ===');
+      print('Workeradded successfully');
+      print('=== END ADD WorkerAPI CALL ===');
     } on DioException catch (e) {
       print('DioException in addProperty: ${e.response?.data ?? e.message}');
       throw Exception(
-        'Failed to add property (Dio Error): ${e.response?.data ?? e.message}',
+        'Failed to add Worker(Dio Error): ${e.response?.data ?? e.message}',
       );
     } catch (e) {
       print('Exception in addProperty: $e');
@@ -196,7 +196,7 @@ class PropertyRemoteDatasource {
     }
   }
 
-  /// Update an existing property with new images and videos
+  /// Update an existing Workerwith new images and videos
   Future<void> updateProperty(
     String propertyId,
     PropertyEntity property,
@@ -206,13 +206,13 @@ class PropertyRemoteDatasource {
     List<String> existingVideos,
   ) async {
     try {
-      print('=== UPDATE PROPERTY API CALL ===');
+      print('=== UPDATE WorkerAPI CALL ===');
       final url = ApiEndpoints.updateProperty(propertyId);
-      print('Updating property at: $url');
+      print('Updating Workerat: $url');
 
       final formData = FormData();
 
-      // Add property fields
+      // Add Workerfields
       formData.fields.addAll([
         MapEntry('title', property.title ?? ''),
         MapEntry('description', property.description ?? ''),
@@ -259,10 +259,10 @@ class PropertyRemoteDatasource {
         formData.files.add(MapEntry('videos', videoFile));
       }
 
-      print('Updating property with form data');
+      print('Updating Workerwith form data');
       final response = await _dio.put(url, data: formData);
 
-      print('Update property response: ${response.data}');
+      print('Update Workerresponse: ${response.data}');
       print('Response status: ${response.statusCode}');
 
       if (response.statusCode != 200 && response.statusCode != 204) {
@@ -271,12 +271,12 @@ class PropertyRemoteDatasource {
         );
       }
 
-      print('Property updated successfully');
-      print('=== END UPDATE PROPERTY API CALL ===');
+      print('Workerupdated successfully');
+      print('=== END UPDATE WorkerAPI CALL ===');
     } on DioException catch (e) {
       print('DioException in updateProperty: ${e.response?.data ?? e.message}');
       throw Exception(
-        'Failed to update property (Dio Error): ${e.response?.data ?? e.message}',
+        'Failed to update Worker(Dio Error): ${e.response?.data ?? e.message}',
       );
     } catch (e) {
       print('Exception in updateProperty: $e');
@@ -287,13 +287,13 @@ class PropertyRemoteDatasource {
   /// Delete a property
   Future<void> deleteProperty(String propertyId) async {
     try {
-      print('=== DELETE PROPERTY API CALL ===');
+      print('=== DELETE WorkerAPI CALL ===');
       final url = '${ApiEndpoints.deleteProperty}$propertyId';
-      print('Deleting property from: $url');
+      print('Deleting Workerfrom: $url');
 
       final response = await _dio.delete(url);
 
-      print('Delete property response: ${response.data}');
+      print('Delete Workerresponse: ${response.data}');
       print('Response status: ${response.statusCode}');
 
       if (response.statusCode != 200 && response.statusCode != 204) {
@@ -302,12 +302,12 @@ class PropertyRemoteDatasource {
         );
       }
 
-      print('Property deleted successfully');
-      print('=== END DELETE PROPERTY API CALL ===');
+      print('Workerdeleted successfully');
+      print('=== END DELETE WorkerAPI CALL ===');
     } on DioException catch (e) {
       print('DioException in deleteProperty: ${e.response?.data ?? e.message}');
       throw Exception(
-        'Failed to delete property (Dio Error): ${e.response?.data ?? e.message}',
+        'Failed to delete Worker(Dio Error): ${e.response?.data ?? e.message}',
       );
     } catch (e) {
       print('Exception in deleteProperty: $e');

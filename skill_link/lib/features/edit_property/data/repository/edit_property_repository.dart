@@ -6,6 +6,6 @@ class MockEditPropertyRepository implements EditPropertyRepository {
   @override
   Future<List<String>> fetchEditProperties() async {
     await Future.delayed(const Duration(milliseconds: 500));
-    return ['Edit Property 1', 'Edit Property 2', 'Edit Property 3'];
+    return ['Edit Worker1', 'Edit Worker2', 'Edit Worker3'];
   }
-} 
+}

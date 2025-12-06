@@ -62,10 +62,7 @@ class _ExploreFilterDialogState extends State<ExploreFilterDialog> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           const Text('Filter Properties'),
-          TextButton(
-            onPressed: _resetFilters,
-            child: const Text('Reset'),
-          ),
+          TextButton(onPressed: _resetFilters, child: const Text('Reset')),
         ],
       ),
       content: SizedBox(
@@ -108,12 +105,12 @@ class _ExploreFilterDialogState extends State<ExploreFilterDialog> {
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Category Filter
               const Text(
-                'Property Type',
+                'WorkerType',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
               const SizedBox(height: 8),
@@ -160,9 +157,9 @@ class _ExploreFilterDialogState extends State<ExploreFilterDialog> {
                   });
                 },
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Bedrooms Filter
               const Text(
                 'Bedrooms',
@@ -177,10 +174,7 @@ class _ExploreFilterDialogState extends State<ExploreFilterDialog> {
                   border: OutlineInputBorder(),
                 ),
                 items: [
-                  const DropdownMenuItem<int>(
-                    value: null,
-                    child: Text('Any'),
-                  ),
+                  const DropdownMenuItem<int>(value: null, child: Text('Any')),
                   const DropdownMenuItem<int>(
                     value: 1,
                     child: Text('1+ Bedroom'),
@@ -208,9 +202,9 @@ class _ExploreFilterDialogState extends State<ExploreFilterDialog> {
                   });
                 },
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Bathrooms Filter
               const Text(
                 'Bathrooms',
@@ -225,10 +219,7 @@ class _ExploreFilterDialogState extends State<ExploreFilterDialog> {
                   border: OutlineInputBorder(),
                 ),
                 items: [
-                  const DropdownMenuItem<int>(
-                    value: null,
-                    child: Text('Any'),
-                  ),
+                  const DropdownMenuItem<int>(value: null, child: Text('Any')),
                   const DropdownMenuItem<int>(
                     value: 1,
                     child: Text('1+ Bathroom'),
@@ -280,4 +271,4 @@ class _ExploreFilterDialogState extends State<ExploreFilterDialog> {
       ],
     );
   }
-} 
+}

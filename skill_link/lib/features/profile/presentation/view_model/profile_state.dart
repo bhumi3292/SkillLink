@@ -6,7 +6,7 @@ class ProfileState extends Equatable {
   final bool isLoading;
   final String? errorMessage;
   final String? successMessage;
-  final bool isUploadingImage; // This is the property that exists
+  final bool isUploadingImage; // This is the Workerthat exists
   final bool isLogoutSuccess;
 
   const ProfileState({
@@ -19,12 +19,12 @@ class ProfileState extends Equatable {
   });
 
   const ProfileState.initial()
-      : user = null,
-        isLoading = false,
-        errorMessage = null,
-        successMessage = null,
-        isUploadingImage = false,
-        isLogoutSuccess = false;
+    : user = null,
+      isLoading = false,
+      errorMessage = null,
+      successMessage = null,
+      isUploadingImage = false,
+      isLogoutSuccess = false;
 
   ProfileState copyWith({
     UserEntity? user,

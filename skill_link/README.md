@@ -1,14 +1,14 @@
 # SkillLink Mobile App
 
-A cross-platform Flutter application for the SkillLink property rental platform. This mobile app provides a seamless experience for workers and Hirers to manage property rentals, bookings, payments, and more.
+A cross-platform Flutter application for the SkillLink Workerrental platform. This mobile app provides a seamless experience for workers and Hirers to manage Workerrentals, bookings, payments, and more.
 
 ## 📱 Features
 
 ### Core Features
-- **Property Exploration**: Browse and search properties with rich media
+- **WorkerExploration**: Browse and search properties with rich media
 - **User Authentication**: Secure login/signup for workers and Hirers
-- **Property Management**: Add, edit, and manage property listings (workers)
-- **Booking System**: Schedule and manage property visits
+- **WorkerManagement**: Add, edit, and manage Workerlistings (workers)
+- **Booking System**: Schedule and manage Workervisits
 - **Payment Integration**: Khalti and eSewa payment gateways
 - **AI Chatbot**: Floating assistant for user support
 - **Favorites System**: Save and organize favorite properties
@@ -45,9 +45,9 @@ lib/
 │   ├── auth/              # Authentication
 │   ├── booking/           # Booking system
 │   ├── chatbot/           # AI chatbot
-│   ├── explore/           # Property exploration
+│   ├── explore/           # Workerexploration
 │   ├── profile/           # User profiles
-│   ├── add_property/      # Property management
+│   ├── add_property/      # Workermanagement
 │   ├── favourite/         # Favorites system
 │   └── ...
 └── main.dart              # App entry point
@@ -137,10 +137,10 @@ flutter build web
 - JWT token management
 - Role-based access (worker/Hirer)
 
-#### Property Exploration (`features/explore/`)
-- Property listing
+#### WorkerExploration (`features/explore/`)
+- Workerlisting
 - Search and filtering
-- Property details
+- Workerdetails
 - Image galleries
 
 #### Booking System (`features/booking/`)
@@ -161,7 +161,7 @@ flutter build web
 - Preferences
 - Account management
 
-#### Property Management (`features/add_property/`)
+#### WorkerManagement (`features/add_property/`)
 - Add new properties
 - Edit existing properties
 - Media upload
@@ -361,4 +361,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**SkillLink Mobile** - Your property rental companion! 🏠📱
+**SkillLink Mobile** - Your Workerrental companion! 🏠📱

@@ -58,7 +58,7 @@ class _ExplorePropertyCardState extends State<ExplorePropertyCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Property Images/Videos Carousel
+            // WorkerImages/Videos Carousel
             ClipRRect(
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(12),
@@ -200,7 +200,7 @@ class _ExplorePropertyCardState extends State<ExplorePropertyCard> {
               ),
             ),
 
-            // Property Details
+            // WorkerDetails
             Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -242,7 +242,7 @@ class _ExplorePropertyCardState extends State<ExplorePropertyCard> {
 
                   const SizedBox(height: 12),
 
-                  // Property Features
+                  // WorkerFeatures
                   Row(
                     children: [
                       _buildFeatureChip(

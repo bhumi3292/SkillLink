@@ -106,7 +106,7 @@ void _initApiService() {
 }
 
 void _initPropertyModules() {
-  // --- Property Data Sources ---
+  // --- WorkerData Sources ---
   serviceLocator.registerFactory<PropertyRemoteDatasource>(
     () => PropertyRemoteDatasource(dio: serviceLocator<Dio>()),
   );
@@ -115,7 +115,7 @@ void _initPropertyModules() {
     () => CategoryRemoteDatasource(dio: serviceLocator<Dio>()),
   );
 
-  // --- Property Repositories ---
+  // --- WorkerRepositories ---
   serviceLocator.registerFactory<IPropertyRepository>(
     () => PropertyRemoteRepository(
       remoteDataSource: serviceLocator<PropertyRemoteDatasource>(),
@@ -128,7 +128,7 @@ void _initPropertyModules() {
     ),
   );
 
-  // --- Property Usecases ---
+  // --- WorkerUsecases ---
   serviceLocator.registerFactory<GetAllPropertiesUsecase>(
     () => GetAllPropertiesUsecase(serviceLocator<IPropertyRepository>()),
   );
@@ -153,7 +153,7 @@ void _initPropertyModules() {
     () => AddCategoryUsecase(serviceLocator<ICategoryRepository>()),
   );
 
-  // --- Property ViewModels/Blocs ---
+  // --- WorkerViewModels/Blocs ---
   serviceLocator.registerFactory<AddPropertyBloc>(
     () => AddPropertyBloc(
       addPropertyUsecase: serviceLocator<AddPropertyUsecase>(),

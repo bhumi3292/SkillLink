@@ -195,7 +195,7 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF4F8FB),
       appBar: AppBar(
-        title: const Text('Property Details'),
+        title: const Text('WorkerDetails'),
         backgroundColor: const Color(0xFF003366),
         foregroundColor: Colors.white,
         elevation: 2,
@@ -497,7 +497,7 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text(
-                                  'Unable to start chat: missing property info.',
+                                  'Unable to start chat: missing Workerinfo.',
                                 ),
                                 backgroundColor: Colors.red,
                               ),
@@ -665,7 +665,7 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                                       context.read<ProfileViewModel>().state;
                                   final currentUser = profileState.user;
                                   debugPrint(
-                                    'Current userId: ${currentUser?.userId}, Property workerId: ${widget.property.workerId}',
+                                    'Current userId: ${currentUser?.userId}, WorkerworkerId: ${widget.property.workerId}',
                                   );
                                   final isworker =
                                       currentUser != null &&
@@ -824,7 +824,7 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Property Management',
+                                'WorkerManagement',
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
@@ -999,7 +999,7 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                                             scaffoldMessenger.showSnackBar(
                                               const SnackBar(
                                                 content: Text(
-                                                  'Property deleted successfully!',
+                                                  'Workerdeleted successfully!',
                                                 ),
                                                 backgroundColor: Colors.green,
                                               ),

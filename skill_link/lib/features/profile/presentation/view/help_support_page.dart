@@ -173,10 +173,12 @@ class _SupportFormState extends State<_SupportForm> {
             ),
             keyboardType: TextInputType.emailAddress,
             validator: (value) {
-              if (value == null || value.isEmpty)
+              if (value == null || value.isEmpty) {
                 return 'Please enter your email';
-              if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+').hasMatch(value))
+              }
+              if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+').hasMatch(value)) {
                 return 'Enter a valid email';
+              }
               return null;
             },
           ),
@@ -191,8 +193,9 @@ class _SupportFormState extends State<_SupportForm> {
             minLines: 3,
             maxLines: 5,
             validator: (value) {
-              if (value == null || value.isEmpty)
+              if (value == null || value.isEmpty) {
                 return 'Please enter your message';
+              }
               return null;
             },
           ),

@@ -54,7 +54,7 @@ class AddPropertyBloc extends Bloc<AddPropertyEvent, AddPropertyState> {
     InitializeAddPropertyForm event,
     Emitter<AddPropertyState> emit,
   ) async {
-    print('Initializing add property form...');
+    print('Initializing add Workerform...');
     emit(
       AddPropertyLoadingState(categories: _currentCategories),
     ); // Pass existing categories
@@ -177,23 +177,23 @@ class AddPropertyBloc extends Bloc<AddPropertyEvent, AddPropertyState> {
     final validationErrors = <String>[];
 
     if (event.title.trim().isEmpty) {
-      validationErrors.add('Property title is required');
+      validationErrors.add('Workertitle is required');
     }
     if (event.location.trim().isEmpty) {
-      validationErrors.add('Property location is required');
+      validationErrors.add('Workerlocation is required');
     }
     if (event.price.trim().isEmpty) {
-      validationErrors.add('Property price is required');
+      validationErrors.add('Workerprice is required');
     } else {
       final price = double.tryParse(event.price);
       if (price == null || price <= 0) {
         validationErrors.add(
-          'Property price must be a valid number greater than 0',
+          'Workerprice must be a valid number greater than 0',
         );
       }
     }
     if (event.description.trim().isEmpty) {
-      validationErrors.add('Property description is required');
+      validationErrors.add('Workerdescription is required');
     }
     if (event.bedrooms.trim().isEmpty) {
       validationErrors.add('Number of bedrooms is required');
@@ -212,10 +212,10 @@ class AddPropertyBloc extends Bloc<AddPropertyEvent, AddPropertyState> {
       }
     }
     if (event.categoryId == null || event.categoryId!.isEmpty) {
-      validationErrors.add('Property category is required');
+      validationErrors.add('Workercategory is required');
     }
     if (_currentImages.isEmpty) {
-      validationErrors.add('At least one property image is required');
+      validationErrors.add('At least one Workerimage is required');
     }
 
     if (validationErrors.isNotEmpty) {
@@ -237,7 +237,7 @@ class AddPropertyBloc extends Bloc<AddPropertyEvent, AddPropertyState> {
 
     try {
       // For now, we'll use a default user ID or skip authentication
-      // This allows property creation without login requirement
+      // This allows Workercreation without login requirement
       String? userId;
       final userIdEither = await _tokenSharedPrefs.getUserId();
       userIdEither.fold((l) => null, (r) => userId = r);
@@ -259,7 +259,7 @@ class AddPropertyBloc extends Bloc<AddPropertyEvent, AddPropertyState> {
       final imagePaths = _currentImages.map((file) => file.path).toList();
       final videoPaths = _currentVideos.map((file) => file.path).toList();
 
-      print('Submitting property with data:');
+      print('Submitting Workerwith data:');
       print('Title: ${property.title}');
       print('Location: ${property.location}');
       print('Price: ${property.price}');
@@ -299,7 +299,7 @@ class AddPropertyBloc extends Bloc<AddPropertyEvent, AddPropertyState> {
           // Keep _currentCategories for next form use
           emit(
             AddPropertySubmissionSuccess(
-              successMessage: "Property added successfully to backend!",
+              successMessage: "Workeradded successfully to backend!",
               categories: List.from(
                 _currentCategories,
               ), // Pass current categories
@@ -312,7 +312,7 @@ class AddPropertyBloc extends Bloc<AddPropertyEvent, AddPropertyState> {
           if (event.context != null) {
             showMySnackbar(
               context: event.context!,
-              content: "Property added successfully to backend!",
+              content: "Workeradded successfully to backend!",
               isSuccess: true,
             );
           }
@@ -350,23 +350,23 @@ class AddPropertyBloc extends Bloc<AddPropertyEvent, AddPropertyState> {
 
     final validationErrors = <String>[];
     if (event.title.trim().isEmpty) {
-      validationErrors.add('Property title is required');
+      validationErrors.add('Workertitle is required');
     }
     if (event.location.trim().isEmpty) {
-      validationErrors.add('Property location is required');
+      validationErrors.add('Workerlocation is required');
     }
     if (event.price.trim().isEmpty) {
-      validationErrors.add('Property price is required');
+      validationErrors.add('Workerprice is required');
     } else {
       final price = double.tryParse(event.price);
       if (price == null || price <= 0) {
         validationErrors.add(
-          'Property price must be a valid number greater than 0',
+          'Workerprice must be a valid number greater than 0',
         );
       }
     }
     if (event.description.trim().isEmpty) {
-      validationErrors.add('Property description is required');
+      validationErrors.add('Workerdescription is required');
     }
     if (event.bedrooms.trim().isEmpty) {
       validationErrors.add('Number of bedrooms is required');
@@ -385,10 +385,10 @@ class AddPropertyBloc extends Bloc<AddPropertyEvent, AddPropertyState> {
       }
     }
     if (event.categoryId == null || event.categoryId!.isEmpty) {
-      validationErrors.add('Property category is required');
+      validationErrors.add('Workercategory is required');
     }
     if (event.existingImages.isEmpty && event.newImagePaths.isEmpty) {
-      validationErrors.add('At least one property image is required');
+      validationErrors.add('At least one Workerimage is required');
     }
     if (validationErrors.isNotEmpty) {
       emit(
@@ -448,7 +448,7 @@ class AddPropertyBloc extends Bloc<AddPropertyEvent, AddPropertyState> {
         (_) {
           emit(
             AddPropertySubmissionSuccess(
-              successMessage: "Property updated successfully!",
+              successMessage: "Workerupdated successfully!",
               categories: List.from(_currentCategories),
               selectedCategoryId: _selectedCategoryId,
               selectedImages: List.from(_currentImages),
@@ -459,7 +459,7 @@ class AddPropertyBloc extends Bloc<AddPropertyEvent, AddPropertyState> {
           if (event.context != null) {
             showMySnackbar(
               context: event.context!,
-              content: "Property updated successfully!",
+              content: "Workerupdated successfully!",
               isSuccess: true,
             );
           }

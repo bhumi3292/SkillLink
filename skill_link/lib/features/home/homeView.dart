@@ -18,7 +18,9 @@ import 'package:skill_link/features/profile/presentation/view/profile.dart';
 import 'package:skill_link/app/service_locator/service_locator.dart';
 
 class HomeView extends StatefulWidget {
-  const HomeView({super.key});
+  final int initialIndex;
+
+  const HomeView({super.key, this.initialIndex = 0});
 
   @override
   State<HomeView> createState() => _HomeViewState();
@@ -32,6 +34,7 @@ class _HomeViewState extends State<HomeView> {
   @override
   void initState() {
     super.initState();
+    _selectedIndex = widget.initialIndex;
     pages = [
       DashboardPage(onSeeAllTap: () => _onItemTapped(1)),
       BlocProvider(
@@ -44,7 +47,9 @@ class _HomeViewState extends State<HomeView> {
     ];
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ProfileViewModel>().add(FetchUserProfileEvent(context: context));
+      context.read<ProfileViewModel>().add(
+        FetchUserProfileEvent(context: context),
+      );
     });
   }
 
@@ -81,8 +86,14 @@ class _HomeViewState extends State<HomeView> {
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.explore), label: 'Explore'),
-          BottomNavigationBarItem(icon: Icon(Icons.favorite_outlined), label: 'Favourite'),
-          BottomNavigationBarItem(icon: Icon(Icons.book_online), label: 'Booking'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.favorite_outlined),
+            label: 'Favourite',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.book_online),
+            label: 'Booking',
+          ),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),

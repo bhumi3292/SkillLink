@@ -86,7 +86,7 @@ class CartApiServiceImpl implements CartApiService {
       case 404:
         return Exception('Cart not found');
       case 409:
-        return Exception('Property already in cart');
+        return Exception('Workeralready in cart');
       case 500:
         return Exception('Server error: Please try again later');
       default:

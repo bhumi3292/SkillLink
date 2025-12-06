@@ -6,12 +6,8 @@ class EditPropertyPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Edit Property'),
-      ),
-      body: const Center(
-        child: Text('Edit Property Page'),
-      ),
+      appBar: AppBar(title: const Text('Edit Property')),
+      body: const Center(child: Text('Edit WorkerPage')),
     );
   }
-} 
+}

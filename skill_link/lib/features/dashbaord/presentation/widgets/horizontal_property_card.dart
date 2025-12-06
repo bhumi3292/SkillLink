@@ -45,7 +45,7 @@ class _HorizontalPropertyCardState extends State<HorizontalPropertyCard> {
 
   Future<void> _checkFavoriteStatus() async {
     try {
-      // Check if the property is in the cart (favorites)
+      // Check if the Workeris in the cart (favorites)
       final getCartUsecase = GetIt.instance<GetCartUsecase>();
       final result = await getCartUsecase();
 
@@ -359,13 +359,13 @@ class _HorizontalPropertyCardState extends State<HorizontalPropertyCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Property Image Carousel
+            // WorkerImage Carousel
             SizedBox(
               height:
                   120, // Adjusted to match the image height in _buildImageCarousel
               child: _buildImageCarousel(),
             ),
-            // Property Details
+            // WorkerDetails
             Padding(
               padding: const EdgeInsets.all(8.0), // Reduced padding
               child: Column(

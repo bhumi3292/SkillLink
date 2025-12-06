@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:skill_link/features/auth/domain/entity/user_entity.dart'; // Import UserEntity
-import 'package:skill_link/features/add_property/presentation/view/add_property_presentation.dart';
+import 'package:skill_link/features/add_property/presentation/view/add_worker_presentation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:skill_link/features/chat/presentation/page/chat_page.dart';
-import 'package:skill_link/app/shared_pref/token_shared_prefs.dart';
-import 'package:skill_link/app/service_locator/service_locator.dart';
 
 class HeaderNav extends StatefulWidget implements PreferredSizeWidget {
   final UserEntity? user;
@@ -37,9 +34,14 @@ class _HeaderNavState extends State<HeaderNav> {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint(
-      'HeaderNav user.stakeholder:  \u001b[33m \u001b[1m \u001b[4m$_role \u001b[0m',
-    ); // DEBUG: print role
+    // Prefer role from the provided user entity (if any), otherwise fall back
+    // to the value loaded from SharedPreferences.
+    final stakeholderFromUser = widget.user?.stakeholder?.trim().toLowerCase();
+    final effectiveRole =
+        (stakeholderFromUser != null && stakeholderFromUser.isNotEmpty)
+            ? stakeholderFromUser
+            : _role?.trim().toLowerCase();
+    debugPrint('HeaderNav effectiveRole: $effectiveRole');
     return AppBar(
       backgroundColor: const Color(0xFF003366),
       elevation: 0,
@@ -51,43 +53,20 @@ class _HeaderNavState extends State<HeaderNav> {
       ),
       centerTitle: true,
       actions: [
-        if ((_role?.trim().toLowerCase() == 'worker'))
+        if (effectiveRole == 'worker')
           IconButton(
             icon: const Icon(Icons.add_home_work_outlined, color: Colors.white),
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => const AddPropertyPresentation(),
+                  builder: (context) => const AddWorkerPresentation(),
                 ),
               );
               widget.onworkerHomePressed?.call();
               debugPrint("worker Home icon pressed (via callback)");
             },
           ),
-        IconButton(
-          icon: const Icon(Icons.message, color: Colors.white),
-          onPressed: () async {
-            // Get userId from shared preferences
-            final result = await serviceLocator<TokenSharedPrefs>().getUserId();
-            final userId = result.fold((failure) => null, (userId) => userId);
-            if (userId != null && mounted) {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => ChatPage(currentUserId: userId),
-                ),
-              );
-            } else {
-              // Optionally show a snackbar or dialog if userId is not available
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Unable to open chats: user not found.'),
-                  ),
-                );
-              }
-            }
-          },
-        ),
+        // Chat icon removed from header; message/chat is accessible from bottom navigation
         IconButton(
           icon: const Icon(Icons.notifications_none, color: Colors.white),
           onPressed: () {

@@ -15,14 +15,16 @@ class AddPropertyPresentation extends StatefulWidget {
   const AddPropertyPresentation({super.key});
 
   @override
-  State<AddPropertyPresentation> createState() => _AddPropertyPresentationState();
+  State<AddPropertyPresentation> createState() =>
+      _AddPropertyPresentationState();
 }
 
 class _AddPropertyPresentationState extends State<AddPropertyPresentation> {
   final _formKey = GlobalKey<FormState>();
   late final AddPropertyBloc _bloc;
   final ImagePicker _picker = ImagePicker();
-  final AddCategoryUsecase _addCategoryUsecase = GetIt.instance<AddCategoryUsecase>();
+  final AddCategoryUsecase _addCategoryUsecase =
+      GetIt.instance<AddCategoryUsecase>();
 
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
@@ -107,7 +109,10 @@ class _AddPropertyPresentationState extends State<AddPropertyPresentation> {
     }
   }
 
-  Widget _buildCategoryDropdown(List<CategoryEntity> categories, String? selectedCategoryId) {
+  Widget _buildCategoryDropdown(
+    List<CategoryEntity> categories,
+    String? selectedCategoryId,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -131,9 +136,7 @@ class _AddPropertyPresentationState extends State<AddPropertyPresentation> {
                 onPressed: _showAddCategoryDialog,
                 icon: const Icon(Icons.add, color: Colors.white, size: 20),
                 tooltip: 'Add New Category',
-                style: IconButton.styleFrom(
-                  padding: const EdgeInsets.all(8),
-                ),
+                style: IconButton.styleFrom(padding: const EdgeInsets.all(8)),
               ),
             ),
           ],
@@ -149,7 +152,10 @@ class _AddPropertyPresentationState extends State<AddPropertyPresentation> {
             decoration: const InputDecoration(
               labelText: 'Select Category',
               border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
               focusedBorder: OutlineInputBorder(
                 borderSide: BorderSide(color: Color(0xFF003366), width: 2),
                 borderRadius: BorderRadius.all(Radius.circular(8)),
@@ -157,26 +163,31 @@ class _AddPropertyPresentationState extends State<AddPropertyPresentation> {
             ),
             items: [
               const DropdownMenuItem(
-                value: null, 
+                value: null,
                 child: Text(
                   'Select Category',
                   style: TextStyle(color: Colors.grey),
                 ),
               ),
-              ...categories.map((cat) => DropdownMenuItem(
-                value: cat.id, 
-                child: Text(
-                  cat.categoryName,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black,
+              ...categories.map(
+                (cat) => DropdownMenuItem(
+                  value: cat.id,
+                  child: Text(
+                    cat.categoryName,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black,
+                    ),
                   ),
                 ),
-              )),
+              ),
             ],
             onChanged: (val) => _bloc.add(SelectCategoryEvent(categoryId: val)),
             validator: (val) => val == null ? 'Category is required' : null,
-            icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFF003366)),
+            icon: const Icon(
+              Icons.keyboard_arrow_down,
+              color: Color(0xFF003366),
+            ),
             dropdownColor: Colors.white,
             style: const TextStyle(fontSize: 16, color: Colors.black),
           ),
@@ -190,10 +201,7 @@ class _AddPropertyPresentationState extends State<AddPropertyPresentation> {
                 const SizedBox(width: 8),
                 Text(
                   'No categories available. Click + to add one.',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.orange[600],
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.orange[600]),
                 ),
               ],
             ),
@@ -204,7 +212,7 @@ class _AddPropertyPresentationState extends State<AddPropertyPresentation> {
 
   Future<void> _showAddCategoryDialog() async {
     _newCategoryController.clear();
-    
+
     return showDialog(
       context: context,
       barrierDismissible: false,
@@ -244,11 +252,8 @@ class _AddPropertyPresentationState extends State<AddPropertyPresentation> {
               ),
               const SizedBox(height: 16),
               const Text(
-                'This category will be available for all properties.',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey,
-                ),
+                'This category will be available for all workers.',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
               ),
             ],
           ),
@@ -307,10 +312,10 @@ class _AddPropertyPresentationState extends State<AddPropertyPresentation> {
 
       final newCategory = CategoryEntity(categoryName: categoryName);
       final result = await _addCategoryUsecase(newCategory);
-      
+
       // Hide loading indicator
       Navigator.of(context).pop();
-      
+
       result.fold(
         (failure) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -336,7 +341,7 @@ class _AddPropertyPresentationState extends State<AddPropertyPresentation> {
     } catch (e) {
       // Hide loading indicator
       Navigator.of(context).pop();
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error adding category: $e'),
@@ -351,7 +356,7 @@ class _AddPropertyPresentationState extends State<AddPropertyPresentation> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add New Property'),
+        title: const Text('Add New Worker'),
         backgroundColor: const Color(0xFF003366),
         foregroundColor: Colors.white,
         leading: IconButton(
@@ -379,7 +384,7 @@ class _AddPropertyPresentationState extends State<AddPropertyPresentation> {
               _bedroomsController.clear();
               _bathroomsController.clear();
               _bloc.add(const ClearAddPropertyMessageEvent());
-              
+
               // Navigate back after successful submission
               Future.delayed(const Duration(seconds: 2), () {
                 Get.back();
@@ -424,21 +429,21 @@ class _AddPropertyPresentationState extends State<AddPropertyPresentation> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _buildTextField(
-                      _titleController, 
-                      'Property Title *',
-                      hintText: 'Enter property title',
+                      _titleController,
+                      'WorkerTitle *',
+                      hintText: 'Enter Workertitle',
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
-                          return 'Property title is required';
+                          return 'Workertitle is required';
                         }
                         return null;
                       },
                     ),
                     const SizedBox(height: 16),
                     _buildTextField(
-                      _locationController, 
+                      _locationController,
                       'Location *',
-                      hintText: 'Enter property location',
+                      hintText: 'Enter Workerlocation',
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
                           return 'Location is required';
@@ -448,7 +453,7 @@ class _AddPropertyPresentationState extends State<AddPropertyPresentation> {
                     ),
                     const SizedBox(height: 16),
                     _buildTextField(
-                      _priceController, 
+                      _priceController,
                       'Price *',
                       keyboardType: TextInputType.number,
                       hintText: 'Enter price (e.g., 1500)',
@@ -468,7 +473,7 @@ class _AddPropertyPresentationState extends State<AddPropertyPresentation> {
                       children: [
                         Expanded(
                           child: _buildTextField(
-                            _bedroomsController, 
+                            _bedroomsController,
                             'Bedrooms *',
                             keyboardType: TextInputType.number,
                             hintText: '0',
@@ -487,7 +492,7 @@ class _AddPropertyPresentationState extends State<AddPropertyPresentation> {
                         const SizedBox(width: 16),
                         Expanded(
                           child: _buildTextField(
-                            _bathroomsController, 
+                            _bathroomsController,
                             'Bathrooms *',
                             keyboardType: TextInputType.number,
                             hintText: '0',
@@ -507,7 +512,7 @@ class _AddPropertyPresentationState extends State<AddPropertyPresentation> {
                     ),
                     const SizedBox(height: 16),
                     _buildTextField(
-                      _descriptionController, 
+                      _descriptionController,
                       'Description *',
                       maxLines: 3,
                       hintText: 'Describe the property...',
@@ -519,43 +524,48 @@ class _AddPropertyPresentationState extends State<AddPropertyPresentation> {
                       },
                     ),
                     const SizedBox(height: 16),
-                    _buildCategoryDropdown(state.categories, state.selectedCategoryId),
+                    _buildCategoryDropdown(
+                      state.categories,
+                      state.selectedCategoryId,
+                    ),
                     const SizedBox(height: 16),
                     _buildMediaSection(
-                      'Images *', 
-                      state.selectedImages, 
-                      _pickImages, 
+                      'Images *',
+                      state.selectedImages,
+                      _pickImages,
                       (i) => _bloc.add(RemoveImageEvent(index: i)),
                       isRequired: true,
                     ),
                     const SizedBox(height: 16),
                     _buildMediaSection(
-                      'Videos (Optional)', 
-                      state.selectedVideos, 
-                      _pickVideos, 
+                      'Videos (Optional)',
+                      state.selectedVideos,
+                      _pickVideos,
                       (i) => _bloc.add(RemoveVideoEvent(index: i)),
                       isRequired: false,
                     ),
                     const SizedBox(height: 32),
                     ElevatedButton(
-                      onPressed: state.isSubmitting
-                          ? null
-                          : () {
-                              if (_formKey.currentState?.validate() ?? false) {
-                                _bloc.add(
-                                  SubmitPropertyEvent(
-                                    title: _titleController.text,
-                                    location: _locationController.text,
-                                    price: _priceController.text,
-                                    description: _descriptionController.text,
-                                    bedrooms: _bedroomsController.text,
-                                    bathrooms: _bathroomsController.text,
-                                    categoryId: state.selectedCategoryId,
-                                    context: context,
-                                  ),
-                                );
-                              }
-                            },
+                      onPressed:
+                          state.isSubmitting
+                              ? null
+                              : () {
+                                if (_formKey.currentState?.validate() ??
+                                    false) {
+                                  _bloc.add(
+                                    SubmitPropertyEvent(
+                                      title: _titleController.text,
+                                      location: _locationController.text,
+                                      price: _priceController.text,
+                                      description: _descriptionController.text,
+                                      bedrooms: _bedroomsController.text,
+                                      bathrooms: _bathroomsController.text,
+                                      categoryId: state.selectedCategoryId,
+                                      context: context,
+                                    ),
+                                  );
+                                }
+                              },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF003366),
                         foregroundColor: Colors.white,
@@ -564,23 +574,27 @@ class _AddPropertyPresentationState extends State<AddPropertyPresentation> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child: state.isSubmitting
-                          ? const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
+                      child:
+                          state.isSubmitting
+                              ? const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
                                   ),
-                                ),
-                                SizedBox(width: 12),
-                                Text('Adding Property...'),
-                              ],
-                            )
-                          : const Text('Add Property', style: TextStyle(fontSize: 16)),
+                                  SizedBox(width: 12),
+                                  Text('Adding Property...'),
+                                ],
+                              )
+                              : const Text(
+                                'Add Property',
+                                style: TextStyle(fontSize: 16),
+                              ),
                     ),
                   ],
                 ),
@@ -593,15 +607,13 @@ class _AddPropertyPresentationState extends State<AddPropertyPresentation> {
   }
 
   Widget _buildTextField(
-    TextEditingController controller, 
-    String label, 
-    {
-      TextInputType keyboardType = TextInputType.text, 
-      int maxLines = 1,
-      String? hintText,
-      String? Function(String?)? validator,
-    }
-  ) {
+    TextEditingController controller,
+    String label, {
+    TextInputType keyboardType = TextInputType.text,
+    int maxLines = 1,
+    String? hintText,
+    String? Function(String?)? validator,
+  }) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
@@ -617,27 +629,26 @@ class _AddPropertyPresentationState extends State<AddPropertyPresentation> {
           borderSide: BorderSide(color: Colors.red, width: 2),
         ),
       ),
-      validator: validator ?? (value) => (value == null || value.isEmpty) ? 'Required' : null,
+      validator:
+          validator ??
+          (value) => (value == null || value.isEmpty) ? 'Required' : null,
     );
   }
 
   Widget _buildMediaSection(
-    String label, 
-    List<XFile> files, 
-    VoidCallback onAdd, 
-    Function(int) onRemove,
-    {bool isRequired = false}
-  ) {
+    String label,
+    List<XFile> files,
+    VoidCallback onAdd,
+    Function(int) onRemove, {
+    bool isRequired = false,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              label,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
+            Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
             Row(
               children: [
                 if (isRequired)
@@ -647,7 +658,7 @@ class _AddPropertyPresentationState extends State<AddPropertyPresentation> {
                   ),
                 const SizedBox(width: 8),
                 IconButton(
-                  onPressed: onAdd, 
+                  onPressed: onAdd,
                   icon: const Icon(Icons.add_a_photo),
                   style: IconButton.styleFrom(
                     backgroundColor: const Color(0xFF003366),
@@ -664,48 +675,56 @@ class _AddPropertyPresentationState extends State<AddPropertyPresentation> {
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               itemCount: files.length,
-              itemBuilder: (context, i) => Stack(
-                children: [
-                  Container(
-                    margin: const EdgeInsets.only(right: 8),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.file(
-                        File(files[i].path),
-                        width: 100,
-                        height: 100,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
+              itemBuilder:
+                  (context, i) => Stack(
+                    children: [
+                      Container(
+                        margin: const EdgeInsets.only(right: 8),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.file(
+                            File(files[i].path),
                             width: 100,
                             height: 100,
-                            decoration: BoxDecoration(
-                              color: Colors.grey[300],
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(Icons.error, color: Colors.red),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 4,
-                    right: 4,
-                    child: GestureDetector(
-                      onTap: () => onRemove(i),
-                      child: Container(
-                        decoration: const BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                width: 100,
+                                height: 100,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[300],
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(
+                                  Icons.error,
+                                  color: Colors.red,
+                                ),
+                              );
+                            },
+                          ),
                         ),
-                        padding: const EdgeInsets.all(4),
-                        child: const Icon(Icons.close, color: Colors.white, size: 16),
                       ),
-                    ),
+                      Positioned(
+                        top: 4,
+                        right: 4,
+                        child: GestureDetector(
+                          onTap: () => onRemove(i),
+                          child: Container(
+                            decoration: const BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                            ),
+                            padding: const EdgeInsets.all(4),
+                            child: const Icon(
+                              Icons.close,
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
             ),
           ),
         if (files.isEmpty && isRequired)
@@ -713,13 +732,10 @@ class _AddPropertyPresentationState extends State<AddPropertyPresentation> {
             padding: const EdgeInsets.only(top: 8),
             child: Text(
               'At least one $label.toLowerCase() is required',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.red[600],
-              ),
+              style: TextStyle(fontSize: 12, color: Colors.red[600]),
             ),
           ),
       ],
     );
   }
-} 
+}

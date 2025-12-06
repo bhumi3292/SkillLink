@@ -11,11 +11,13 @@ class PropertyRemoteRepository implements IPropertyRepository {
   final PropertyRemoteDatasource _remoteDataSource;
 
   PropertyRemoteRepository({required PropertyRemoteDatasource remoteDataSource})
-      : _remoteDataSource = remoteDataSource;
+    : _remoteDataSource = remoteDataSource;
 
   // Helper to convert DioException to Failure types
   Failure _handleDioError(DioException e) {
-    if (e.type == DioExceptionType.connectionError || e.type == DioExceptionType.sendTimeout || e.type == DioExceptionType.receiveTimeout) {
+    if (e.type == DioExceptionType.connectionError ||
+        e.type == DioExceptionType.sendTimeout ||
+        e.type == DioExceptionType.receiveTimeout) {
       return NetworkFailure(message: 'No Internet Connection or Timeout');
     } else if (e.type == DioExceptionType.badResponse) {
       final statusCode = e.response?.statusCode;
@@ -29,23 +31,34 @@ class PropertyRemoteRepository implements IPropertyRepository {
           return ForbiddenFailure(message: errorMessage);
         } else if (statusCode == 404) {
           return NotFoundFailure(message: errorMessage);
-        } else if (statusCode >= 500) { // This is where the '>' null check was needed
+        } else if (statusCode >= 500) {
+          // This is where the '>' null check was needed
           return ServerFailure(message: 'Server error: $errorMessage');
         }
       }
     }
-    return UnknownFailure(message: e.message ?? 'An unknown network error occurred');
+    return UnknownFailure(
+      message: e.message ?? 'An unknown network error occurred',
+    );
   }
 
   @override
-  Future<Either<Failure, void>> addProperty(PropertyEntity property, List<String> imagePaths, List<String> videoPaths) async {
+  Future<Either<Failure, void>> addProperty(
+    PropertyEntity property,
+    List<String> imagePaths,
+    List<String> videoPaths,
+  ) async {
     try {
       await _remoteDataSource.addProperty(property, imagePaths, videoPaths);
       return const Right(null);
     } on DioException catch (e) {
       return Left(_handleDioError(e));
     } catch (e) {
-      return Left(RemoteDatabaseFailure(message: 'Failed to add property remotely: ${e.toString()}'));
+      return Left(
+        RemoteDatabaseFailure(
+          message: 'Failed to add Workerremotely: ${e.toString()}',
+        ),
+      );
     }
   }
 
@@ -57,7 +70,11 @@ class PropertyRemoteRepository implements IPropertyRepository {
     } on DioException catch (e) {
       return Left(_handleDioError(e));
     } catch (e) {
-      return Left(RemoteDatabaseFailure(message: 'Failed to delete property remotely: ${e.toString()}'));
+      return Left(
+        RemoteDatabaseFailure(
+          message: 'Failed to delete Workerremotely: ${e.toString()}',
+        ),
+      );
     }
   }
 
@@ -69,31 +86,59 @@ class PropertyRemoteRepository implements IPropertyRepository {
     } on DioException catch (e) {
       return Left(_handleDioError(e));
     } catch (e) {
-      return Left(RemoteDatabaseFailure(message: 'Failed to get properties remotely: ${e.toString()}'));
+      return Left(
+        RemoteDatabaseFailure(
+          message: 'Failed to get properties remotely: ${e.toString()}',
+        ),
+      );
     }
   }
 
   @override
-  Future<Either<Failure, PropertyEntity>> getPropertyById(String propertyId) async {
+  Future<Either<Failure, PropertyEntity>> getPropertyById(
+    String propertyId,
+  ) async {
     try {
       final property = await _remoteDataSource.getPropertyById(propertyId);
       return Right(property);
     } on DioException catch (e) {
       return Left(_handleDioError(e));
     } catch (e) {
-      return Left(RemoteDatabaseFailure(message: 'Failed to get property by ID remotely: ${e.toString()}'));
+      return Left(
+        RemoteDatabaseFailure(
+          message: 'Failed to get Workerby ID remotely: ${e.toString()}',
+        ),
+      );
     }
   }
 
   @override
-  Future<Either<Failure, void>> updateProperty(String propertyId, PropertyEntity property, List<String> newImagePaths, List<String> newVideoPaths, List<String> existingImages, List<String> existingVideos) async {
+  Future<Either<Failure, void>> updateProperty(
+    String propertyId,
+    PropertyEntity property,
+    List<String> newImagePaths,
+    List<String> newVideoPaths,
+    List<String> existingImages,
+    List<String> existingVideos,
+  ) async {
     try {
-      await _remoteDataSource.updateProperty(propertyId, property, newImagePaths, newVideoPaths, existingImages, existingVideos);
+      await _remoteDataSource.updateProperty(
+        propertyId,
+        property,
+        newImagePaths,
+        newVideoPaths,
+        existingImages,
+        existingVideos,
+      );
       return const Right(null);
     } on DioException catch (e) {
       return Left(_handleDioError(e));
     } catch (e) {
-      return Left(RemoteDatabaseFailure(message: 'Failed to update property remotely:  [${e.toString()}'));
+      return Left(
+        RemoteDatabaseFailure(
+          message: 'Failed to update Workerremotely:  [${e.toString()}',
+        ),
+      );
     }
   }
 }

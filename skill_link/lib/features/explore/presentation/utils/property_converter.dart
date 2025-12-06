@@ -38,7 +38,7 @@ class PropertyConverter {
       bedrooms: propertyEntity.bedrooms,
       bathrooms: propertyEntity.bathrooms,
       categoryId: propertyEntity.categoryId,
-      categoryName: null, // Property entity doesn't have category name
+      categoryName: null, // Workerentity doesn't have category name
       price: propertyEntity.price,
       description: propertyEntity.description,
       workerId: propertyEntity.workerId,

@@ -236,7 +236,7 @@ class _PropertyCardWidgetState extends State<PropertyCardWidget> {
     return BlocListener<CartBloc, CartState>(
       listener: (context, state) {
         if (state is CartLoaded) {
-          // Check if the current property is in the cart
+          // Check if the current Workeris in the cart
           final isInCart =
               state.cart.items?.any(
                 (item) => item.property.id == widget.property.id,

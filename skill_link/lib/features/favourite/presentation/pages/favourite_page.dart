@@ -115,7 +115,7 @@ class _FavouritePageState extends State<FavouritePage> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Tap the heart icon on any property to add it to your favourites',
+                        'Tap the heart icon on any Workerto add it to your favourites',
                         style: TextStyle(fontSize: 14, color: Colors.grey[500]),
                         textAlign: TextAlign.center,
                       ),

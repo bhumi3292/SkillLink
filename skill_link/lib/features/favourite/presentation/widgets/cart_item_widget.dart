@@ -39,7 +39,7 @@ class CartItemWidget extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           child: Row(
             children: [
-              // Property Image
+              // WorkerImage
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: SizedBox(
@@ -75,7 +75,7 @@ class CartItemWidget extends StatelessWidget {
               ),
               const SizedBox(width: 12),
 
-              // Property Details
+              // WorkerDetails
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

@@ -328,14 +328,14 @@ class _BookingPageState extends State<BookingPage> {
 
   Widget _buildBookingCard(Map<String, dynamic> booking) {
     final property = booking['property'] ?? {};
-    final Hirer = booking['Hirer'];
+    final hirer = booking['Hirer'];
     final worker = booking['worker'];
     final status = booking['status'] ?? 'pending';
     final date = booking['date'] ?? '';
     final timeSlot = booking['timeSlot'] ?? '';
     final bookingId = booking['_id'] ?? '';
 
-    // Get property image using ImageUrlHelper
+    // Get Workerimage using ImageUrlHelper
     String? imageUrl;
     if (property['images'] != null && (property['images'] as List).isNotEmpty) {
       final imagePath = property['images'][0];
@@ -357,7 +357,7 @@ class _BookingPageState extends State<BookingPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Property header with image
+            // Workerheader with image
             Row(
               children: [
                 if (imageUrl != null && imageUrl.isNotEmpty)
@@ -470,7 +470,7 @@ class _BookingPageState extends State<BookingPage> {
                 ),
 
                 // Show Hirer info for workers
-                if (_userRole == 'worker' && Hirer != null) ...[
+                if (_userRole == 'worker' && hirer != null) ...[
                   const SizedBox(height: 4),
                   Row(
                     children: [
@@ -486,7 +486,7 @@ class _BookingPageState extends State<BookingPage> {
                       ),
                       Expanded(
                         child: Text(
-                          '${Hirer['fullName'] ?? 'N/A'} (${Hirer['email'] ?? 'N/A'})',
+                          '${hirer['fullName'] ?? 'N/A'} (${hirer['email'] ?? 'N/A'})',
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
@@ -509,7 +509,7 @@ class _BookingPageState extends State<BookingPage> {
                       ),
                       const SizedBox(width: 8),
                       const Text(
-                        'Property Owner: ',
+                        'WorkerOwner: ',
                         style: TextStyle(fontSize: 14, color: Colors.grey),
                       ),
                       Expanded(
@@ -698,7 +698,7 @@ class _BookingPageState extends State<BookingPage> {
         appBar: AppBar(
           title: Text(
             _userRole == 'worker'
-                ? 'Your Property Bookings'
+                ? 'Your WorkerBookings'
                 : 'Your Scheduled Visits',
             style: const TextStyle(
               color: Colors.white,

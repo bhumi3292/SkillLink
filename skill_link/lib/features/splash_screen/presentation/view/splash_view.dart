@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
+// using static logo image instead of lottie
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -136,10 +136,10 @@ class _SplashScreenState extends State<SplashScreen>
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      // Lottie Animation
+                                      // App logo image (replaces Lottie animation)
                                       Flexible(
-                                        child: Lottie.asset(
-                                          'assets/animation/animation_123.json',
+                                        child: Image.asset(
+                                          'assets/images/logo.png',
                                           width: logoSize,
                                           height: logoSize,
                                           fit: BoxFit.contain,
