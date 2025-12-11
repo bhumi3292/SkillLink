@@ -71,8 +71,8 @@ class _workerManageAvailabilityState extends State<workerManageAvailability> {
       final map = <String, List<String>>{};
 
       for (var avail in availabilities) {
-        // Safely access 'property' and then '_id'
-        final propertyData = avail['property'] as Map<String, dynamic>?;
+        // Safely access 'worker' and then '_id'
+        final propertyData = avail['worker'] as Map<String, dynamic>?;
         if (propertyData != null && propertyData['_id'] == widget.propertyId) {
           final date =
               avail['date'] as String?; // date can be null from backend too

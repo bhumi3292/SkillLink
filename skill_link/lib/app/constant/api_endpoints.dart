@@ -12,7 +12,7 @@ class ApiEndpoints {
   static const String iosSimulatorAddress = "http://localhost:3001";
 
   // Default LAN address for real devices — update this if your PC IP changes
-  static const String realDeviceAddress = "http://192.168.1.13:3001";
+  static const String realDeviceAddress = "http://192.168.1.6:3001";
 
   // Runtime-resolved server address. Chooses the correct host for the
   // current platform (Android emulator, iOS simulator, web, or a real device).

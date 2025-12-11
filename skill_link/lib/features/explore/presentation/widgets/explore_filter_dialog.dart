@@ -115,7 +115,7 @@ class _ExploreFilterDialogState extends State<ExploreFilterDialog> {
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                value: _selectedCategory,
+                initialValue: _selectedCategory,
                 decoration: const InputDecoration(
                   labelText: 'Category',
                   prefixIcon: Icon(Icons.category),
@@ -167,7 +167,7 @@ class _ExploreFilterDialogState extends State<ExploreFilterDialog> {
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<int>(
-                value: _selectedMinBedrooms,
+                initialValue: _selectedMinBedrooms,
                 decoration: const InputDecoration(
                   labelText: 'Minimum Bedrooms',
                   prefixIcon: Icon(Icons.bed),
@@ -212,7 +212,7 @@ class _ExploreFilterDialogState extends State<ExploreFilterDialog> {
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<int>(
-                value: _selectedMinBathrooms,
+                initialValue: _selectedMinBathrooms,
                 decoration: const InputDecoration(
                   labelText: 'Minimum Bathrooms',
                   prefixIcon: Icon(Icons.bathtub_outlined),

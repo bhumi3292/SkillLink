@@ -3,6 +3,14 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 require("dotenv").config();
+
+// Ensure a JWT secret exists for local development to avoid runtime errors
+// in environments where .env isn't present. In production, always set
+// a strong JWT_SECRET in your environment and remove this fallback.
+if (!process.env.JWT_SECRET) {
+    process.env.JWT_SECRET = 'dev-secret-key';
+    console.warn('WARNING: JWT_SECRET not set. Using fallback development secret.');
+}
 const mongoose = require("mongoose");
 const multer = require("multer");
 

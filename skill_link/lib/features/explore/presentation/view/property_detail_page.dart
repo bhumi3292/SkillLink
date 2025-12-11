@@ -5,8 +5,8 @@ import 'package:skill_link/features/booking/presentation/widgets/booking_modal.d
 import 'package:skill_link/features/booking/presentation/widgets/worker_manage_availability.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:skill_link/features/profile/presentation/view_model/profile_view_model.dart';
-import 'package:skill_link/features/add_property/presentation/view/update_property_page.dart';
-import 'package:skill_link/features/add_property/domain/use_case/property/delete_property_usecase.dart';
+import 'package:skill_link/features/add_worker/presentation/view/update_worker_page.dart';
+import 'package:skill_link/features/add_worker/domain/use_case/property/delete_property_usecase.dart';
 import 'package:get_it/get_it.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_paypal/flutter_paypal.dart';
@@ -121,8 +121,7 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                       "shipping_discount": 0,
                     },
                   },
-                  "description":
-                      "Payment for property: ${widget.property.title}",
+                  "description": "Payment for worker: ${widget.property.title}",
                   "item_list": {
                     "items": [
                       {
@@ -594,7 +593,7 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
-                                  'worker contact information is not available for this property.',
+                                  'worker contact information is not available for this worker.',
                                   style: TextStyle(
                                     color: Colors.grey[600],
                                     fontSize: 14,
@@ -941,7 +940,7 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                                                   'Delete Property',
                                                 ),
                                                 content: const Text(
-                                                  'Are you sure you want to delete this property? This action cannot be undone.',
+                                                  'Are you sure you want to delete this worker? This action cannot be undone.',
                                                 ),
                                                 actions: [
                                                   TextButton(
@@ -989,7 +988,7 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                                             scaffoldMessenger.showSnackBar(
                                               SnackBar(
                                                 content: Text(
-                                                  'Failed to delete property: ${failure.toString()}',
+                                                  'Failed to delete worker: ${failure.toString()}',
                                                 ),
                                                 backgroundColor: Colors.red,
                                               ),

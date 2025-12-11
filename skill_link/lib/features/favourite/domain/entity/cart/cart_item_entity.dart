@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:skill_link/features/add_property/domain/entity/property/property_entity.dart';
+import 'package:skill_link/features/add_worker/domain/entity/property/property_entity.dart';
 
 class CartItemEntity extends Equatable {
   final String? id;

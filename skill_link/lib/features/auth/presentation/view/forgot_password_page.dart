@@ -20,16 +20,20 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     try {
       final authRemote = AuthRemoteDatasource(Dio());
       await authRemote.requestPasswordResetLink(_emailController.text.trim());
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Password reset link sent to your email!')),
       );
       _emailController.clear();
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(e.toString())));
     } finally {
-      setState(() => _loading = false);
+      if (mounted) {
+        setState(() => _loading = false);
+      }
     }
   }
 
@@ -48,7 +52,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
               borderRadius: BorderRadius.circular(18),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withOpacity(0.12),
+                  color: Colors.grey.withValues(alpha: 0.12),
                   blurRadius: 18,
                   offset: const Offset(0, 8),
                 ),

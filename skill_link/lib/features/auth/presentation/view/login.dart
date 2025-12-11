@@ -82,8 +82,17 @@ class _LoginState extends State<Login> {
       backgroundColor: Colors.white,
       body: BlocConsumer<LoginViewModel, LoginState>(
         listener: (context, state) {
-          // Handle navigation based on state
-          if (state.shouldNavigateToHome) {
+          // Only react when not loading
+          if (state.isLoading) return;
+
+          // On success: show success message and navigate to Dashboard
+          if (state.isSuccess) {
+            showMySnackbar(
+              context: context,
+              content: 'Login successful!',
+              isSuccess: true,
+            );
+            // fetch profile then navigate
             context.read<ProfileViewModel>().add(
               FetchUserProfileEvent(context: context),
             );
@@ -93,26 +102,17 @@ class _LoginState extends State<Login> {
                 builder: (context) => const HomeView(initialIndex: 0),
               ),
             );
-          } else if (state.shouldNavigateToRegister) {
-            Navigator.pushReplacementNamed(context, '/signup');
+            return;
           }
-          // Show login success snackbar only once, when login is successful and not loading
-          if (state.isSuccess &&
-              !state.isLoading &&
-              !state.shouldNavigateToHome) {
-            showMySnackbar(
-              context: context,
-              content: 'Login successful!',
-              isSuccess: true,
-            );
-          }
-          // Handle error state
-          if (!state.isLoading && !state.isSuccess && state.error != null) {
+
+          // On failure: show error toast, do NOT navigate to signup
+          if (!state.isSuccess && state.error != null) {
             showMySnackbar(
               context: context,
               content: '⚠️ ${state.error}',
               isSuccess: false,
             );
+            return;
           }
         },
         builder: (context, state) {
@@ -194,7 +194,7 @@ class _LoginState extends State<Login> {
                         "Stake Holder",
                         Icons.person_outline,
                       ),
-                      value: selectedStakeholder,
+                      initialValue: selectedStakeholder,
                       items:
                           stakeholders.map((stakeholder) {
                             return DropdownMenuItem(
@@ -259,9 +259,7 @@ class _LoginState extends State<Login> {
                         const Text("Don't have an account?"),
                         TextButton(
                           onPressed: () {
-                            context.read<LoginViewModel>().add(
-                              NavigateToRegisterViewEvent(),
-                            );
+                            Navigator.pushNamed(context, '/signup');
                           },
                           child: Text(
                             "Signup",

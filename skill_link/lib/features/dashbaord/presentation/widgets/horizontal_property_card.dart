@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:get_it/get_it.dart';
-import 'package:skill_link/features/add_property/data/model/property_model/property_api_model.dart';
-import 'package:skill_link/features/add_property/domain/use_case/cart/add_to_cart_usecase.dart';
-import 'package:skill_link/features/add_property/domain/use_case/cart/remove_from_cart_usecase.dart';
-import 'package:skill_link/features/add_property/domain/use_case/cart/get_cart_usecase.dart';
+import 'package:skill_link/features/add_worker/data/model/property_model/property_api_model.dart';
+import 'package:skill_link/features/add_worker/domain/use_case/cart/add_to_cart_usecase.dart';
+import 'package:skill_link/features/add_worker/domain/use_case/cart/remove_from_cart_usecase.dart';
+import 'package:skill_link/features/add_worker/domain/use_case/cart/get_cart_usecase.dart';
 import 'package:skill_link/cores/utils/image_url_helper.dart'; // Ensure this import is correct
 
 class HorizontalPropertyCard extends StatefulWidget {
@@ -79,7 +79,7 @@ class _HorizontalPropertyCardState extends State<HorizontalPropertyCard> {
     if (_isLoading) return;
 
     print(
-      'DEBUG: Horizontal heart icon tapped for property: ${widget.property.id} - ${widget.property.title}',
+      'DEBUG: Horizontal heart icon tapped for worker: ${widget.property.id} - ${widget.property.title}',
     );
     print('DEBUG: Current favorite state: $_isFavorite');
 
@@ -183,7 +183,7 @@ class _HorizontalPropertyCardState extends State<HorizontalPropertyCard> {
 
   Widget _buildImageCarousel() {
     print(
-      'DEBUG: Building horizontal image carousel for property: ${widget.property.title}',
+      'DEBUG: Building horizontal image carousel for worker: ${widget.property.title}',
     );
     print('DEBUG: Number of images: ${widget.property.images.length}');
     print('DEBUG: Images: ${widget.property.images}');

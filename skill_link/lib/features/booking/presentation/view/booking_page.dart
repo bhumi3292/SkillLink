@@ -327,7 +327,7 @@ class _BookingPageState extends State<BookingPage> {
   }
 
   Widget _buildBookingCard(Map<String, dynamic> booking) {
-    final property = booking['property'] ?? {};
+    final property = booking['worker'] ?? {};
     final hirer = booking['Hirer'];
     final worker = booking['worker'];
     final status = booking['status'] ?? 'pending';

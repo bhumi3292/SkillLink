@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:skill_link/cores/network/api_service.dart';
-import 'package:skill_link/features/add_property/data/model/property_model/property_api_model.dart';
+import 'package:skill_link/features/add_worker/data/model/property_model/property_api_model.dart';
 
 abstract class DashboardRemoteDatasource {
   Future<List<PropertyApiModel>> getDashboardProperties();

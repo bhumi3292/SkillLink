@@ -1,3 +1,4 @@
+import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:skill_link/features/auth/presentation/view_model/register_view_model/register_event.dart';
 import 'package:skill_link/features/auth/presentation/view_model/register_view_model/register_state.dart';
 import 'package:skill_link/features/auth/presentation/view_model/register_view_model/register_view_model.dart';
@@ -24,6 +25,7 @@ class _SignupState extends State<Signup> {
       TextEditingController();
 
   String? _selectedStakeholder;
+  String _selectedCountryCode = '+977';
   String? _errorMessage;
   bool _passwordVisible = false;
   bool _confirmPasswordVisible = false;
@@ -41,52 +43,42 @@ class _SignupState extends State<Signup> {
     super.dispose();
   }
 
-  /// Toggles the visibility of the password in the password text field.
   void _togglePasswordVisibility() {
     setState(() {
       _passwordVisible = !_passwordVisible;
     });
   }
 
-  /// Toggles the visibility of the confirm password in its text field.
   void _toggleConfirmPasswordVisibility() {
     setState(() {
       _confirmPasswordVisible = !_confirmPasswordVisible;
     });
   }
 
-  /// Updates the selected stakeholder from the dropdown.
   void _selectStakeholder(String? value) {
     setState(() {
       _selectedStakeholder = value;
     });
   }
 
-  /// Validates the full name input field.
   String? _validateFullName(String? value) =>
       (value == null || value.isEmpty) ? 'Enter your full name' : null;
 
-  /// Validates the email input field.
   String? _validateEmail(String? value) {
     if (value == null || value.isEmpty) {
       return 'Enter your email';
     }
-    // Basic email format validation using a regex
     if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
       return 'Enter a valid email address';
     }
     return null;
   }
 
-  /// Validates the phone number input field.
-  String? _validatePhoneNumber(String? value) =>
-      (value == null || value.isEmpty) ? 'Enter your phone number' : null;
+  // phone validation is handled by the phone field's validator
 
-  /// Validates the stakeholder dropdown selection.
   String? _validateStakeholder(String? value) =>
       (value == null || value.isEmpty) ? 'Please select a role' : null;
 
-  /// Validates the password input field.
   String? _validatePassword(String? value) {
     if (value == null || value.isEmpty) {
       return 'Enter a password';
@@ -97,7 +89,6 @@ class _SignupState extends State<Signup> {
     return null;
   }
 
-  /// Validates the confirm password input field and checks if it matches the password.
   String? _validateConfirmPassword(String? value) {
     if (value == null || value.isEmpty) {
       return 'Confirm your password';
@@ -108,43 +99,37 @@ class _SignupState extends State<Signup> {
     return null;
   }
 
-  /// Checks if the password and confirm password fields have matching values.
   bool _passwordsMatch() =>
       _passwordController.text == _confirmPasswordController.text;
 
-  /// Handles the signup button press.
-  /// Validates the form and dispatches a RegisterNewUserEvent to the BLoC.
   void _onSignupPressed() {
-    // Clear previous local error message
     setState(() {
       _errorMessage = null;
     });
 
     if (_formKey.currentState!.validate()) {
-      // Perform local password matching validation before dispatching
       if (!_passwordsMatch()) {
         setState(() {
           _errorMessage = '⚠️ Passwords do not match.';
         });
-        return; // Stop if passwords don't match
+        return;
       }
 
-      // If validation passes, dispatch the event to the BLoC
       context.read<RegisterUserViewModel>().add(
         RegisterNewUserEvent(
           fullName: _fullNameController.text.trim(),
           email: _emailController.text.trim(),
-          phoneNumber: _phoneNumberController.text.trim(),
+          phoneNumber:
+              _selectedCountryCode + _phoneNumberController.text.trim(),
           stakeholder: _selectedStakeholder!.toLowerCase(),
           password: _passwordController.text,
           confirmPassword: _confirmPasswordController.text,
-          context: context, // Pass context for snackbar feedback
+          context: context,
         ),
       );
     }
   }
 
-  /// Creates a consistent input decoration for text form fields.
   InputDecoration _inputDecoration(
     String label,
     IconData icon, {
@@ -157,7 +142,6 @@ class _SignupState extends State<Signup> {
       filled: true,
       fillColor: Colors.grey.shade100,
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-      // Display local error message for password fields if they don't match
       errorText:
           (label == "Password" || label == "Confirm Password") &&
                   _errorMessage != null &&
@@ -179,15 +163,15 @@ class _SignupState extends State<Signup> {
               content: 'User registered successfully! Please log in.',
               isSuccess: true,
             );
-            // Navigate to login page on successful registration
             Navigator.pushReplacementNamed(context, '/login');
           } else if (state.errorMessage != null && !state.isLoading) {
-            // Display error message from BLoC if registration fails
             showMySnackbar(
               context: context,
               content: state.errorMessage!,
               isSuccess: false,
             );
+            // keep prints for now; will clean avoid_print warnings later
+            // ignore: avoid_print
             print("Registration Error (from BLoC): ${state.errorMessage}");
           }
         },
@@ -250,17 +234,37 @@ class _SignupState extends State<Signup> {
                     ),
                     const SizedBox(height: 15),
 
-                    // Phone Number
+                    // Phone Number (intl_phone_field)
                     SizedBox(
                       width: MediaQuery.of(context).size.width * 0.85,
-                      child: TextFormField(
+                      child: IntlPhoneField(
                         controller: _phoneNumberController,
                         decoration: _inputDecoration(
                           "Phone Number",
-                          Icons.phone,
+                          Icons.phone_outlined,
                         ),
+                        initialCountryCode:
+                            _selectedCountryCode.replaceAll('+', '') == '977'
+                                ? 'NP'
+                                : null,
+                        onCountryChanged: (country) {
+                          setState(() {
+                            _selectedCountryCode = '+${country.dialCode}';
+                          });
+                        },
+                        onChanged: (phone) {
+                          _phoneNumberController.text = phone.number;
+                          setState(() {
+                            _selectedCountryCode = '+${phone.countryCode}';
+                          });
+                        },
+                        validator: (value) {
+                          if (value == null || value.number.isEmpty) {
+                            return 'Enter your phone number';
+                          }
+                          return null;
+                        },
                         keyboardType: TextInputType.phone,
-                        validator: _validatePhoneNumber,
                       ),
                     ),
                     const SizedBox(height: 15),
@@ -269,7 +273,7 @@ class _SignupState extends State<Signup> {
                     SizedBox(
                       width: MediaQuery.of(context).size.width * 0.85,
                       child: DropdownButtonFormField<String>(
-                        value: _selectedStakeholder,
+                        initialValue: _selectedStakeholder,
                         decoration: _inputDecoration(
                           "Stake Holder",
                           Icons.person_pin,
@@ -335,7 +339,6 @@ class _SignupState extends State<Signup> {
                     ),
                     const SizedBox(height: 20),
 
-                    // Display local error message (e.g., password mismatch)
                     if (_errorMessage != null) ...[
                       Text(
                         _errorMessage!,

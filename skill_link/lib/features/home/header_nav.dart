@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:skill_link/features/auth/domain/entity/user_entity.dart'; // Import UserEntity
-import 'package:skill_link/features/add_property/presentation/view/add_worker_presentation.dart';
+import 'package:skill_link/features/add_worker/presentation/view/add_worker_presentation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HeaderNav extends StatefulWidget implements PreferredSizeWidget {
@@ -59,7 +59,7 @@ class _HeaderNavState extends State<HeaderNav> {
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => const AddWorkerPresentation(),
+                  builder: (context) => const AddPropertyPresentation(),
                 ),
               );
               widget.onworkerHomePressed?.call();

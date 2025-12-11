@@ -1,4 +1,4 @@
-import 'package:skill_link/features/add_property/presentation/view/add_property_presentation.dart';
+import 'package:skill_link/features/add_worker/presentation/view/add_worker_presentation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:skill_link'

@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:skill_link/features/favourite/domain/entity/cart/cart_entity.dart';
-import 'package:skill_link/features/add_property/data/model/property_model/property_api_model.dart';
+import 'package:skill_link/features/add_worker/data/model/property_model/property_api_model.dart';
 import 'package:skill_link/features/favourite/domain/entity/cart/cart_item_entity.dart';
 
 part 'cart_api_model.g.dart';

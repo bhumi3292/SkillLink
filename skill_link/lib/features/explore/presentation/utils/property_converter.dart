@@ -1,6 +1,6 @@
 import 'package:skill_link/features/explore/domain/entity/explore_property_entity.dart';
-import 'package:skill_link/features/add_property/data/model/property_model/property_api_model.dart';
-import 'package:skill_link/features/add_property/domain/entity/property/property_entity.dart';
+import 'package:skill_link/features/add_worker/data/model/property_model/property_api_model.dart';
+import 'package:skill_link/features/add_worker/domain/entity/property/property_entity.dart';
 
 class PropertyConverter {
   /// Convert PropertyApiModel to ExplorePropertyEntity

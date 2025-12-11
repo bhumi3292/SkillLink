@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:skill_link/features/add_property/data/model/property_model/property_api_model.dart';
+import 'package:skill_link/features/add_worker/data/model/property_model/property_api_model.dart';
 import 'package:skill_link/features/favourite/presentation/bloc/cart_bloc.dart';
 import 'package:skill_link/cores/utils/image_url_helper.dart'; // Make sure this path is correct
 
@@ -58,7 +58,7 @@ class _PropertyCardWidgetState extends State<PropertyCardWidget> {
     if (_isLoading) return;
 
     print(
-      'DEBUG: Heart icon tapped for property: ${widget.property.id} - ${widget.property.title}',
+      'DEBUG: Heart icon tapped for worker: ${widget.property.id} - ${widget.property.title}',
     );
     print('DEBUG: Current favorite state: $_isFavorite');
 
@@ -87,7 +87,7 @@ class _PropertyCardWidgetState extends State<PropertyCardWidget> {
 
   Widget _buildImageCarousel() {
     print(
-      'DEBUG: Building image carousel for property: ${widget.property.title}',
+      'DEBUG: Building image carousel for worker: ${widget.property.title}',
     );
     print('DEBUG: Number of images: ${widget.property.images.length}');
     print('DEBUG: Images: ${widget.property.images}');

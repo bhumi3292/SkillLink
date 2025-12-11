@@ -28,16 +28,20 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
         newPassword: _newPasswordController.text,
         confirmPassword: _confirmPasswordController.text,
       );
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Password reset successfully!')));
       Navigator.of(context).pushReplacementNamed('/login');
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(e.toString())));
     } finally {
-      setState(() => _loading = false);
+      if (mounted) {
+        setState(() => _loading = false);
+      }
     }
   }
 
@@ -56,7 +60,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
               borderRadius: BorderRadius.circular(18),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withOpacity(0.12),
+                  color: Colors.grey.withValues(alpha: 0.12),
                   blurRadius: 18,
                   offset: const Offset(0, 8),
                 ),

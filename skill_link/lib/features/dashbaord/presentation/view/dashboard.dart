@@ -6,7 +6,7 @@ import 'package:skill_link/features/profile/presentation/view_model/profile_view
 import 'package:skill_link/features/auth/domain/entity/user_entity.dart';
 import 'package:skill_link/app/service_locator/service_locator.dart';
 import 'package:skill_link/features/dashbaord/presentation/view_model/dashboard_view_model.dart';
-import 'package:skill_link/features/add_property/data/model/property_model/property_api_model.dart';
+import 'package:skill_link/features/add_worker/data/model/property_model/property_api_model.dart';
 import 'package:skill_link/features/dashbaord/presentation/widgets/property_card_widget.dart';
 import 'package:skill_link/features/dashbaord/presentation/widgets/horizontal_property_card.dart';
 import 'package:skill_link/features/explore/presentation/view/property_detail_page.dart';
@@ -198,7 +198,7 @@ class DashboardView extends StatelessWidget {
               child: CachedNetworkImage(
                 // Changed to CachedNetworkImage for consistency
                 imageUrl:
-                    "https://thumbs.dreamstime.com/z/commercial-real-estate-banner-blue-colors-hands-smartphone-buildings-skyscrapers-cityscape-property-searching-app-concept-186877789.jpg",
+                    "https://thumbs.dreamstime.com/z/commercial-real-estate-banner-blue-colors-hands-smartphone-buildings-skyscrapers-cityscape-worker-searching-app-concept-186877789.jpg",
                 fit: BoxFit.cover,
                 width: double.infinity,
                 height: 140,

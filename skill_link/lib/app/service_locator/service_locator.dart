@@ -25,21 +25,21 @@ import 'package:skill_link/features/profile/presentation/view_model/profile_view
 import 'package:skill_link/features/profile/domain/use_case/upload_profile_picture_usecase.dart';
 
 // Property
-import 'package:skill_link/features/add_property/data/data_source/property/remote_datasource/property_remote_datasource.dart';
-import 'package:skill_link/features/add_property/data/repository/property/remote_repository/property_remote_repository.dart';
-import 'package:skill_link/features/add_property/domain/repository/property_repository.dart';
-import 'package:skill_link/features/add_property/domain/use_case/property/get_all_properties_usecase.dart';
-import 'package:skill_link/features/add_property/domain/use_case/property/add_property_usecase.dart';
-import 'package:skill_link/features/add_property/domain/use_case/property/update_property_usecase.dart';
-import 'package:skill_link/features/add_property/domain/use_case/property/delete_property_usecase.dart';
-import 'package:skill_link/features/add_property/domain/use_case/category/get_all_categories_usecase.dart';
-import 'package:skill_link/features/add_property/domain/use_case/category/add_category_usecase.dart';
-import 'package:skill_link/features/add_property/presentation/property/view_model/add_property_view_model.dart';
+import 'package:skill_link/features/add_worker/data/data_source/property/remote_datasource/property_remote_datasource.dart';
+import 'package:skill_link/features/add_worker/data/repository/property/remote_repository/property_remote_repository.dart';
+import 'package:skill_link/features/add_worker/domain/repository/property_repository.dart';
+import 'package:skill_link/features/add_worker/domain/use_case/property/get_all_properties_usecase.dart';
+import 'package:skill_link/features/add_worker/domain/use_case/property/add_property_usecase.dart';
+import 'package:skill_link/features/add_worker/domain/use_case/property/update_property_usecase.dart';
+import 'package:skill_link/features/add_worker/domain/use_case/property/delete_property_usecase.dart';
+import 'package:skill_link/features/add_worker/domain/use_case/category/get_all_categories_usecase.dart';
+import 'package:skill_link/features/add_worker/domain/use_case/category/add_category_usecase.dart';
+import 'package:skill_link/features/add_worker/presentation/worker/view_model/add_worker_view_model.dart';
 
 // Category
-import 'package:skill_link/features/add_property/data/data_source/category/remote_datasource/category_remote_datasource.dart';
-import 'package:skill_link/features/add_property/data/repository/category/remote_repository/category_remote_repository.dart';
-import 'package:skill_link/features/add_property/domain/repository/category_repository.dart';
+import 'package:skill_link/features/add_worker/data/data_source/category/remote_datasource/category_remote_datasource.dart';
+import 'package:skill_link/features/add_worker/data/repository/category/remote_repository/category_remote_repository.dart';
+import 'package:skill_link/features/add_worker/domain/repository/category_repository.dart';
 
 // Cart
 import 'package:skill_link/features/favourite/data/datasource/cart_api_service.dart';

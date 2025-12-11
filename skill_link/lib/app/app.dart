@@ -12,7 +12,7 @@ import 'package:skill_link/features/auth/presentation/view/signup.dart';
 import 'package:skill_link/view/forgetPassword.dart';
 import 'package:skill_link/view/homeView.dart'; // Make sure this path is correct
 import 'package:skill_link/features/dashbaord/presentation/view/dashboard.dart'; // Make sure this path is correct
-import 'package:skill_link/features/add_property/presentation/view/add_property_presentation.dart';
+import 'package:skill_link/features/add_worker/presentation/view/add_worker_presentation.dart';
 import 'package:skill_link/features/auth/presentation/view/forgot_password_page.dart';
 import 'package:skill_link/features/auth/presentation/view/reset_password_page.dart';
 import 'package:skill_link/features/favourite/presentation/bloc/cart_bloc.dart';
@@ -21,7 +21,6 @@ import 'package:skill_link/features/favourite/presentation/bloc/cart_bloc.dart';
 import 'package:skill_link/features/auth/presentation/view_model/login_view_model/login_view_model.dart';
 import 'package:skill_link/features/auth/presentation/view_model/register_view_model/register_view_model.dart';
 import 'package:skill_link/features/profile/presentation/view_model/profile_view_model.dart';
-
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,8 +43,6 @@ class _MyAppState extends State<MyApp> {
     super.initState();
     // _handleIncomingLinks();
   }
-
-  
 
   @override
   void dispose() {
@@ -73,7 +70,10 @@ class _MyAppState extends State<MyApp> {
             GetPage(name: '/login', page: () => const Login()),
             GetPage(name: '/signup', page: () => const Signup()),
             GetPage(name: '/forget', page: () => const ForgetPassword()),
-            GetPage(name: '/forgot-password', page: () => const ForgotPasswordPage()),
+            GetPage(
+              name: '/forgot-password',
+              page: () => const ForgotPasswordPage(),
+            ),
             GetPage(
               name: '/reset-password',
               page: () {
@@ -84,7 +84,10 @@ class _MyAppState extends State<MyApp> {
             GetPage(name: '/dashboard', page: () => const DashboardPage()),
             GetPage(name: '/home', page: () => const HomeView()),
             GetPage(name: '/profile', page: () => const ProfilePage()),
-            GetPage(name: '/add-property', page: () => const AddPropertyPresentation()),
+            GetPage(
+              name: '/add-worker',
+              page: () => const AddPropertyPresentation(),
+            ),
           ],
         ),
       ),

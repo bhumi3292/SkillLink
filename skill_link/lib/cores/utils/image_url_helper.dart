@@ -4,7 +4,7 @@ class ImageUrlHelper {
   /// Constructs a full URL for an image, using ApiEndpoints.imageUrl as the base.
   ///
   /// - [imagePath]: The relative or absolute path of the image.
-  ///                Examples: 'uploads/profile/my_pic.jpg', '/uploads/property/house1.jpg',
+  ///                Examples: 'uploads/profile/my_pic.jpg', '/uploads/worker/house1.jpg',
   ///                'http://example.com/some_image.png'
   ///
   /// If [imagePath] is null, empty, or cannot form a valid URL,
