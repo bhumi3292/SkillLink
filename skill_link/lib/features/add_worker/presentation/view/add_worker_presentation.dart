@@ -1,251 +1,88 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:get_it/get_it.dart';
-import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:skill_link/features/add_worker/presentation/worker/view_model/add_worker_view_model.dart';
-import 'package:skill_link/features/add_worker/presentation/worker/view_model/add_worker_event.dart';
-import 'package:skill_link/features/add_worker/presentation/worker/view_model/add_worker_state.dart';
-import 'package:skill_link/features/add_worker/domain/entity/category/category_entity.dart';
-import 'package:skill_link/features/add_worker/domain/use_case/category/add_category_usecase.dart';
-import 'package:skill_link/features/add_worker/presentation/widgets/location_picker_widget.dart';
+import 'package:image_picker/image_picker.dart';
 
-class AddPropertyPresentation extends StatefulWidget {
-  const AddPropertyPresentation({super.key});
+import 'package:skill_link/app/service_locator/service_locator.dart';
+import 'package:skill_link/features/add_worker/domain/use_case/worker/add_worker_usecase.dart';
+import 'package:skill_link/features/add_worker/domain/entity/worker/worker_entity.dart';
+import 'package:skill_link/features/add_worker/domain/use_case/category/get_all_categories_usecase.dart';
+import 'package:skill_link/features/add_worker/domain/use_case/category/add_category_usecase.dart';
+import 'package:skill_link/features/add_worker/domain/entity/category/category_entity.dart';
+import 'package:skill_link/features/add_worker/presentation/widgets/location_picker_widget.dart';
+// dartz import removed — avoid symbol conflicts with Flutter's `State`
+
+class AddWorkerPresentation extends StatefulWidget {
+  const AddWorkerPresentation({super.key});
 
   @override
-  State<AddPropertyPresentation> createState() =>
-      _AddPropertyPresentationState();
+  State<AddWorkerPresentation> createState() => _AddWorkerPresentationState();
 }
 
-class _AddPropertyPresentationState extends State<AddPropertyPresentation> {
+class _AddWorkerPresentationState extends State<AddWorkerPresentation> {
   final _formKey = GlobalKey<FormState>();
-  late final AddPropertyBloc _bloc;
-  final ImagePicker _picker = ImagePicker();
-  final AddCategoryUsecase _addCategoryUsecase =
-      GetIt.instance<AddCategoryUsecase>();
-
-  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _skillController = TextEditingController();
+  final TextEditingController _experienceController = TextEditingController();
+  final TextEditingController _rateController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
-  final TextEditingController _priceController = TextEditingController();
+  // categories fetched from backend
+  List<CategoryEntity> _categories = [];
+  String? _selectedCategoryId;
   final TextEditingController _descriptionController = TextEditingController();
-  final TextEditingController _bedroomsController = TextEditingController();
-  final TextEditingController _bathroomsController = TextEditingController();
   final TextEditingController _newCategoryController = TextEditingController();
+  bool _isLoadingCategories = true;
+  String _rateUnit = 'per visit';
+  LatLng? _pickedLatLng;
+  String? _pickedAddress;
+  final List<String> _selectedImagePaths = [];
+  final List<String> _selectedVideoPaths = [];
 
-  LatLng? _selectedLocation;
-  String _selectedAddress = '';
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _skillController.dispose();
+    _experienceController.dispose();
+    _rateController.dispose();
+    _locationController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
     super.initState();
-    _bloc = GetIt.instance<AddPropertyBloc>();
-    _bloc.add(const InitializeAddPropertyForm());
+    _loadCategories();
   }
 
-  @override
-  void dispose() {
-    _titleController.dispose();
-    _locationController.dispose();
-    _priceController.dispose();
-    _descriptionController.dispose();
-    _bedroomsController.dispose();
-    _bathroomsController.dispose();
-    _newCategoryController.dispose();
-    _bloc.close();
-    super.dispose();
-  }
-
-  Future<void> _pickImages() async {
+  Future<void> _loadCategories() async {
+    setState(() => _isLoadingCategories = true);
     try {
-      final pickedFiles = await _picker.pickMultiImage(
-        imageQuality: 70,
-        maxWidth: 1920,
-        maxHeight: 1080,
+      final usecase = serviceLocator<GetAllCategoriesUsecase>();
+      final res = await usecase.call();
+      res.fold(
+        (f) {
+          setState(() {
+            _categories = [];
+            _isLoadingCategories = false;
+          });
+        },
+        (cats) {
+          setState(() {
+            _categories = cats;
+            if (_categories.isNotEmpty && _selectedCategoryId == null) {
+              _selectedCategoryId = _categories.first.id;
+            }
+            _isLoadingCategories = false;
+          });
+        },
       );
-      if (pickedFiles.isNotEmpty) {
-        for (var file in pickedFiles) {
-          _bloc.add(AddImageEvent(image: file));
-        }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${pickedFiles.length} image(s) selected'),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 2),
-          ),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error picking images: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+    } catch (_) {
+      setState(() => _isLoadingCategories = false);
     }
-  }
-
-  Future<void> _pickVideos() async {
-    try {
-      final pickedFile = await _picker.pickVideo(
-        source: ImageSource.gallery,
-        maxDuration: const Duration(minutes: 5), // Limit to 5 minutes
-      );
-      if (pickedFile != null) {
-        _bloc.add(AddVideoEvent(video: pickedFile));
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Video selected'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error picking video: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
-  Future<void> _openLocationPicker() async {
-    final result = await Navigator.push<Map<String, dynamic>>(
-      context,
-      MaterialPageRoute(
-        builder:
-            (context) => LocationPickerWidget(
-              onLocationSelected: (latLng, address) {
-                setState(() {
-                  _selectedLocation = latLng;
-                  _selectedAddress = address;
-                  _locationController.text = address;
-                });
-              },
-              initialLatLng: _selectedLocation,
-              initialAddress: _selectedAddress,
-            ),
-      ),
-    );
-
-    if (result != null && mounted) {
-      setState(() {
-        _selectedLocation = result['location'] as LatLng?;
-        _selectedAddress = result['address'] as String? ?? '';
-        _locationController.text = _selectedAddress;
-      });
-    }
-  }
-
-  Widget _buildCategoryDropdown(
-    List<CategoryEntity> categories,
-    String? selectedCategoryId,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'Category *',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFF003366),
-              ),
-            ),
-            Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFF003366),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: IconButton(
-                onPressed: _showAddCategoryDialog,
-                icon: const Icon(Icons.add, color: Colors.white, size: 20),
-                tooltip: 'Add New Category',
-                style: IconButton.styleFrom(padding: const EdgeInsets.all(8)),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: DropdownButtonFormField<String>(
-            value: selectedCategoryId,
-            decoration: const InputDecoration(
-              labelText: 'Select Category',
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Color(0xFF003366), width: 2),
-                borderRadius: BorderRadius.all(Radius.circular(8)),
-              ),
-            ),
-            items: [
-              const DropdownMenuItem(
-                value: null,
-                child: Text(
-                  'Select Category',
-                  style: TextStyle(color: Colors.grey),
-                ),
-              ),
-              ...categories.map(
-                (cat) => DropdownMenuItem(
-                  value: cat.id,
-                  child: Text(
-                    cat.categoryName,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-            onChanged: (val) => _bloc.add(SelectCategoryEvent(categoryId: val)),
-            validator: (val) => val == null ? 'Category is required' : null,
-            icon: const Icon(
-              Icons.keyboard_arrow_down,
-              color: Color(0xFF003366),
-            ),
-            dropdownColor: Colors.white,
-            style: const TextStyle(fontSize: 16, color: Colors.black),
-          ),
-        ),
-        if (categories.isEmpty)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Row(
-              children: [
-                Icon(Icons.info_outline, size: 16, color: Colors.orange[600]),
-                const SizedBox(width: 8),
-                Text(
-                  'No categories available. Click + to add one.',
-                  style: TextStyle(fontSize: 12, color: Colors.orange[600]),
-                ),
-              ],
-            ),
-          ),
-      ],
-    );
   }
 
   Future<void> _showAddCategoryDialog() async {
     _newCategoryController.clear();
-
     return showDialog(
       context: context,
       barrierDismissible: false,
@@ -255,10 +92,10 @@ class _AddPropertyPresentationState extends State<AddPropertyPresentation> {
             borderRadius: BorderRadius.circular(12),
           ),
           title: Row(
-            children: [
-              const Icon(Icons.add_circle, color: Color(0xFF003366)),
-              const SizedBox(width: 8),
-              const Text('Add New Category'),
+            children: const [
+              Icon(Icons.add_circle, color: Color(0xFF003366)),
+              SizedBox(width: 8),
+              Text('Add New Category'),
             ],
           ),
           content: Column(
@@ -268,11 +105,8 @@ class _AddPropertyPresentationState extends State<AddPropertyPresentation> {
                 controller: _newCategoryController,
                 decoration: const InputDecoration(
                   labelText: 'Category Name *',
-                  hintText: 'e.g., Apartment, House, Villa',
+                  hintText: 'e.g., Electrician, Plumber',
                   border: OutlineInputBorder(),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFF003366), width: 2),
-                  ),
                 ),
                 autofocus: true,
                 textCapitalization: TextCapitalization.words,
@@ -283,7 +117,7 @@ class _AddPropertyPresentationState extends State<AddPropertyPresentation> {
                   }
                 },
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               const Text(
                 'This category will be available for all workers.',
                 style: TextStyle(fontSize: 12, color: Colors.grey),
@@ -297,24 +131,20 @@ class _AddPropertyPresentationState extends State<AddPropertyPresentation> {
             ),
             ElevatedButton(
               onPressed: () async {
-                if (_newCategoryController.text.trim().isNotEmpty) {
-                  await _addNewCategory(_newCategoryController.text.trim());
+                final name = _newCategoryController.text.trim();
+                if (name.isNotEmpty) {
+                  await _addNewCategory(name);
                   Navigator.of(context).pop();
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Please enter a category name'),
-                      backgroundColor: Colors.orange,
                     ),
                   );
                 }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF003366),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
               ),
               child: const Text('Add Category'),
             ),
@@ -326,62 +156,50 @@ class _AddPropertyPresentationState extends State<AddPropertyPresentation> {
 
   Future<void> _addNewCategory(String categoryName) async {
     try {
-      // Show loading indicator
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (BuildContext context) {
-          return const AlertDialog(
-            content: Row(
-              children: [
-                CircularProgressIndicator(),
-                SizedBox(width: 16),
-                Text('Adding category...'),
-              ],
-            ),
-          );
-        },
+        builder: (_) => const Center(child: CircularProgressIndicator()),
       );
-
-      final newCategory = CategoryEntity(categoryName: categoryName);
-      final result = await _addCategoryUsecase(newCategory);
-
-      // Hide loading indicator
+      final addCategoryUsecase = serviceLocator<AddCategoryUsecase>();
+      final result = await addCategoryUsecase.call(
+        CategoryEntity(categoryName: categoryName),
+      );
       Navigator.of(context).pop();
-
       result.fold(
         (failure) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to add category: ${failure.message}'),
-              backgroundColor: Colors.red,
-              duration: const Duration(seconds: 3),
-            ),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Failed: ${failure.message}')));
         },
-        (_) {
+        (_) async {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Category "$categoryName" added successfully!'),
-              backgroundColor: Colors.green,
-              duration: const Duration(seconds: 2),
-            ),
+            SnackBar(content: Text('Category "$categoryName" added')),
           );
-          // Refresh categories in the form
-          _bloc.add(const InitializeAddPropertyForm());
+          await _loadCategories();
+          // Try to select the newly added category by name if available
+          try {
+            final match = _categories.firstWhere(
+              (c) => c.categoryName.toLowerCase() == categoryName.toLowerCase(),
+              orElse:
+                  () =>
+                      _categories.isNotEmpty
+                          ? _categories.first
+                          : CategoryEntity(categoryName: ''),
+            );
+            if (match.id != null && match.id!.isNotEmpty) {
+              setState(() {
+                _selectedCategoryId = match.id;
+              });
+            }
+          } catch (_) {}
         },
       );
     } catch (e) {
-      // Hide loading indicator
       Navigator.of(context).pop();
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error adding category: $e'),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 3),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error adding category: $e')));
     }
   }
 
@@ -389,342 +207,214 @@ class _AddPropertyPresentationState extends State<AddPropertyPresentation> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add New Worker'),
         backgroundColor: const Color(0xFF003366),
-        foregroundColor: Colors.white,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Get.back(),
-        ),
+        title: const Text('ADD'),
+        actions: [
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.notifications_none),
+          ),
+        ],
       ),
-      body: BlocProvider.value(
-        value: _bloc,
-        child: BlocConsumer<AddPropertyBloc, AddPropertyState>(
-          listener: (context, state) {
-            if (state.successMessage != null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.successMessage!),
-                  backgroundColor: Colors.green,
-                  duration: const Duration(seconds: 3),
-                ),
-              );
-              _formKey.currentState?.reset();
-              _titleController.clear();
-              _locationController.clear();
-              _priceController.clear();
-              _descriptionController.clear();
-              _bedroomsController.clear();
-              _bathroomsController.clear();
-              _bloc.add(const ClearAddPropertyMessageEvent());
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text(
+                'Service Details',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Basic Information',
+                style: TextStyle(color: Colors.grey),
+              ),
+              const SizedBox(height: 12),
 
-              // Navigate back after successful submission
-              Future.delayed(const Duration(seconds: 2), () {
-                Get.back();
-              });
-            } else if (state.errorMessage != null) {
-              print('Error in add worker: ${state.errorMessage}');
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.errorMessage!),
-                  backgroundColor: Colors.red,
-                  duration: const Duration(seconds: 8),
-                  action: SnackBarAction(
-                    label: 'Dismiss',
-                    textColor: Colors.white,
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                    },
-                  ),
-                ),
-              );
-              _bloc.add(const ClearAddPropertyMessageEvent());
-            }
-          },
-          builder: (context, state) {
-            if (state.isLoading) {
-              return const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 16),
-                    Text('Loading categories...'),
-                  ],
-                ),
-              );
-            }
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _buildTextField(
-                      _titleController,
-                      'WorkerTitle *',
-                      hintText: 'Enter Workertitle',
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Workertitle is required';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Location *',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        GestureDetector(
-                          onTap: _openLocationPicker,
-                          child: Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color:
-                                    _selectedLocation == null
-                                        ? Colors.red
-                                        : Colors.grey.shade300,
-                                width: 1.5,
-                              ),
-                              borderRadius: BorderRadius.circular(8),
-                              color: Colors.grey.shade50,
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.location_on,
-                                  color: const Color(0xFF003366),
-                                  size: 24,
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        _selectedAddress.isEmpty
-                                            ? 'Tap to select location on map'
-                                            : _selectedAddress,
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500,
-                                          color:
-                                              _selectedAddress.isEmpty
-                                                  ? Colors.grey
-                                                  : Colors.black,
-                                        ),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      if (_selectedLocation != null)
-                                        Padding(
-                                          padding: const EdgeInsets.only(
-                                            top: 4,
-                                          ),
-                                          child: Text(
-                                            'Lat: ${_selectedLocation!.latitude.toStringAsFixed(4)}, Lng: ${_selectedLocation!.longitude.toStringAsFixed(4)}',
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.grey,
-                                            ),
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                                const Icon(
-                                  Icons.arrow_forward_ios,
-                                  size: 16,
-                                  color: Colors.grey,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        if (_selectedLocation == null)
-                          const Padding(
-                            padding: EdgeInsets.only(top: 4),
-                            child: Text(
-                              'Location is required',
-                              style: TextStyle(color: Colors.red, fontSize: 12),
-                            ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    _buildTextField(
-                      _priceController,
-                      'Price *',
-                      keyboardType: TextInputType.number,
-                      hintText: 'Enter price (e.g., 1500)',
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Price is required';
-                        }
-                        final price = double.tryParse(value);
-                        if (price == null || price <= 0) {
-                          return 'Price must be a valid number greater than 0';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildTextField(
-                            _bedroomsController,
-                            'Bedrooms *',
-                            keyboardType: TextInputType.number,
-                            hintText: '0',
-                            validator: (value) {
-                              if (value == null || value.trim().isEmpty) {
-                                return 'Bedrooms is required';
-                              }
-                              final bedrooms = int.tryParse(value);
-                              if (bedrooms == null || bedrooms < 0) {
-                                return 'Bedrooms must be 0 or more';
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _buildTextField(
-                            _bathroomsController,
-                            'Bathrooms *',
-                            keyboardType: TextInputType.number,
-                            hintText: '0',
-                            validator: (value) {
-                              if (value == null || value.trim().isEmpty) {
-                                return 'Bathrooms is required';
-                              }
-                              final bathrooms = int.tryParse(value);
-                              if (bathrooms == null || bathrooms < 0) {
-                                return 'Bathrooms must be 0 or more';
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    _buildTextField(
-                      _descriptionController,
-                      'Description *',
-                      maxLines: 3,
-                      hintText: 'Describe the worker...',
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Description is required';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    _buildCategoryDropdown(
-                      state.categories,
-                      state.selectedCategoryId,
-                    ),
-                    const SizedBox(height: 16),
-                    _buildMediaSection(
-                      'Images *',
-                      state.selectedImages,
-                      _pickImages,
-                      (i) => _bloc.add(RemoveImageEvent(index: i)),
-                      isRequired: true,
-                    ),
-                    const SizedBox(height: 16),
-                    _buildMediaSection(
-                      'Videos (Optional)',
-                      state.selectedVideos,
-                      _pickVideos,
-                      (i) => _bloc.add(RemoveVideoEvent(index: i)),
-                      isRequired: false,
-                    ),
-                    const SizedBox(height: 32),
-                    ElevatedButton(
-                      onPressed:
-                          state.isSubmitting
-                              ? null
-                              : () {
-                                if (_formKey.currentState?.validate() ??
-                                    false) {
-                                  _bloc.add(
-                                    SubmitPropertyEvent(
-                                      title: _titleController.text,
-                                      location: _locationController.text,
-                                      price: _priceController.text,
-                                      description: _descriptionController.text,
-                                      bedrooms: _bedroomsController.text,
-                                      bathrooms: _bathroomsController.text,
-                                      categoryId: state.selectedCategoryId,
-                                      context: context,
-                                    ),
-                                  );
-                                }
-                              },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF003366),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+              _buildOutlinedField(_skillController, 'Primary Skill'),
+              const SizedBox(height: 12),
+
+              _buildOutlinedField(_experienceController, 'Experience'),
+              const SizedBox(height: 12),
+
+              _buildOutlinedField(
+                _descriptionController,
+                'Description',
+                maxLines: 4,
+              ),
+              const SizedBox(height: 12),
+
+              // Category dropdown (fetched from backend)
+              _isLoadingCategories
+                  ? SizedBox(
+                    height: 56,
+                    child: Center(child: CircularProgressIndicator()),
+                  )
+                  : _categories.isEmpty
+                  ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'No categories found',
+                        style: TextStyle(color: Colors.grey),
                       ),
-                      child:
-                          state.isSubmitting
-                              ? const Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2,
-                                    ),
-                                  ),
-                                  SizedBox(width: 12),
-                                  Text('Adding Property...'),
-                                ],
-                              )
-                              : const Text(
-                                'Add Property',
-                                style: TextStyle(fontSize: 16),
-                              ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          ElevatedButton.icon(
+                            onPressed: _showAddCategoryDialog,
+                            icon: const Icon(Icons.add),
+                            label: const Text('Add Category'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF003366),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          const Text(
+                            'Create a category to continue',
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ],
+                  )
+                  : DropdownButtonFormField<String>(
+                    value: _selectedCategoryId,
+                    decoration: InputDecoration(
+                      labelText: 'Category',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 14,
+                      ),
                     ),
-                  ],
+                    items:
+                        _categories
+                            .map(
+                              (c) => DropdownMenuItem(
+                                value: c.id,
+                                child: Text(c.categoryName),
+                              ),
+                            )
+                            .toList(),
+                    onChanged: (v) => setState(() => _selectedCategoryId = v),
+                    validator:
+                        (v) => (v == null || v.isEmpty) ? 'Required' : null,
+                  ),
+              const SizedBox(height: 12),
+
+              // Location picker row
+              GestureDetector(
+                onTap: _openLocationPicker,
+                child: AbsorbPointer(
+                  child: _buildOutlinedField(_locationController, 'Location'),
                 ),
               ),
-            );
-          },
+              const SizedBox(height: 12),
+
+              // Rate + unit
+              Row(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: _buildOutlinedField(
+                      _rateController,
+                      'Rate/visit',
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 1,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade400),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: _rateUnit,
+                          items: const [
+                            DropdownMenuItem(
+                              value: 'per visit',
+                              child: Text('per visit'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'per hour',
+                              child: Text('/hr'),
+                            ),
+                          ],
+                          onChanged:
+                              (v) =>
+                                  setState(() => _rateUnit = v ?? 'per visit'),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 20),
+
+              // Media pickers
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: _pickImages,
+                      icon: const Icon(Icons.photo_library),
+                      label: const Text('Pick Images'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: _pickVideo,
+                      icon: const Icon(Icons.video_library),
+                      label: const Text('Pick Video'),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+
+              // Simple preview counts
+              Text('Images selected: ${_selectedImagePaths.length}'),
+              Text('Videos selected: ${_selectedVideoPaths.length}'),
+              const SizedBox(height: 12),
+              // OK button styled as pill
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _onSubmit,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF003366),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                  child: const Text('OK', style: TextStyle(fontSize: 16)),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildTextField(
+  Widget _buildOutlinedField(
     TextEditingController controller,
     String label, {
     TextInputType keyboardType = TextInputType.text,
     int maxLines = 1,
-    String? hintText,
-    String? Function(String?)? validator,
   }) {
     return TextFormField(
       controller: controller,
@@ -732,122 +422,150 @@ class _AddPropertyPresentationState extends State<AddPropertyPresentation> {
       maxLines: maxLines,
       decoration: InputDecoration(
         labelText: label,
-        hintText: hintText,
-        border: const OutlineInputBorder(),
-        focusedBorder: const OutlineInputBorder(
-          borderSide: BorderSide(color: Color(0xFF003366), width: 2),
-        ),
-        errorBorder: const OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.red, width: 2),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 14,
         ),
       ),
-      validator:
-          validator ??
-          (value) => (value == null || value.isEmpty) ? 'Required' : null,
+      validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
     );
   }
 
-  Widget _buildMediaSection(
-    String label,
-    List<XFile> files,
-    VoidCallback onAdd,
-    Function(int) onRemove, {
-    bool isRequired = false,
+  Widget _buildTextField(
+    TextEditingController controller,
+    String label, {
+    TextInputType keyboardType = TextInputType.text,
+    String? Function(String?)? validator,
+    int maxLines = 1,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-            Row(
-              children: [
-                if (isRequired)
-                  const Text(
-                    '*',
-                    style: TextStyle(color: Colors.red, fontSize: 16),
-                  ),
-                const SizedBox(width: 8),
-                IconButton(
-                  onPressed: onAdd,
-                  icon: const Icon(Icons.add_a_photo),
-                  style: IconButton.styleFrom(
-                    backgroundColor: const Color(0xFF003366),
-                    foregroundColor: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-          ],
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      maxLines: maxLines,
+      decoration: InputDecoration(
+        labelText: label,
+        border: const OutlineInputBorder(),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 14,
         ),
-        if (files.isNotEmpty)
-          SizedBox(
-            height: 100,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: files.length,
-              itemBuilder:
-                  (context, i) => Stack(
-                    children: [
-                      Container(
-                        margin: const EdgeInsets.only(right: 8),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.file(
-                            File(files[i].path),
-                            width: 100,
-                            height: 100,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                width: 100,
-                                height: 100,
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[300],
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: const Icon(
-                                  Icons.error,
-                                  color: Colors.red,
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        top: 4,
-                        right: 4,
-                        child: GestureDetector(
-                          onTap: () => onRemove(i),
-                          child: Container(
-                            decoration: const BoxDecoration(
-                              color: Colors.red,
-                              shape: BoxShape.circle,
-                            ),
-                            padding: const EdgeInsets.all(4),
-                            child: const Icon(
-                              Icons.close,
-                              color: Colors.white,
-                              size: 16,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-            ),
-          ),
-        if (files.isEmpty && isRequired)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(
-              'At least one $label.toLowerCase() is required',
-              style: TextStyle(fontSize: 12, color: Colors.red[600]),
-            ),
-          ),
-      ],
+      ),
+      validator: validator,
     );
+  }
+
+  void _onSubmit() {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    _submitToBackend();
+  }
+
+  Future<void> _submitToBackend() async {
+    // Use primary skill as the display name for the worker when name is not provided
+    final skill = _skillController.text.trim();
+    final name = skill.isNotEmpty ? skill : 'Worker';
+    final experience = _experienceController.text.trim();
+    final rate = double.tryParse(_rateController.text.trim()) ?? 0.0;
+    final location = _pickedAddress ?? _locationController.text.trim();
+    final description = _descriptionController.text.trim();
+
+    final entity = WorkerEntity(
+      name: name,
+      primarySkill: skill,
+      experience: experience,
+      description: description,
+      location: location,
+      rate: rate,
+      categoryId: _selectedCategoryId,
+    );
+
+    final usecase = serviceLocator<AddWorkerUsecase>();
+    final params = AddWorkerParams(
+      worker: entity,
+      imagePaths: _selectedImagePaths,
+      videoPaths: _selectedVideoPaths,
+    );
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final result = await usecase.call(params);
+      Navigator.of(context).pop(); // close progress
+      result.fold(
+        (failure) {
+          final msg = failure.toString();
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Failed: $msg')));
+        },
+        (_) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Worker added')));
+          Navigator.of(context).pop({'added': true});
+        },
+      );
+    } catch (e) {
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+    }
+  }
+
+  void _openLocationPicker() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder:
+            (_) => LocationPickerWidget(
+              initialAddress: _pickedAddress,
+              initialLatLng: _pickedLatLng,
+              onLocationSelected: (latlng, address) {
+                setState(() {
+                  _pickedLatLng = latlng;
+                  _pickedAddress = address;
+                  _locationController.text = address;
+                });
+              },
+            ),
+      ),
+    );
+  }
+
+  Future<void> _pickImages() async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final List<XFile>? files = await picker.pickMultiImage();
+      if (files == null || files.isEmpty) return;
+      setState(() {
+        _selectedImagePaths.clear();
+        _selectedImagePaths.addAll(files.map((f) => f.path));
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Image pick error: $e')));
+    }
+  }
+
+  Future<void> _pickVideo() async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? file = await picker.pickVideo(source: ImageSource.gallery);
+      if (file == null) return;
+      setState(() {
+        _selectedVideoPaths.clear();
+        _selectedVideoPaths.add(file.path);
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Video pick error: $e')));
+    }
   }
 }

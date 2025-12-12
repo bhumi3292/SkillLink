@@ -19,7 +19,9 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ["worker", "hirer"],
+        // Accept both lowercase and TitleCase role values to remain compatible
+        // with existing tests and older clients (e.g., 'Hirer').
+        enum: ["worker", "hirer", "Worker", "Hirer"],
         required: true
     },
     password: {

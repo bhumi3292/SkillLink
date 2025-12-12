@@ -6,7 +6,7 @@ import 'package:skill_link/features/booking/presentation/widgets/worker_manage_a
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:skill_link/features/profile/presentation/view_model/profile_view_model.dart';
 import 'package:skill_link/features/add_worker/presentation/view/update_worker_page.dart';
-import 'package:skill_link/features/add_worker/domain/use_case/property/delete_property_usecase.dart';
+import 'package:skill_link/features/add_worker/domain/use_case/worker/delete_worker_usecase.dart';
 import 'package:get_it/get_it.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_paypal/flutter_paypal.dart';
@@ -332,24 +332,6 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                   ),
                   const SizedBox(height: 18),
                   Divider(thickness: 1.2, color: Colors.blueGrey[100]),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      const Icon(Icons.king_bed, color: Color(0xFF003366)),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Bedrooms: ${widget.property.bedrooms ?? '-'}',
-                        style: const TextStyle(fontWeight: FontWeight.w500),
-                      ),
-                      const SizedBox(width: 18),
-                      const Icon(Icons.bathtub, color: Color(0xFF003366)),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Bathrooms: ${widget.property.bathrooms ?? '-'}',
-                        style: const TextStyle(fontWeight: FontWeight.w500),
-                      ),
-                    ],
-                  ),
                   const SizedBox(height: 10),
                   Row(
                     children: [
@@ -967,7 +949,7 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
                                         );
                                         if (confirm != true) return;
                                         final deleteUsecase =
-                                            GetIt.I<DeletePropertyUsecase>();
+                                            GetIt.I<DeleteWorkerUsecase>();
                                         showDialog(
                                           context: context,
                                           barrierDismissible: false,

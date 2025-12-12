@@ -48,18 +48,22 @@ class ApiEndpoints {
   static String get uploadProfilePicture => "${baseUrl}auth/uploadImage";
 
   // ---------- Worker----------
-  static String get createWorker => "${baseUrl}properties";
-  // Backwards-compatible aliases for older code that still refers to "Property" endpoints
+  // Worker endpoints — use dedicated /workers routes. Keep property aliases
+  // for backward compatibility with older clients.
+  static String get createWorker => "${baseUrl}workers";
   static String get createProperty => createWorker;
-  static String get getAllProperties => "${baseUrl}properties"; // GET
+  static String get getAllProperties =>
+      "${baseUrl}workers"; // GET (returns workers)
+  static String get getAllWorkers => getAllProperties;
   static String get getPropertyById =>
-      "${baseUrl}properties/"; // GET by ID (append ID)
+      "${baseUrl}workers/"; // GET by ID (append ID)
+  static String get getWorkerById => getPropertyById;
   static String get deleteWorker =>
-      "${baseUrl}properties/"; // DELETE by ID (append ID)
+      "${baseUrl}workers/"; // DELETE by ID (append ID)
   static String get deleteProperty => deleteWorker;
 
   static String updateProperty(String id) {
-    return "${baseUrl}properties/$id";
+    return "${baseUrl}workers/$id";
   }
 
   // ---------- Category ----------
@@ -107,4 +111,13 @@ class ApiEndpoints {
       "${baseUrl}calendar/bookings/$bookingId/status";
   static String deleteBookingById(String bookingId) =>
       "${baseUrl}calendar/bookings/$bookingId";
+
+  // ---------- Notifications ----------
+  static String get getNotifications => "${baseUrl}notifications";
+  static String markNotificationRead(String notificationId) =>
+      "${baseUrl}notifications/$notificationId/read";
+  static String get markAllNotificationsRead =>
+      "${baseUrl}notifications/read-all";
+  static String deleteNotification(String notificationId) =>
+      "${baseUrl}notifications/$notificationId";
 }

@@ -1,9 +1,9 @@
 import 'package:equatable/equatable.dart';
-import 'package:skill_link/features/add_worker/domain/entity/property/property_entity.dart';
+import 'package:skill_link/features/add_worker/domain/entity/worker/worker_entity.dart';
 
 class CartItemEntity extends Equatable {
   final String? id;
-  final PropertyEntity property;
+  final WorkerEntity property;
 
   const CartItemEntity({this.id, required this.property});
 

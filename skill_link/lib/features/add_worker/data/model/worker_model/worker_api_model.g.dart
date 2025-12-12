@@ -1,21 +1,19 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'property_api_model.dart';
+part of 'worker_api_model.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
 // **************************************************************************
 
-PropertyApiModel _$PropertyApiModelFromJson(
+WorkerApiModel _$WorkerApiModelFromJson(
   Map<String, dynamic> json,
-) => PropertyApiModel(
+) => WorkerApiModel(
   id: json['_id'] as String?,
   images: (json['images'] as List<dynamic>).map((e) => e as String).toList(),
   videos: (json['videos'] as List<dynamic>?)?.map((e) => e as String).toList(),
   title: json['title'] as String,
   location: json['location'] as String,
-  bedrooms: (json['bedrooms'] as num?)?.toInt(),
-  bathrooms: (json['bathrooms'] as num?)?.toInt(),
   categoryId: json['categoryId'] as String,
   price: (json['price'] as num).toDouble(),
   description: json['description'] as String?,
@@ -30,15 +28,13 @@ PropertyApiModel _$PropertyApiModelFromJson(
           : DateTime.parse(json['updatedAt'] as String),
 );
 
-Map<String, dynamic> _$PropertyApiModelToJson(PropertyApiModel instance) =>
+Map<String, dynamic> _$WorkerApiModelToJson(WorkerApiModel instance) =>
     <String, dynamic>{
       '_id': instance.id,
       'images': instance.images,
       'videos': instance.videos,
       'title': instance.title,
       'location': instance.location,
-      'bedrooms': instance.bedrooms,
-      'bathrooms': instance.bathrooms,
       'categoryId': instance.categoryId,
       'price': instance.price,
       'description': instance.description,

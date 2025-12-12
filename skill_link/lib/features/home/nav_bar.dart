@@ -60,7 +60,7 @@ class _NavBarState extends State<NavBar> {
           if (isworker)
             const BottomNavigationBarItem(
               icon: Icon(Icons.add_box),
-              label: 'Add Property',
+              label: 'Add Worker',
             ),
           const BottomNavigationBarItem(
             icon: Icon(Icons.favorite_border),
@@ -85,7 +85,7 @@ class _NavBarState extends State<NavBar> {
           ),
           // Message page expects currentUserId; provide from profile state if available
           ChatPage(currentUserId: user?.userId ?? ''),
-          if (isworker) const AddPropertyPresentation(),
+          if (isworker) const AddWorkerPresentation(),
           const FavouritePage(),
           const BookingPage(),
           const ProfilePage(),

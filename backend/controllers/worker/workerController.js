@@ -1,6 +1,6 @@
 const fs = require('fs').promises;
 const path = require('path');
-const Property = require("../../models/Property");
+const Worker = require("../../models/Worker");
 const Category = require("../../models/Category");
 const User = require('../../models/User'); // Ensure this is needed/used or remove if not
 
@@ -31,20 +31,36 @@ const deleteFiles = async (filePaths) => {
     await Promise.all(deletionPromises);
 };
 
-// --- CREATE PROPERTY ---
+// --- CREATE WORKER ---
 exports.createProperty = async (req, res) => {
     // Collect paths of newly uploaded files so they can be cleaned up on error
     const uploadedFilePaths = [];
     try {
-        const { title, description, location, price, categoryId, bedrooms, bathrooms } = req.body;
+        // Accept several possible field names to be tolerant of frontend variations
+        const title = req.body.title || req.body.name || '';
+        const description = req.body.description || req.body.desc || '';
+        const location = req.body.location || req.body.address || '';
+        const priceRaw = req.body.price || req.body.rate || '';
+        const categoryId = req.body.categoryId || req.body.category || '';
+        const bedrooms = req.body.bedrooms;
+        const bathrooms = req.body.bathrooms;
+        // Normalize price to a Number if possible
+        const price = priceRaw === '' ? null : Number(priceRaw);
 
         // Add newly uploaded file paths to the cleanup array
         if (req.files?.images) uploadedFilePaths.push(...extractFilePaths(req.files.images));
         if (req.files?.videos) uploadedFilePaths.push(...extractFilePaths(req.files.videos));
 
-        // Basic validation
-        if (!title || !description || !location || !price || !categoryId) {
-            throw new Error("Missing required fields: title, description, location, price, categoryId.");
+        // Basic validation with improved messaging
+        const missing = [];
+        if (!title || title.toString().trim() === '') missing.push('title');
+        if (!description || description.toString().trim() === '') missing.push('description');
+        if (!location || location.toString().trim() === '') missing.push('location');
+        if (price === null || Number.isNaN(price)) missing.push('price');
+        if (!categoryId || categoryId.toString().trim() === '') missing.push('categoryId');
+
+        if (missing.length > 0) {
+            throw new Error(`Missing required fields: ${missing.join(', ')}.`);
         }
 
         // Check if category exists
@@ -53,17 +69,30 @@ exports.createProperty = async (req, res) => {
             throw new Error("Invalid category ID provided.");
         }
 
-        // Create a new property document
-        const property = new Property({
-            title, description, location, price, categoryId, bedrooms, bathrooms,
+        // Create a new worker document (schema shared with Property for now)
+        const worker = new Worker({
+            title: title.toString(),
+            description: description.toString(),
+            location: location.toString(),
+            price: price,
+            categoryId,
+            bedrooms: bedrooms ? Number(bedrooms) : undefined,
+            bathrooms: bathrooms ? Number(bathrooms) : undefined,
             images: extractFilePaths(req.files?.images),
             videos: extractFilePaths(req.files?.videos),
             worker: req.user._id, // Assumes `req.user` is set by your authentication middleware
         });
 
-        await property.save();
+        await worker.save();
 
-        res.status(201).json({ success: true, message: "Property created successfully!", data: property });
+        // Debug: log where the document was saved (model and collection)
+        try {
+            console.log('DEBUG: Saved worker document. model=', worker.constructor && worker.constructor.modelName, 'collection=', worker.collection && worker.collection.name, 'id=', worker._id?.toString());
+        } catch (logErr) {
+            console.warn('DEBUG: failed to log saved worker info', logErr);
+        }
+
+        res.status(201).json({ success: true, message: "Worker created successfully!", data: worker });
     } catch (err) {
         console.error("Create property error:", err.message);
         // Clean up uploaded files if something goes wrong before saving to DB
@@ -79,17 +108,32 @@ exports.createProperty = async (req, res) => {
 // --- GET ALL PROPERTIES --- (No changes needed)
 exports.getAllProperties = async (req, res) => {
     try {
-        const properties = await Property.find({})
+        // Debug: log model and collection info before query
+        try {
+            console.log('DEBUG: Worker modelName=', Worker.modelName || Worker.constructor && Worker.constructor.modelName);
+            console.log('DEBUG: Worker collection=', Worker.collection && Worker.collection.name);
+        } catch (dbgErr) {
+            console.warn('DEBUG: failed to log Worker model/collection', dbgErr);
+        }
+
+        const workers = await Worker.find({})
             .populate("categoryId", "category_name")
             .populate("worker", "fullName email phoneNumber profilePicture");
 
-        res.status(200).json({
-            success: true,
-            message: "Properties fetched successfully.",
-            data: properties,
-        });
+        // Debug: log number of documents returned and sample document collection
+        try {
+            console.log('DEBUG: Workers fetched count=', Array.isArray(workers) ? workers.length : 0);
+            if (Array.isArray(workers) && workers.length > 0) {
+                const first = workers[0];
+                console.log('DEBUG: first doc model=', first.constructor && first.constructor.modelName, 'collection=', first.collection && first.collection.name, 'id=', first._id?.toString());
+            }
+        } catch (dbgErr) {
+            console.warn('DEBUG: failed to log fetched workers info', dbgErr);
+        }
+
+        res.status(200).json({ success: true, message: "Workers fetched successfully.", data: workers });
     } catch (err) {
-        console.error("Get properties error:", err.message);
+        console.error("Get workers error:", err.message);
         res.status(500).json({ success: false, message: "Server error" });
     }
 };
@@ -97,17 +141,17 @@ exports.getAllProperties = async (req, res) => {
 // --- GET SINGLE PROPERTY --- (No changes needed)
 exports.getOneProperty = async (req, res) => {
     try {
-        const property = await Property.findById(req.params.id)
+        const worker = await Worker.findById(req.params.id)
             .populate("categoryId", "category_name")
             .populate("worker", "fullName email phoneNumber profilePicture");
 
-        if (!property) {
-            return res.status(404).json({ success: false, message: "Property not found" });
+        if (!worker) {
+            return res.status(404).json({ success: false, message: "Worker not found" });
         }
 
-        res.status(200).json({ success: true, data: property });
+        res.status(200).json({ success: true, data: worker });
     } catch (err) {
-        console.error("Get property error:", err.message);
+        console.error("Get worker error:", err.message);
         res.status(500).json({ success: false, message: "Server error" });
     }
 };
@@ -117,17 +161,17 @@ exports.updateProperty = async (req, res) => {
     console.log(req.body)
     const newlyUploadedFilePaths = []; // Track files uploaded during this request for potential cleanup
     try {
-        const property = await Property.findById(req.params.id);
-        if (!property) {
-            return res.status(404).json({ success: false, message: "Property not found." });
+        const worker = await Worker.findById(req.params.id);
+        if (!worker) {
+            return res.status(404).json({ success: false, message: "Worker not found." });
         }
 
-        if (property.worker.toString() !== req.user._id.toString()) {
+        if (worker.worker.toString() !== req.user._id.toString()) {
             // If unauthorized, clean up any newly uploaded files
             if (req.files?.images) newlyUploadedFilePaths.push(...extractFilePaths(req.files.images));
             if (req.files?.videos) newlyUploadedFilePaths.push(...extractFilePaths(req.files.videos));
             await deleteFiles(newlyUploadedFilePaths);
-            return res.status(403).json({ success: false, message: "Unauthorized access: You do not own this property." });
+            return res.status(403).json({ success: false, message: "Unauthorized access: You do not own this worker." });
         }
 
         const {
@@ -153,10 +197,10 @@ exports.updateProperty = async (req, res) => {
         }
 
         const filesToDelete = [];
-        property.images.forEach(oldPath => {
+        worker.images.forEach(oldPath => {
             if (!existingImagesToKeep.includes(oldPath)) filesToDelete.push(oldPath);
         });
-        property.videos.forEach(oldPath => {
+        worker.videos.forEach(oldPath => {
             if (!existingVideosToKeep.includes(oldPath)) filesToDelete.push(oldPath);
         });
         await deleteFiles(filesToDelete);
@@ -185,18 +229,18 @@ exports.updateProperty = async (req, res) => {
         }
 
 
-        const updatedProperty = await Property.findByIdAndUpdate(
+        const updatedWorker = await Worker.findByIdAndUpdate(
             req.params.id,
              updateData,
             { new: true, runValidators: true }
         );
 
-        if (!updatedProperty) {
-            // This might occur if property was deleted by another process
-            return res.status(404).json({ success: false, message: "Update failed: Property not found or already removed." });
+        if (!updatedWorker) {
+            // This might occur if worker was deleted by another process
+            return res.status(404).json({ success: false, message: "Update failed: Worker not found or already removed." });
         }
 
-        res.status(200).json({ success: true, message: "Property updated successfully!", data: updatedProperty });
+        res.status(200).json({ success: true, message: "Worker updated successfully!", data: updatedWorker });
     } catch (err) {
         console.error("Update property error:", err.message);
         // Clean up newly uploaded files if any other error occurs during the update process
@@ -210,24 +254,32 @@ exports.updateProperty = async (req, res) => {
 // --- DELETE PROPERTY --- (No changes needed)
 exports.deleteProperty = async (req, res) => {
     try {
-        const property = await Property.findById(req.params.id);
-        if (!property) {
-            return res.status(404).json({ success: false, message: "Property not found." });
+        const worker = await Worker.findById(req.params.id);
+        if (!worker) {
+            return res.status(404).json({ success: false, message: "Worker not found." });
         }
 
-        if (property.worker.toString() !== req.user._id.toString()) {
-            return res.status(403).json({ success: false, message: "Unauthorized access: You do not own this property." });
+        if (worker.worker.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ success: false, message: "Unauthorized access: You do not own this worker." });
         }
 
-        const allFilesToDelete = [...property.images, ...property.videos];
+        const allFilesToDelete = [...worker.images, ...worker.videos];
 
-        await property.deleteOne();
+        await worker.deleteOne();
 
         await deleteFiles(allFilesToDelete);
 
-        res.status(200).json({ success: true, message: "Property deleted successfully!" });
+        res.status(200).json({ success: true, message: "Worker deleted successfully!" });
     } catch (err) {
-        console.error("Delete property error:", err.message);
-        res.status(500).json({ success: false, message: "Server error. Failed to delete property." });
+        console.error("Delete worker error:", err.message);
+        res.status(500).json({ success: false, message: "Server error. Failed to delete worker." });
     }
 };
+
+// Provide alias exports using "Worker" naming so other parts of the codebase can
+// call createWorker/getAllWorkers/getOneWorker/updateWorker/deleteWorker if needed.
+exports.createWorker = exports.createProperty;
+exports.getAllWorkers = exports.getAllProperties;
+exports.getOneWorker = exports.getOneProperty;
+exports.updateWorker = exports.updateProperty;
+exports.deleteWorker = exports.deleteProperty;

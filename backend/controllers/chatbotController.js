@@ -17,7 +17,7 @@ const generateKnowledgeBase = async () => {
     try {
         const recentProperties = await Property.find({}).sort({ createdAt: -1 }).limit(5).populate('categoryId', 'category_name');
 
-        context += "LIVE PROPERTY INFORMATION (recent listings):\n";
+        context += "LIVE PROPERTY/WORKER LISTINGS (recent):\n";
         if (recentProperties.length > 0) {
             recentProperties.forEach(prop => {
                 context += `- Title: ${prop.title}, Type: ${prop.categoryId ? prop.categoryId.category_name : 'N/A'}, Location: ${prop.location}, Price: Rs. ${prop.price ? prop.price.toLocaleString() : 'N/A'}, Bedrooms: ${prop.bedrooms || 'N/A'}, Bathrooms: ${prop.bathrooms || 'N/A'}.\n`;
@@ -29,7 +29,7 @@ const generateKnowledgeBase = async () => {
         // Fetch some workers (optional, but good for context if chatbot is asked about them)
         const workers = await User.find({ role: "worker" }).limit(3); // Assuming 'role' field in User model
 
-        context += "\nOUR workerS (examples):\n";
+        context += "\nOUR WORKERS (examples):\n";
         if (workers.length > 0) {
             workers.forEach(worker => {
                 context += `- Name: ${worker.fullName || 'N/A'}, Email: ${worker.email || 'N/A'}.\n`;
@@ -40,7 +40,7 @@ const generateKnowledgeBase = async () => {
 
         // Fetch property categories
         const categories = await Category.find({});
-        context += "\nPROPERTY CATEGORIES:\n";
+        context += "\nCATEGORIES:\n";
         if (categories.length > 0) {
             context += categories.map(cat => `- ${cat.category_name}`).join('\n') + '.\n';
         } else {
@@ -79,8 +79,8 @@ Capabilities:
     - Then suggest a few properties based on that info.
 
 2. **Listing Properties:**
-    - If the user wants to list a property, guide them to the "Add Property" page.
-    - Explain the process: "If you're a worker, you can easily list your property on SkillLink! Just log in, go to the 'Add Property' section, and fill in the details. We'll help you showcase your space to potential renters."
+    - If the user wants to list a property or worker service, guide them to the "Add Worker" (Add Listing) page.
+    - Explain the process: "If you're a worker, you can easily list your offering on SkillLink! Just log in, go to the 'Add Worker' section (Add Listing), and fill in the details. We'll help you showcase your profile to potential Hirers."
 
 3. **Rental Process/Advice:**
     - If they ask about the rental process, offer general tips relevant to Nepal:
@@ -101,8 +101,8 @@ Always start your very first response with:
 The latest data from our system will appear below. Use it when available to generate your responses.
 
 ---
-[Insert LIVE PROPERTY INFORMATION and OUR workerS here]
-[Insert PROPERTY CATEGORIES here]
+[Insert LIVE PROPERTY/WORKER LISTINGS and OUR WORKERS here]
+[Insert CATEGORIES here]
 
 📚 FAQs for SkillLink:
 

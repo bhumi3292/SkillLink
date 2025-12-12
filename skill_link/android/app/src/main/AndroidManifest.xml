@@ -32,6 +32,11 @@
         </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
+        <!-- Google Maps API key: replace the string value in res/values/google_maps_api.xml -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="@string/google_maps_key" />
+
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />

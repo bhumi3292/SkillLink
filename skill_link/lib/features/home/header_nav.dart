@@ -55,15 +55,15 @@ class _HeaderNavState extends State<HeaderNav> {
       actions: [
         if (effectiveRole == 'worker')
           IconButton(
-            icon: const Icon(Icons.add_home_work_outlined, color: Colors.white),
+            icon: const Icon(Icons.work_outline, color: Colors.white),
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => const AddPropertyPresentation(),
+                  builder: (context) => const AddWorkerPresentation(),
                 ),
               );
               widget.onworkerHomePressed?.call();
-              debugPrint("worker Home icon pressed (via callback)");
+              debugPrint("Add Worker icon pressed (via callback)");
             },
           ),
         // Chat icon removed from header; message/chat is accessible from bottom navigation

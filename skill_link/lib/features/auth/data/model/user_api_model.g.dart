@@ -7,15 +7,15 @@ part of 'user_api_model.dart';
 // **************************************************************************
 
 UserApiModel _$UserApiModelFromJson(Map<String, dynamic> json) => UserApiModel(
-      userId: json['_id'] as String?,
-      fullName: json['fullName'] as String,
-      email: json['email'] as String,
-      phoneNumber: json['phoneNumber'] as String?,
-      stakeholder: json['role'] as String?,
-      password: json['password'] as String?,
-      confirmPassword: json['confirmPassword'] as String?,
-      profilePicture: json['profilePicture'] as String?,
-    );
+  userId: json['_id'] as String?,
+  fullName: json['fullName'] as String,
+  email: json['email'] as String,
+  phoneNumber: json['phoneNumber'] as String?,
+  stakeholder: json['role'] as String?,
+  password: json['password'] as String?,
+  confirmPassword: json['confirmPassword'] as String?,
+  profilePicture: json['profilePicture'] as String?,
+);
 
 Map<String, dynamic> _$UserApiModelToJson(UserApiModel instance) =>
     <String, dynamic>{

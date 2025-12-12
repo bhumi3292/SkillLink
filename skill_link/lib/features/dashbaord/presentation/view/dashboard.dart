@@ -6,7 +6,7 @@ import 'package:skill_link/features/profile/presentation/view_model/profile_view
 import 'package:skill_link/features/auth/domain/entity/user_entity.dart';
 import 'package:skill_link/app/service_locator/service_locator.dart';
 import 'package:skill_link/features/dashbaord/presentation/view_model/dashboard_view_model.dart';
-import 'package:skill_link/features/add_worker/data/model/property_model/property_api_model.dart';
+import 'package:skill_link/features/add_worker/data/model/worker_model/worker_api_model.dart';
 import 'package:skill_link/features/dashbaord/presentation/widgets/property_card_widget.dart';
 import 'package:skill_link/features/dashbaord/presentation/widgets/horizontal_property_card.dart';
 import 'package:skill_link/features/explore/presentation/view/property_detail_page.dart';
@@ -79,7 +79,7 @@ class DashboardView extends StatelessWidget {
 
   Widget _buildDashboardContent(
     BuildContext context,
-    List<PropertyApiModel> properties,
+    List<WorkerApiModel> properties,
   ) {
     final user = context.select<ProfileViewModel, UserEntity?>(
       (vm) => vm.state.user,

@@ -5,7 +5,10 @@ import 'package:image_picker/image_picker.dart';
 
 import 'package:skill_link/features/add_worker/domain/entity/category/category_entity.dart';
 
-abstract class AddPropertyState extends Equatable {
+// lib/features/add_worker/presentation/bloc/add_worker_state.dart
+
+
+abstract class AddWorkerState extends Equatable {
   final bool isLoading;
   final String? errorMessage;
   final String? successMessage;
@@ -15,7 +18,7 @@ abstract class AddPropertyState extends Equatable {
   final List<XFile> selectedVideos;
   final bool isSubmitting;
 
-  const AddPropertyState({
+  const AddWorkerState({
     this.isLoading = false,
     this.errorMessage,
     this.successMessage,
@@ -38,20 +41,23 @@ abstract class AddPropertyState extends Equatable {
     isSubmitting,
   ];
 
-  AddPropertyState copyWith({
+  AddWorkerState copyWith({
     bool? isLoading,
-    String? errorMessage, // Nullable to clear
-    String? successMessage, // Nullable to clear
+    String? errorMessage,
+    String? successMessage,
     List<CategoryEntity>? categories,
-    String? selectedCategoryId, // Nullable to clear
+    String? selectedCategoryId,
     List<XFile>? selectedImages,
     List<XFile>? selectedVideos,
     bool? isSubmitting,
   });
 }
 
-class AddPropertyInitial extends AddPropertyState {
-  const AddPropertyInitial({
+// -----------------------------
+// INITIAL STATE
+// -----------------------------
+class AddWorkerInitial extends AddWorkerState {
+  const AddWorkerInitial({
     super.isLoading = false,
     super.errorMessage,
     super.successMessage,
@@ -63,20 +69,20 @@ class AddPropertyInitial extends AddPropertyState {
   });
 
   @override
-  AddPropertyInitial copyWith({
+  AddWorkerInitial copyWith({
     bool? isLoading,
-    String? errorMessage, // <--- Add this
-    String? successMessage, // <--- Add this
+    String? errorMessage,
+    String? successMessage,
     List<CategoryEntity>? categories,
     String? selectedCategoryId,
     List<XFile>? selectedImages,
     List<XFile>? selectedVideos,
     bool? isSubmitting,
   }) {
-    return AddPropertyInitial(
+    return AddWorkerInitial(
       isLoading: isLoading ?? this.isLoading,
-      errorMessage: errorMessage, // Pass to constructor
-      successMessage: successMessage, // Pass to constructor
+      errorMessage: errorMessage,
+      successMessage: successMessage,
       categories: categories ?? this.categories,
       selectedCategoryId: selectedCategoryId,
       selectedImages: selectedImages ?? this.selectedImages,
@@ -86,33 +92,36 @@ class AddPropertyInitial extends AddPropertyState {
   }
 }
 
-class AddPropertyLoadingState extends AddPropertyState {
-  const AddPropertyLoadingState({
+// -----------------------------
+// LOADING STATE
+// -----------------------------
+class AddWorkerLoadingState extends AddWorkerState {
+  const AddWorkerLoadingState({
     required super.categories,
     super.isLoading = true,
     super.selectedCategoryId,
     super.selectedImages,
     super.selectedVideos,
     super.isSubmitting,
-    super.errorMessage, // Added here as well for consistency
-    super.successMessage, // Added here as well for consistency
+    super.errorMessage,
+    super.successMessage,
   });
 
   @override
-  AddPropertyLoadingState copyWith({
+  AddWorkerLoadingState copyWith({
     bool? isLoading,
-    String? errorMessage, // <--- Add this
-    String? successMessage, // <--- Add this
+    String? errorMessage,
+    String? successMessage,
     List<CategoryEntity>? categories,
     String? selectedCategoryId,
     List<XFile>? selectedImages,
     List<XFile>? selectedVideos,
     bool? isSubmitting,
   }) {
-    return AddPropertyLoadingState(
+    return AddWorkerLoadingState(
       isLoading: isLoading ?? this.isLoading,
-      errorMessage: errorMessage, // Pass to constructor
-      successMessage: successMessage, // Pass to constructor
+      errorMessage: errorMessage,
+      successMessage: successMessage,
       categories: categories ?? this.categories,
       selectedCategoryId: selectedCategoryId ?? this.selectedCategoryId,
       selectedImages: selectedImages ?? this.selectedImages,
@@ -122,8 +131,11 @@ class AddPropertyLoadingState extends AddPropertyState {
   }
 }
 
-class AddPropertyLoadedState extends AddPropertyState {
-  const AddPropertyLoadedState({
+// -----------------------------
+// LOADED STATE
+// -----------------------------
+class AddWorkerLoadedState extends AddWorkerState {
+  const AddWorkerLoadedState({
     required super.categories,
     super.isLoading = false,
     super.errorMessage,
@@ -135,22 +147,22 @@ class AddPropertyLoadedState extends AddPropertyState {
   });
 
   @override
-  AddPropertyLoadedState copyWith({
+  AddWorkerLoadedState copyWith({
     bool? isLoading,
-    String? errorMessage, // <--- Add this
-    String? successMessage, // <--- Add this
+    String? errorMessage,
+    String? successMessage,
     List<CategoryEntity>? categories,
     String? selectedCategoryId,
     List<XFile>? selectedImages,
     List<XFile>? selectedVideos,
     bool? isSubmitting,
   }) {
-    return AddPropertyLoadedState(
+    return AddWorkerLoadedState(
       isLoading: isLoading ?? this.isLoading,
-      errorMessage: errorMessage, // Pass to constructor
-      successMessage: successMessage, // Pass to constructor
+      errorMessage: errorMessage,
+      successMessage: successMessage,
       categories: categories ?? this.categories,
-      selectedCategoryId: selectedCategoryId, // Allow null to clear
+      selectedCategoryId: selectedCategoryId,
       selectedImages: selectedImages ?? this.selectedImages,
       selectedVideos: selectedVideos ?? this.selectedVideos,
       isSubmitting: isSubmitting ?? this.isSubmitting,
@@ -158,8 +170,11 @@ class AddPropertyLoadedState extends AddPropertyState {
   }
 }
 
-class AddPropertySubmissionSuccess extends AddPropertyState {
-  const AddPropertySubmissionSuccess({
+// -----------------------------
+// SUCCESS STATE
+// -----------------------------
+class AddWorkerSubmissionSuccess extends AddWorkerState {
+  const AddWorkerSubmissionSuccess({
     required super.successMessage,
     required super.categories,
     super.isLoading = false,
@@ -167,23 +182,23 @@ class AddPropertySubmissionSuccess extends AddPropertyState {
     super.selectedImages,
     super.selectedVideos,
     super.isSubmitting = false,
-    super.errorMessage, // Added here for consistency, though typically null on success
+    super.errorMessage,
   });
 
   @override
-  AddPropertySubmissionSuccess copyWith({
+  AddWorkerSubmissionSuccess copyWith({
     bool? isLoading,
-    String? errorMessage, // <--- Add this
-    String? successMessage, // <--- Add this
+    String? errorMessage,
+    String? successMessage,
     List<CategoryEntity>? categories,
     String? selectedCategoryId,
     List<XFile>? selectedImages,
     List<XFile>? selectedVideos,
     bool? isSubmitting,
   }) {
-    return AddPropertySubmissionSuccess(
+    return AddWorkerSubmissionSuccess(
       isLoading: isLoading ?? this.isLoading,
-      errorMessage: errorMessage, // Pass to constructor
+      errorMessage: errorMessage,
       successMessage: successMessage ?? this.successMessage,
       categories: categories ?? this.categories,
       selectedCategoryId: selectedCategoryId,
@@ -194,34 +209,36 @@ class AddPropertySubmissionSuccess extends AddPropertyState {
   }
 }
 
-class AddPropertyErrorState extends AddPropertyState {
-  const AddPropertyErrorState({
+// -----------------------------
+// ERROR STATE
+// -----------------------------
+class AddWorkerErrorState extends AddWorkerState {
+  const AddWorkerErrorState({
     required super.errorMessage,
-    super.categories =
-        const [], // Keep categories if error is not category loading
+    super.categories = const [],
     super.isLoading = false,
     super.selectedCategoryId,
     super.selectedImages,
     super.selectedVideos,
     super.isSubmitting = false,
-    super.successMessage, // Added here for consistency, though typically null on error
+    super.successMessage,
   });
 
   @override
-  AddPropertyErrorState copyWith({
+  AddWorkerErrorState copyWith({
     bool? isLoading,
-    String? errorMessage, // <--- Add this
-    String? successMessage, // <--- Add this
+    String? errorMessage,
+    String? successMessage,
     List<CategoryEntity>? categories,
     String? selectedCategoryId,
     List<XFile>? selectedImages,
     List<XFile>? selectedVideos,
     bool? isSubmitting,
   }) {
-    return AddPropertyErrorState(
+    return AddWorkerErrorState(
       isLoading: isLoading ?? this.isLoading,
       errorMessage: errorMessage ?? this.errorMessage,
-      successMessage: successMessage, // Pass to constructor
+      successMessage: successMessage,
       categories: categories ?? this.categories,
       selectedCategoryId: selectedCategoryId ?? this.selectedCategoryId,
       selectedImages: selectedImages ?? this.selectedImages,

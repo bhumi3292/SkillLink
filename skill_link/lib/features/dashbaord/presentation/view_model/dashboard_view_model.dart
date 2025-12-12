@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:skill_link/features/dashbaord/domain/use_case/get_dashboard_properties_usecase.dart';
-import 'package:skill_link/features/add_worker/data/model/property_model/property_api_model.dart';
+import 'package:skill_link/features/add_worker/data/model/worker_model/worker_api_model.dart';
 
 // Events
 abstract class DashboardEvent extends Equatable {
@@ -32,7 +32,7 @@ class DashboardLoading extends DashboardState {
 }
 
 class DashboardLoaded extends DashboardState {
-  final List<PropertyApiModel> properties;
+  final List<WorkerApiModel> properties;
 
   const DashboardLoaded(this.properties);
 

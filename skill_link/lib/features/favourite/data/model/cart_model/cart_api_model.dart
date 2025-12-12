@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:skill_link/features/favourite/domain/entity/cart/cart_entity.dart';
-import 'package:skill_link/features/add_worker/data/model/property_model/property_api_model.dart';
+import 'package:skill_link/features/add_worker/data/model/worker_model/worker_api_model.dart';
 import 'package:skill_link/features/favourite/domain/entity/cart/cart_item_entity.dart';
 
 part 'cart_api_model.g.dart';
@@ -62,7 +62,7 @@ class CartApiModel extends Equatable {
 class CartItemApiModel extends Equatable {
   @JsonKey(name: '_id')
   final String? id;
-  final PropertyApiModel property;
+  final WorkerApiModel property;
 
   const CartItemApiModel({this.id, required this.property});
 
@@ -77,7 +77,7 @@ class CartItemApiModel extends Equatable {
   factory CartItemApiModel.fromEntity(CartItemEntity entity) {
     return CartItemApiModel(
       id: entity.id,
-      property: PropertyApiModel.fromEntity(entity.property),
+      property: WorkerApiModel.fromEntity(entity.property),
     );
   }
 

@@ -1,9 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:skill_link/cores/network/api_service.dart';
-import 'package:skill_link/features/add_worker/data/model/property_model/property_api_model.dart';
+import 'package:skill_link/features/add_worker/data/model/worker_model/worker_api_model.dart';
 
 abstract class DashboardRemoteDatasource {
-  Future<List<PropertyApiModel>> getDashboardProperties();
+  Future<List<WorkerApiModel>> getDashboardProperties();
 }
 
 class DashboardRemoteDatasourceImpl implements DashboardRemoteDatasource {
@@ -13,14 +13,14 @@ class DashboardRemoteDatasourceImpl implements DashboardRemoteDatasource {
     : _apiService = apiService;
 
   @override
-  Future<List<PropertyApiModel>> getDashboardProperties() async {
+  Future<List<WorkerApiModel>> getDashboardProperties() async {
     try {
       final response = await _apiService.dio.get('/properties');
 
       if (response.statusCode == 200 && response.data['success'] == true) {
         final List<dynamic> propertiesJson = response.data['data'];
         return propertiesJson
-            .map((json) => PropertyApiModel.fromJson(json))
+            .map((json) => WorkerApiModel.fromJson(json))
             .toList();
       } else {
         throw Exception('Failed to load dashboard properties');

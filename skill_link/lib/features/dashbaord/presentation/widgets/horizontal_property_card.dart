@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:get_it/get_it.dart';
-import 'package:skill_link/features/add_worker/data/model/property_model/property_api_model.dart';
+import 'package:skill_link/features/add_worker/data/model/worker_model/worker_api_model.dart';
 import 'package:skill_link/features/add_worker/domain/use_case/cart/add_to_cart_usecase.dart';
 import 'package:skill_link/features/add_worker/domain/use_case/cart/remove_from_cart_usecase.dart';
 import 'package:skill_link/features/add_worker/domain/use_case/cart/get_cart_usecase.dart';
 import 'package:skill_link/cores/utils/image_url_helper.dart'; // Ensure this import is correct
 
 class HorizontalPropertyCard extends StatefulWidget {
-  final PropertyApiModel property;
+  final WorkerApiModel property;
   final VoidCallback? onTap;
   // Removed final String? baseUrl;
   // As ImageUrlHelper no longer needs it directly passed, it relies on ApiEndpoints.
@@ -396,28 +396,7 @@ class _HorizontalPropertyCardState extends State<HorizontalPropertyCard> {
                       fontSize: 14,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(Icons.bed, size: 14, color: Colors.grey[600]),
-                      const SizedBox(width: 2),
-                      Text(
-                        '${widget.property.bedrooms ?? 0}',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 10),
-                      ),
-                      const SizedBox(width: 8),
-                      Icon(
-                        Icons.bathtub_outlined,
-                        size: 14,
-                        color: Colors.grey[600],
-                      ),
-                      const SizedBox(width: 2),
-                      Text(
-                        '${widget.property.bathrooms ?? 0}',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 10),
-                      ),
-                    ],
-                  ),
+                  const SizedBox(height: 8),
                 ],
               ),
             ),

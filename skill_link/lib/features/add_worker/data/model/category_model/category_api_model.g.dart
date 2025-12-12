@@ -7,19 +7,18 @@ part of 'category_api_model.dart';
 // **************************************************************************
 
 CategoryApiModel _$CategoryApiModelFromJson(Map<String, dynamic> json) {
-  $checkKeys(
-    json,
-    requiredKeys: const ['category_name'],
-  );
+  $checkKeys(json, requiredKeys: const ['category_name']);
   return CategoryApiModel(
     id: json['_id'] as String?,
     categoryName: json['category_name'] as String,
-    createdAt: json['createdAt'] == null
-        ? null
-        : DateTime.parse(json['createdAt'] as String),
-    updatedAt: json['updatedAt'] == null
-        ? null
-        : DateTime.parse(json['updatedAt'] as String),
+    createdAt:
+        json['createdAt'] == null
+            ? null
+            : DateTime.parse(json['createdAt'] as String),
+    updatedAt:
+        json['updatedAt'] == null
+            ? null
+            : DateTime.parse(json['updatedAt'] as String),
   );
 }
 

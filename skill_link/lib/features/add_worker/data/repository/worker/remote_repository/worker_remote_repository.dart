@@ -1,16 +1,16 @@
-// lib/features/add_worker/data/repository/property_remote_repository.dart
+// lib/features/add_worker/data/repository/worker_remote_repository.dart
 
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:skill_link/cores/error/failure.dart';
-import 'package:skill_link/features/add_worker/data/data_source/property/remote_datasource/property_remote_datasource.dart';
-import 'package:skill_link/features/add_worker/domain/entity/property/property_entity.dart';
+import 'package:skill_link/features/add_worker/data/data_source/worker/remote_datasource/worker_remote_datasource.dart';
+import 'package:skill_link/features/add_worker/domain/entity/worker/worker_entity.dart';
 import 'package:skill_link/features/add_worker/domain/repository/property_repository.dart';
 
-class PropertyRemoteRepository implements IPropertyRepository {
-  final PropertyRemoteDatasource _remoteDataSource;
+class WorkerRemoteRepository implements IWorkerRepository {
+  final WorkerRemoteDatasource _remoteDataSource;
 
-  PropertyRemoteRepository({required PropertyRemoteDatasource remoteDataSource})
+  WorkerRemoteRepository({required WorkerRemoteDatasource remoteDataSource})
     : _remoteDataSource = remoteDataSource;
 
   // Helper to convert DioException to Failure types
@@ -43,88 +43,86 @@ class PropertyRemoteRepository implements IPropertyRepository {
   }
 
   @override
-  Future<Either<Failure, void>> addProperty(
-    PropertyEntity property,
+  Future<Either<Failure, void>> addWorker(
+    WorkerEntity worker,
     List<String> imagePaths,
     List<String> videoPaths,
   ) async {
     try {
-      await _remoteDataSource.addProperty(property, imagePaths, videoPaths);
+      await _remoteDataSource.addWorker(worker, imagePaths, videoPaths);
       return const Right(null);
     } on DioException catch (e) {
       return Left(_handleDioError(e));
     } catch (e) {
       return Left(
         RemoteDatabaseFailure(
-          message: 'Failed to add Workerremotely: ${e.toString()}',
+          message: 'Failed to add Worker remotely: ${e.toString()}',
         ),
       );
     }
   }
 
   @override
-  Future<Either<Failure, void>> deleteProperty(String propertyId) async {
+  Future<Either<Failure, void>> deleteWorker(String workerId) async {
     try {
-      await _remoteDataSource.deleteProperty(propertyId);
+      await _remoteDataSource.deleteWorker(workerId);
       return const Right(null);
     } on DioException catch (e) {
       return Left(_handleDioError(e));
     } catch (e) {
       return Left(
         RemoteDatabaseFailure(
-          message: 'Failed to delete Workerremotely: ${e.toString()}',
+          message: 'Failed to delete Worker remotely: ${e.toString()}',
         ),
       );
     }
   }
 
   @override
-  Future<Either<Failure, List<PropertyEntity>>> getProperties() async {
+  Future<Either<Failure, List<WorkerEntity>>> getWorkers() async {
     try {
-      final properties = await _remoteDataSource.getProperties();
-      return Right(properties);
+      final workers = await _remoteDataSource.getWorkers();
+      return Right(workers);
     } on DioException catch (e) {
       return Left(_handleDioError(e));
     } catch (e) {
       return Left(
         RemoteDatabaseFailure(
-          message: 'Failed to get properties remotely: ${e.toString()}',
+          message: 'Failed to get workers remotely: ${e.toString()}',
         ),
       );
     }
   }
 
   @override
-  Future<Either<Failure, PropertyEntity>> getPropertyById(
-    String propertyId,
-  ) async {
+  Future<Either<Failure, WorkerEntity>> getWorkerById(String workerId) async {
     try {
-      final property = await _remoteDataSource.getPropertyById(propertyId);
-      return Right(property);
+      final worker = await _remoteDataSource.getWorkerById(workerId);
+      return Right(worker);
     } on DioException catch (e) {
       return Left(_handleDioError(e));
     } catch (e) {
       return Left(
         RemoteDatabaseFailure(
-          message: 'Failed to get Workerby ID remotely: ${e.toString()}',
+          message: 'Failed to get Worker by ID remotely: ${e.toString()}',
         ),
       );
     }
   }
 
   @override
-  Future<Either<Failure, void>> updateProperty(
-    String propertyId,
-    PropertyEntity property,
+  Future<Either<Failure, void>> updateWorker(
+    String workerId,
+    WorkerEntity worker,
     List<String> newImagePaths,
     List<String> newVideoPaths,
     List<String> existingImages,
     List<String> existingVideos,
   ) async {
     try {
-      await _remoteDataSource.updateProperty(
-        propertyId,
-        property,
+      await _remoteDataSource.updateWorker(
+        workerId,
+        worker,
         newImagePaths,
         newVideoPaths,
         existingImages,
@@ -136,7 +134,7 @@ class PropertyRemoteRepository implements IPropertyRepository {
     } catch (e) {
       return Left(
         RemoteDatabaseFailure(
-          message: 'Failed to update Workerremotely:  [${e.toString()}',
+          message: 'Failed to update Worker remotely:  [${e.toString()}',
         ),
       );
     }

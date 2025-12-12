@@ -191,8 +191,10 @@ class _ExplorePropertyCardState extends State<ExplorePropertyCard> {
                         )
                         : Container(
                           color: Colors.grey[300],
-                          child: const Icon(
-                            Icons.home,
+                          child: Icon(
+                            widget.property.workerName != null
+                                ? Icons.person
+                                : Icons.home,
                             size: 48,
                             color: Colors.grey,
                           ),
@@ -208,7 +210,7 @@ class _ExplorePropertyCardState extends State<ExplorePropertyCard> {
                 children: [
                   // Title
                   Text(
-                    widget.property.title ?? 'Unknown Property',
+                    widget.property.title ?? 'Unknown Service',
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -218,6 +220,20 @@ class _ExplorePropertyCardState extends State<ExplorePropertyCard> {
 
                   const SizedBox(height: 4),
 
+                  // Subtitle: show worker name or short description
+                  if (widget.property.workerName != null &&
+                      widget.property.workerName!.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 6.0),
+                      child: Text(
+                        widget.property.workerName!,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: Colors.grey[700],
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   // Location
                   Row(
                     children: [
@@ -242,81 +258,141 @@ class _ExplorePropertyCardState extends State<ExplorePropertyCard> {
 
                   const SizedBox(height: 12),
 
-                  // WorkerFeatures
-                  Row(
-                    children: [
-                      _buildFeatureChip(
-                        icon: Icons.bed,
-                        label: '${widget.property.bedrooms ?? 0} Beds',
-                      ),
-                      const SizedBox(width: 8),
-                      _buildFeatureChip(
-                        icon: Icons.bathtub_outlined,
-                        label: '${widget.property.bathrooms ?? 0} Baths',
-                      ),
-                    ],
-                  ),
-
                   const SizedBox(height: 12),
 
-                  // Price
+                  // Price and actions
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'Rs ${widget.property.price?.toStringAsFixed(0) ?? '0'}',
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: theme.primaryColor,
-                        ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Rs ${widget.property.price?.toStringAsFixed(0) ?? '0'}',
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: theme.primaryColor,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '/ per visit',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
                       ),
-                      BlocBuilder<CartBloc, CartState>(
-                        builder: (context, cartState) {
-                          bool isFavorite = false;
-                          if (cartState is CartLoaded &&
-                              widget.property.id != null) {
-                            isFavorite =
-                                cartState.cart.items?.any(
-                                  (item) =>
-                                      item.property.id == widget.property.id,
-                                ) ??
-                                false;
-                          }
-                          return BlocListener<CartBloc, CartState>(
-                            listener: (context, state) {
-                              if (state is CartLoaded) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Added to favourites!'),
-                                  ),
-                                );
-                              } else if (state is CartError) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text(state.message)),
-                                );
-                              }
-                            },
-                            child: IconButton(
-                              icon: Icon(
-                                isFavorite
-                                    ? Icons.favorite
-                                    : Icons.favorite_border,
-                                color:
-                                    isFavorite ? Colors.red : Colors.grey[600],
-                              ),
+                      Row(
+                        children: [
+                          // Call button
+                          if (widget.property.workerPhone != null &&
+                              widget.property.workerPhone!.isNotEmpty)
+                            IconButton(
+                              icon: const Icon(Icons.call, color: Colors.green),
                               onPressed: () {
-                                if (widget.property.id != null && !isFavorite) {
-                                  context.read<CartBloc>().add(
-                                    AddToCartEvent(widget.property.id!),
-                                  );
-                                }
+                                // Launch phone intent handled by caller
                               },
                             ),
-                          );
-                        },
+                          // Message button
+                          if (widget.property.workerEmail != null &&
+                              widget.property.workerEmail!.isNotEmpty)
+                            IconButton(
+                              icon: const Icon(Icons.email, color: Colors.blue),
+                              onPressed: () {
+                                // Launch email intent handled by caller
+                              },
+                            ),
+                          BlocBuilder<CartBloc, CartState>(
+                            builder: (context, cartState) {
+                              bool isFavorite = false;
+                              if (cartState is CartLoaded &&
+                                  widget.property.id != null) {
+                                isFavorite =
+                                    cartState.cart.items?.any(
+                                      (item) =>
+                                          item.property.id ==
+                                          widget.property.id,
+                                    ) ??
+                                    false;
+                              }
+                              return BlocListener<CartBloc, CartState>(
+                                listener: (context, state) {
+                                  if (state is CartLoaded) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Added to favourites!'),
+                                      ),
+                                    );
+                                  } else if (state is CartError) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text(state.message)),
+                                    );
+                                  }
+                                },
+                                child: IconButton(
+                                  icon: Icon(
+                                    isFavorite
+                                        ? Icons.favorite
+                                        : Icons.favorite_border,
+                                    color:
+                                        isFavorite
+                                            ? Colors.red
+                                            : Colors.grey[600],
+                                  ),
+                                  onPressed: () {
+                                    if (widget.property.id != null &&
+                                        !isFavorite) {
+                                      context.read<CartBloc>().add(
+                                        AddToCartEvent(widget.property.id!),
+                                      );
+                                    }
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+                        ],
                       ),
                     ],
                   ),
+                  const SizedBox(height: 8),
+                  // Skill chip
+                  if (widget.property.categoryName != null &&
+                      widget.property.categoryName!.isNotEmpty)
+                    Wrap(
+                      spacing: 6,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.work,
+                                size: 14,
+                                color: Colors.grey,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                widget.property.categoryName!,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[800],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                 ],
               ),
             ),

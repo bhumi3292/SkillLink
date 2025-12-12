@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:skill_link/features/add_worker/data/model/property_model/property_api_model.dart';
+import 'package:skill_link/features/add_worker/data/model/worker_model/worker_api_model.dart';
 import 'package:skill_link/features/favourite/presentation/bloc/cart_bloc.dart';
 import 'package:skill_link/cores/utils/image_url_helper.dart'; // Make sure this path is correct
 
 class PropertyCardWidget extends StatefulWidget {
-  final PropertyApiModel property;
+  final WorkerApiModel property;
   final VoidCallback? onTap;
   final bool showFavoriteButton;
   final bool showRemoveButton;
@@ -321,42 +321,7 @@ class _PropertyCardWidgetState extends State<PropertyCardWidget> {
                               fontSize: 15,
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              if (widget.property.bedrooms != null)
-                                Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.bed,
-                                      size: 16,
-                                      color: Colors.grey,
-                                    ),
-                                    const SizedBox(width: 2),
-                                    Text(
-                                      '${widget.property.bedrooms}',
-                                      style: const TextStyle(fontSize: 13),
-                                    ),
-                                    const SizedBox(width: 8),
-                                  ],
-                                ),
-                              if (widget.property.bathrooms != null)
-                                Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.bathtub,
-                                      size: 16,
-                                      color: Colors.grey,
-                                    ),
-                                    const SizedBox(width: 2),
-                                    Text(
-                                      '${widget.property.bathrooms}',
-                                      style: const TextStyle(fontSize: 13),
-                                    ),
-                                  ],
-                                ),
-                            ],
-                          ),
+                          const SizedBox(height: 8),
                           const SizedBox(height: 8),
                         ],
                       ),

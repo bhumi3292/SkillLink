@@ -6,7 +6,7 @@ class SharePropertyWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Share Property')),
+      appBar: AppBar(title: const Text('Share Your Service')),
       body: const Center(child: Text('Share WorkerWidget')),
     );
   }

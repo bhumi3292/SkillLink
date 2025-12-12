@@ -25,16 +25,15 @@ import 'package:skill_link/features/profile/presentation/view_model/profile_view
 import 'package:skill_link/features/profile/domain/use_case/upload_profile_picture_usecase.dart';
 
 // Property
-import 'package:skill_link/features/add_worker/data/data_source/property/remote_datasource/property_remote_datasource.dart';
-import 'package:skill_link/features/add_worker/data/repository/property/remote_repository/property_remote_repository.dart';
+import 'package:skill_link/features/add_worker/data/data_source/worker/remote_datasource/worker_remote_datasource.dart';
+import 'package:skill_link/features/add_worker/data/repository/worker/remote_repository/worker_remote_repository.dart';
 import 'package:skill_link/features/add_worker/domain/repository/property_repository.dart';
-import 'package:skill_link/features/add_worker/domain/use_case/property/get_all_properties_usecase.dart';
-import 'package:skill_link/features/add_worker/domain/use_case/property/add_property_usecase.dart';
-import 'package:skill_link/features/add_worker/domain/use_case/property/update_property_usecase.dart';
-import 'package:skill_link/features/add_worker/domain/use_case/property/delete_property_usecase.dart';
+import 'package:skill_link/features/add_worker/domain/use_case/worker/get_all_worker_usecase.dart';
+import 'package:skill_link/features/add_worker/domain/use_case/worker/add_worker_usecase.dart';
+import 'package:skill_link/features/add_worker/domain/use_case/worker/update_worker_usecase.dart';
+import 'package:skill_link/features/add_worker/domain/use_case/worker/delete_worker_usecase.dart';
 import 'package:skill_link/features/add_worker/domain/use_case/category/get_all_categories_usecase.dart';
 import 'package:skill_link/features/add_worker/domain/use_case/category/add_category_usecase.dart';
-import 'package:skill_link/features/add_worker/presentation/worker/view_model/add_worker_view_model.dart';
 
 // Category
 import 'package:skill_link/features/add_worker/data/data_source/category/remote_datasource/category_remote_datasource.dart';
@@ -107,8 +106,8 @@ void _initApiService() {
 
 void _initPropertyModules() {
   // --- WorkerData Sources ---
-  serviceLocator.registerFactory<PropertyRemoteDatasource>(
-    () => PropertyRemoteDatasource(dio: serviceLocator<Dio>()),
+  serviceLocator.registerFactory<WorkerRemoteDatasource>(
+    () => WorkerRemoteDatasource(dio: serviceLocator<Dio>()),
   );
 
   serviceLocator.registerFactory<CategoryRemoteDatasource>(
@@ -116,9 +115,9 @@ void _initPropertyModules() {
   );
 
   // --- WorkerRepositories ---
-  serviceLocator.registerFactory<IPropertyRepository>(
-    () => PropertyRemoteRepository(
-      remoteDataSource: serviceLocator<PropertyRemoteDatasource>(),
+  serviceLocator.registerFactory<IWorkerRepository>(
+    () => WorkerRemoteRepository(
+      remoteDataSource: serviceLocator<WorkerRemoteDatasource>(),
     ),
   );
 
@@ -129,20 +128,20 @@ void _initPropertyModules() {
   );
 
   // --- WorkerUsecases ---
-  serviceLocator.registerFactory<GetAllPropertiesUsecase>(
-    () => GetAllPropertiesUsecase(serviceLocator<IPropertyRepository>()),
+  serviceLocator.registerFactory<GetAllWorkersUsecase>(
+    () => GetAllWorkersUsecase(serviceLocator<IWorkerRepository>()),
   );
 
-  serviceLocator.registerFactory<AddPropertyUsecase>(
-    () => AddPropertyUsecase(repository: serviceLocator<IPropertyRepository>()),
+  serviceLocator.registerFactory<AddWorkerUsecase>(
+    () => AddWorkerUsecase(repository: serviceLocator<IWorkerRepository>()),
   );
 
-  serviceLocator.registerFactory<UpdatePropertyUsecase>(
-    () => UpdatePropertyUsecase(serviceLocator<IPropertyRepository>()),
+  serviceLocator.registerFactory<UpdateWorkerUsecase>(
+    () => UpdateWorkerUsecase(serviceLocator<IWorkerRepository>()),
   );
 
-  serviceLocator.registerFactory<DeletePropertyUsecase>(
-    () => DeletePropertyUsecase(serviceLocator<IPropertyRepository>()),
+  serviceLocator.registerFactory<DeleteWorkerUsecase>(
+    () => DeleteWorkerUsecase(serviceLocator<IWorkerRepository>()),
   );
 
   serviceLocator.registerFactory<GetAllCategoriesUsecase>(
@@ -154,14 +153,15 @@ void _initPropertyModules() {
   );
 
   // --- WorkerViewModels/Blocs ---
-  serviceLocator.registerFactory<AddPropertyBloc>(
-    () => AddPropertyBloc(
-      addPropertyUsecase: serviceLocator<AddPropertyUsecase>(),
-      updatePropertyUsecase: serviceLocator<UpdatePropertyUsecase>(),
-      getAllCategoriesUsecase: serviceLocator<GetAllCategoriesUsecase>(),
-      tokenSharedPrefs: serviceLocator<TokenSharedPrefs>(),
-    ),
-  );
+  // NOTE: AddPropertyBloc is not yet implemented, commenting out for now
+  // serviceLocator.registerFactory<AddPropertyBloc>(
+  //   () => AddPropertyBloc(
+  //     addPropertyUsecase: serviceLocator<AddPropertyUsecase>(),
+  //     updatePropertyUsecase: serviceLocator<UpdatePropertyUsecase>(),
+  //     getAllCategoriesUsecase: serviceLocator<GetAllCategoriesUsecase>(),
+  //     tokenSharedPrefs: serviceLocator<TokenSharedPrefs>(),
+  //   ),
+  // );
 }
 
 void _initCartModules() {
@@ -398,11 +398,5 @@ void _initChatModules() {
   );
 }
 
-void setupServiceLocator() {
-  serviceLocator.registerLazySingleton<UpdatePropertyUsecase>(
-    () => UpdatePropertyUsecase(serviceLocator<IPropertyRepository>()),
-  );
-  serviceLocator.registerLazySingleton<DeletePropertyUsecase>(
-    () => DeletePropertyUsecase(serviceLocator<IPropertyRepository>()),
-  );
-}
+// Legacy setup function removed — property-based registrations
+// were migrated to worker-named usecases in _initPropertyModules.

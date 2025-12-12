@@ -1,15 +1,15 @@
 import 'package:dio/dio.dart';
 import 'package:skill_link/app/constant/api_endpoints.dart';
-import 'package:skill_link/features/add_worker/data/model/property_model/property_api_model.dart';
-import 'package:skill_link/features/add_worker/domain/entity/property/property_entity.dart';
+import 'package:skill_link/features/add_worker/data/model/worker_model/worker_api_model.dart';
+import 'package:skill_link/features/add_worker/domain/entity/worker/worker_entity.dart';
 
-class PropertyRemoteDatasource {
+class WorkerRemoteDatasource {
   final Dio _dio;
 
-  PropertyRemoteDatasource({required Dio dio}) : _dio = dio;
+  WorkerRemoteDatasource({required Dio dio}) : _dio = dio;
 
   /// Fetch all properties from the remote server
-  Future<List<PropertyEntity>> getProperties() async {
+  Future<List<WorkerEntity>> getWorkers() async {
     try {
       print('=== GET PROPERTIES API CALL ===');
       print('Fetching properties from: ${ApiEndpoints.getAllProperties}');
@@ -29,7 +29,7 @@ class PropertyRemoteDatasource {
           print('Properties from data field: $jsonList');
           return jsonList.map((json) {
             print('Processing WorkerJSON: $json');
-            return PropertyApiModel.fromJson(
+            return WorkerApiModel.fromJson(
               json as Map<String, dynamic>,
             ).toEntity();
           }).toList();
@@ -38,7 +38,7 @@ class PropertyRemoteDatasource {
           print('Properties as direct array: $responseData');
           return responseData.map((json) {
             print('Processing WorkerJSON: $json');
-            return PropertyApiModel.fromJson(
+            return WorkerApiModel.fromJson(
               json as Map<String, dynamic>,
             ).toEntity();
           }).toList();
@@ -69,11 +69,11 @@ class PropertyRemoteDatasource {
   }
 
   /// Fetch a single Workerby ID
-  Future<PropertyEntity> getPropertyById(String propertyId) async {
+  Future<WorkerEntity> getWorkerById(String workerId) async {
     try {
       print('=== GET WorkerBY ID API CALL ===');
-      final url = '${ApiEndpoints.getPropertyById}$propertyId';
-      print('Fetching Workerfrom: $url');
+      final url = '${ApiEndpoints.getPropertyById}$workerId';
+      print('Fetching Worker from: $url');
 
       final response = await _dio.get(url);
 
@@ -87,12 +87,12 @@ class PropertyRemoteDatasource {
         if (responseData is Map<String, dynamic> &&
             responseData['success'] == true) {
           final json = responseData['data'] as Map<String, dynamic>;
-          print('Workerfrom data field: $json');
-          return PropertyApiModel.fromJson(json).toEntity();
+          print('Worker from data field: $json');
+          return WorkerApiModel.fromJson(json).toEntity();
         } else if (responseData is Map) {
           // Fallback for direct object response
           print('Workeras direct object: $responseData');
-          return PropertyApiModel.fromJson(
+          return WorkerApiModel.fromJson(
             responseData as Map<String, dynamic>,
           ).toEntity();
         } else {
@@ -124,30 +124,45 @@ class PropertyRemoteDatasource {
   }
 
   /// Add a new Workerwith images and videos
-  Future<void> addProperty(
-    PropertyEntity property,
+  Future<void> addWorker(
+    WorkerEntity worker,
     List<String> imagePaths,
     List<String> videoPaths,
   ) async {
     try {
-      print('=== ADD WorkerAPI CALL ===');
-      print('Adding Workerto: ${ApiEndpoints.createProperty}');
+      print('=== ADD Worker API CALL ===');
+      print('Adding Worker to: ${ApiEndpoints.createProperty}');
+      // Validate required fields on the client before sending
+      final missing = <String>[];
+      if (worker.name == null || worker.name!.trim().isEmpty)
+        missing.add('name/title');
+      if (worker.description == null || worker.description!.trim().isEmpty)
+        missing.add('description');
+      if (worker.location == null || worker.location!.trim().isEmpty)
+        missing.add('location');
+      if (worker.rate == null) missing.add('rate/price');
+      if (worker.categoryId == null || worker.categoryId!.trim().isEmpty)
+        missing.add('categoryId');
+
+      if (missing.isNotEmpty) {
+        throw Exception('Missing required fields: ${missing.join(', ')}');
+      }
 
       final formData = FormData();
 
-      // Add Workerfields
+      // Add Worker fields. Send both legacy and new names for compatibility.
       formData.fields.addAll([
-        MapEntry('title', property.title ?? ''),
-        MapEntry('description', property.description ?? ''),
-        MapEntry('location', property.location ?? ''),
-        MapEntry('price', property.price.toString()),
-        MapEntry('bedrooms', (property.bedrooms ?? 0).toString()),
-        MapEntry('bathrooms', (property.bathrooms ?? 0).toString()),
+        MapEntry('title', worker.name ?? ''),
+        MapEntry('name', worker.name ?? ''),
+        MapEntry('description', worker.description ?? ''),
+        MapEntry('location', worker.location ?? ''),
+        MapEntry('price', worker.rate?.toString() ?? '0'),
+        MapEntry('rate', worker.rate?.toString() ?? '0'),
       ]);
 
       // Add categoryId if not null
-      if (property.categoryId != null && property.categoryId!.isNotEmpty) {
-        formData.fields.add(MapEntry('categoryId', property.categoryId!));
+      if (worker.categoryId != null && worker.categoryId!.isNotEmpty) {
+        formData.fields.add(MapEntry('categoryId', worker.categoryId!));
       }
 
       // Add images
@@ -174,7 +189,7 @@ class PropertyRemoteDatasource {
         data: formData,
       );
 
-      print('Add Workerresponse: ${response.data}');
+      print('Add Worker response: ${response.data}');
       print('Response status: ${response.statusCode}');
 
       if (response.statusCode != 201 && response.statusCode != 200) {
@@ -197,9 +212,9 @@ class PropertyRemoteDatasource {
   }
 
   /// Update an existing Workerwith new images and videos
-  Future<void> updateProperty(
-    String propertyId,
-    PropertyEntity property,
+  Future<void> updateWorker(
+    String workerId,
+    WorkerEntity worker,
     List<String> newImagePaths,
     List<String> newVideoPaths,
     List<String> existingImages,
@@ -207,24 +222,22 @@ class PropertyRemoteDatasource {
   ) async {
     try {
       print('=== UPDATE WorkerAPI CALL ===');
-      final url = ApiEndpoints.updateProperty(propertyId);
-      print('Updating Workerat: $url');
+      final url = ApiEndpoints.updateProperty(workerId);
+      print('Updating Worker at: $url');
 
       final formData = FormData();
 
       // Add Workerfields
       formData.fields.addAll([
-        MapEntry('title', property.title ?? ''),
-        MapEntry('description', property.description ?? ''),
-        MapEntry('location', property.location ?? ''),
-        MapEntry('price', property.price.toString()),
-        MapEntry('bedrooms', (property.bedrooms ?? 0).toString()),
-        MapEntry('bathrooms', (property.bathrooms ?? 0).toString()),
+        MapEntry('title', worker.name ?? ''),
+        MapEntry('description', worker.description ?? ''),
+        MapEntry('location', worker.location ?? ''),
+        MapEntry('price', worker.rate?.toString() ?? '0'),
       ]);
 
       // Add categoryId if not null
-      if (property.categoryId != null && property.categoryId!.isNotEmpty) {
-        formData.fields.add(MapEntry('categoryId', property.categoryId!));
+      if (worker.categoryId != null && worker.categoryId!.isNotEmpty) {
+        formData.fields.add(MapEntry('categoryId', worker.categoryId!));
       }
 
       // Add existing images to keep
@@ -285,11 +298,11 @@ class PropertyRemoteDatasource {
   }
 
   /// Delete a worker
-  Future<void> deleteProperty(String propertyId) async {
+  Future<void> deleteWorker(String workerId) async {
     try {
       print('=== DELETE WorkerAPI CALL ===');
-      final url = '${ApiEndpoints.deleteProperty}$propertyId';
-      print('Deleting Workerfrom: $url');
+      final url = '${ApiEndpoints.deleteProperty}$workerId';
+      print('Deleting Worker from: $url');
 
       final response = await _dio.delete(url);
 

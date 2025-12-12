@@ -1,9 +1,9 @@
 import 'package:equatable/equatable.dart';
-import 'package:skill_link/features/add_worker/domain/entity/property/property_entity.dart';
+import 'package:skill_link/features/add_worker/domain/entity/worker/worker_entity.dart';
 
 class CartItemEntity extends Equatable {
   final String? id;
-  final PropertyEntity? property;
+  final WorkerEntity? property;
   final DateTime? createdAt;
 
   const CartItemEntity({this.id, this.property, this.createdAt});
@@ -12,9 +12,7 @@ class CartItemEntity extends Equatable {
     return CartItemEntity(
       id: json['_id'] as String?,
       property:
-          json['worker'] != null
-              ? PropertyEntity.fromJson(json['worker'])
-              : null,
+          json['worker'] != null ? WorkerEntity.fromJson(json['worker']) : null,
       createdAt:
           json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
     );

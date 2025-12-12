@@ -113,37 +113,6 @@ class CartItemWidget extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        if (property.bedrooms != null) ...[
-                          const Icon(Icons.bed, size: 16, color: Colors.grey),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${property.bedrooms}',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                        ],
-                        if (property.bathrooms != null) ...[
-                          const Icon(
-                            Icons.bathroom,
-                            size: 16,
-                            color: Colors.grey,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${property.bathrooms}',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
                     const SizedBox(height: 4),
                     Text(
                       'Rs. ${property.price?.toStringAsFixed(0) ?? '0'} / month',

@@ -312,6 +312,30 @@ exports.bookVisit = async (req, res) => {
         availability.timeSlots = availability.timeSlots.filter(slot => slot !== timeSlot);
         await availability.save();
 
+        // 6. Create notification for worker
+        const Notification = require('../models/Notification');
+        const hirer = await User.findById(HirerId).select('fullName');
+        await Notification.create({
+            recipient: workerId,
+            sender: HirerId,
+            type: 'booking_request',
+            title: `New booking request from ${hirer.fullName}`,
+            message: `${hirer.fullName} has requested to book your service on ${normalizedDate} at ${timeSlot}`,
+            relatedId: newBooking._id,
+            relatedModel: 'Booking',
+            data: { date: normalizedDate, timeSlot: timeSlot }
+        });
+
+        // Emit real-time notification to worker via Socket.IO if available
+        if (global.io) {
+            global.io.to(workerId.toString()).emit('newNotification', {
+                type: 'booking_request',
+                title: `New booking request from ${hirer.fullName}`,
+                message: `${hirer.fullName} has requested to book your service on ${normalizedDate} at ${timeSlot}`,
+                bookingId: newBooking._id.toString()
+            });
+        }
+
         res.status(201).json({ success: true, message: 'Visit booked successfully! Awaiting worker confirmation.', booking: newBooking.toObject() });
 
     } catch (error) {
@@ -434,6 +458,39 @@ exports.updateBookingStatus = async (req, res) => {
         // as 'bookVisit' already removed the slot.
 
         await booking.save();
+
+        // Create notification for Hirer about booking status change
+        const Notification = require('../models/Notification');
+        const worker = await User.findById(workerId).select('fullName');
+        
+        const notificationMessages = {
+            'confirmed': { title: 'Booking Confirmed', message: `${worker.fullName} has confirmed your booking` },
+            'rejected': { title: 'Booking Rejected', message: `${worker.fullName} has rejected your booking` },
+            'cancelled': { title: 'Booking Cancelled', message: `${worker.fullName} has cancelled the booking` }
+        };
+
+        if (notificationMessages[newStatus]) {
+            const { title, message } = notificationMessages[newStatus];
+            await Notification.create({
+                recipient: booking.Hirer,
+                sender: workerId,
+                type: `booking_${newStatus}`,
+                title,
+                message,
+                relatedId: booking._id,
+                relatedModel: 'Booking'
+            });
+
+            // Emit real-time notification
+            if (global.io) {
+                global.io.to(booking.Hirer.toString()).emit('newNotification', {
+                    type: `booking_${newStatus}`,
+                    title,
+                    message,
+                    bookingId: booking._id.toString()
+                });
+            }
+        }
 
         res.status(200).json({ success: true, message: `Booking status updated to ${newStatus}.`, booking: booking.toObject() });
     } catch (error) {

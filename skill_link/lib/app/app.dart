@@ -86,7 +86,7 @@ class _MyAppState extends State<MyApp> {
             GetPage(name: '/profile', page: () => const ProfilePage()),
             GetPage(
               name: '/add-worker',
-              page: () => const AddPropertyPresentation(),
+              page: () => const AddWorkerPresentation(),
             ),
           ],
         ),
