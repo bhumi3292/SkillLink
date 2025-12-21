@@ -337,7 +337,7 @@ describe("Auth, Category, and Basic Property API Tests", () => {
                 .set("Authorization", `Bearer ${workerTokenAuthDB}`);
             expect(res.statusCode).toBe(404);
             expect(res.body.success).toBe(false);
-            expect(res.body.message).toBe("Worker not found.");
+            expect(res.body.message).toBe("Property not found.");
         });
     });
 });

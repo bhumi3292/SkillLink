@@ -2,13 +2,12 @@
 const Chat = require('../models/chat');
 const User = require('../models/User');
 const Property = require('../models/Property');
-const Worker = require('../models/Worker');
 const { asyncHandler } = require('../utils/asyncHandler');
 
 
 exports.createOrGetChat = asyncHandler(async (req, res) => {
     const currentUserId = req.user._id;
-    const { otherUserId, propertyId, workerId } = req.body;
+    const { otherUserId, propertyId } = req.body;
 
     if (!otherUserId) {
         return res.status(400).json({ success: false, message: "Other user ID is required." });
@@ -28,13 +27,7 @@ exports.createOrGetChat = asyncHandler(async (req, res) => {
     let query = { participants: { $all: [currentUserId, otherUserId] } };
     let chatName = `Chat between ${currentUser.fullName} and ${otherUser.fullName}`;
 
-    // Support either a legacy propertyId or the newer workerId (frontend may use worker)
-    if (workerId) {
-        const worker = await Worker.findById(workerId);
-        if (!worker) return res.status(404).json({ success: false, message: "Worker not found." });
-        query.property = workerId; // chat schema still uses 'property' field name
-        chatName = `Chat for ${worker.title}: ${currentUser.fullName} - ${otherUser.fullName}`;
-    } else if (propertyId) {
+    if (propertyId) {
         const property = await Property.findById(propertyId);
         if (!property) {
             return res.status(404).json({ success: false, message: "Property not found." });

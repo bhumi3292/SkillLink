@@ -3,14 +3,6 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 require("dotenv").config();
-
-// Ensure a JWT secret exists for local development to avoid runtime errors
-// in environments where .env isn't present. In production, always set
-// a strong JWT_SECRET in your environment and remove this fallback.
-if (!process.env.JWT_SECRET) {
-    process.env.JWT_SECRET = 'dev-secret-key';
-    console.warn('WARNING: JWT_SECRET not set. Using fallback development secret.');
-}
 const mongoose = require("mongoose");
 const multer = require("multer");
 
@@ -37,6 +29,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // ========== Import & Use API Routes ==========
 
 const authRoutes = require("./routes/authRoutes");
+const propertyRoutes = require("./routes/propertyRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
 const cartRoutes = require("./routes/cartRoute");
 
@@ -46,13 +39,8 @@ const paymentRoutes = require('./routes/paymentRoute');
 const calendarRoutes = require('./routes/calendarRoutes');
 const chatbotRoutes = require('./routes/chatbotRoute');
 const chatRoutes = require('./routes/chatRoute');
-const notificationRoutes = require('./routes/notificationRoutes');
 
 app.use("/api/auth", authRoutes);
-const propertyRoutes = require("./routes/propertyRoutes");
-// expose same routes under /api/workers to match frontend naming
-app.use("/api/workers", propertyRoutes);
-// Keep legacy properties route for backward compatibility/tests
 app.use("/api/properties", propertyRoutes);
 app.use("/api/category", categoryRoutes);
 app.use("/api/cart", cartRoutes);
@@ -64,7 +52,6 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/chats', chatRoutes);
-app.use('/api/notifications', notificationRoutes);
 
 app.get("/", (req, res) => {
     res.status(200).send("SkillLink backend running successfully!");
@@ -141,9 +128,6 @@ if (require.main === module) {
         },
     });
 
-    // Make io globally accessible to controllers
-    global.io = io;
-
     // ========== Connect DB (for actual server run) ==========
     connectDB()
         .then(() => console.log("MongoDB connected successfully!"))
@@ -151,26 +135,6 @@ if (require.main === module) {
             console.error("Failed to connect to DB:", err);
             process.exit(1);
         });
-
-    // Optional dev helpers: automatically run migration/seed scripts on startup
-    const { exec } = require('child_process');
-    if (process.env.MIGRATE_ON_STARTUP === 'true') {
-        console.log('MIGRATE_ON_STARTUP is true — running migration script to copy properties -> workers');
-        exec('node backend/scripts/migratePropertiesToWorkers.js', (err, stdout, stderr) => {
-            if (err) console.error('Migration script error:', err);
-            if (stdout) console.log('Migration stdout:', stdout);
-            if (stderr) console.error('Migration stderr:', stderr);
-        });
-    }
-
-    if (process.env.SEED_ON_STARTUP === 'true') {
-        console.log('SEED_ON_STARTUP is true — running seeding script for workers');
-        exec('node backend/scripts/seedWorkers.js', (err, stdout, stderr) => {
-            if (err) console.error('Seed script error:', err);
-            if (stdout) console.log('Seed stdout:', stdout);
-            if (stderr) console.error('Seed stderr:', stderr);
-        });
-    }
 
     // ========== Socket.IO Connection Handling ==========
     io.on("connection", (socket) => {
@@ -249,29 +213,6 @@ if (require.main === module) {
                 };
 
                 io.to(chatId).emit("newMessage", broadcastMessage);
-
-                // Emit message notification to chat participants
-                const Notification = require("./models/Notification");
-                for (const participantId of updatedChat.participants) {
-                    if (participantId.toString() !== senderId) {
-                        await Notification.create({
-                            recipient: participantId,
-                            sender: senderId,
-                            type: 'message',
-                            title: `New message from ${populatedSender.fullName}`,
-                            message: text.trim().substring(0, 50),
-                            relatedId: chatId,
-                            relatedModel: 'Chat'
-                        });
-
-                        io.to(participantId.toString()).emit('newNotification', {
-                            type: 'message',
-                            title: `New message from ${populatedSender.fullName}`,
-                            message: text.trim().substring(0, 50),
-                            senderName: populatedSender.fullName
-                        });
-                    }
-                }
 
             } catch (error) {
                 console.error("Error handling message:", error);

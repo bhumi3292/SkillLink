@@ -8,7 +8,7 @@ const {
     getOneProperty,
     updateProperty,
     deleteProperty
-} = require('../controllers/worker/workerController');
+} = require('../controllers/property/propertyController');
 
 const {
     authenticateUser,
@@ -16,7 +16,7 @@ const {
     isPropertyOwner
 } = require('../middlewares/authorizedUser');
 
-const uploadPropertyMedia = require('../middlewares/worker/workerMediaUpload');
+const uploadPropertyMedia = require('../middlewares/property/propertyMediaUpload');
 
 router.post(
     '/',

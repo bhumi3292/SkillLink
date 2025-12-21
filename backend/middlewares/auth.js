@@ -48,9 +48,6 @@ const requireRole = (requiredRole) => {
 };
 
 module.exports = {
-    // keep original named export
     authenticateUser,
-    // provide backward-compatible alias used by routes (`authenticate`)
-    authenticate: authenticateUser,
     requireRole,
 };
