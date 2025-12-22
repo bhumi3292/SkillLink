@@ -1,8 +1,51 @@
-const mongoose = require('mongoose');
-const Property = require('./Property');
+const mongoose = require("mongoose");
 
-// Create (or reuse) a `Worker` model that uses the same schema as `Property`
-// but stores documents in the `workers` collection. This allows Worker CRUD
-// to operate against a dedicated `workers` collection while reusing the
-// existing property schema.
-module.exports = mongoose.models.Worker || mongoose.model('Worker', Property.schema, 'workers');
+const workerSchema = new mongoose.Schema({
+    images: {
+        type: [String],
+        required: true, 
+    },
+    videos: {
+        type: [String],
+        required: false,
+    },
+    title: {
+        type: String,
+        required: true,
+    },
+    description: {
+        type: String,
+        required: true,
+    },
+    location: {
+        type: {
+            type: String,
+            enum: ['Point'],
+            required: true
+        },
+        coordinates: {
+            type: [Number],
+            required: true
+        }
+    },
+    categoryId: {
+        type: mongoose.Schema.ObjectId,
+        ref: "Category",
+        required: true
+    },
+    price: {
+        type: Number, 
+        required: true,
+    },
+    worker: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true
+    }
+}, { timestamps: true });
+
+workerSchema.index({ location: '2dsphere' });
+
+const Worker = mongoose.model("Worker", workerSchema);
+
+module.exports = Worker;

@@ -1,15 +1,15 @@
-import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:image_picker/image_picker.dart';
+import 'dart:convert';
 
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:skill_link/app/service_locator/service_locator.dart';
-import 'package:skill_link/features/add_worker/domain/use_case/worker/add_worker_usecase.dart';
-import 'package:skill_link/features/add_worker/domain/entity/worker/worker_entity.dart';
-import 'package:skill_link/features/add_worker/domain/use_case/category/get_all_categories_usecase.dart';
-import 'package:skill_link/features/add_worker/domain/use_case/category/add_category_usecase.dart';
 import 'package:skill_link/features/add_worker/domain/entity/category/category_entity.dart';
+import 'package:skill_link/features/add_worker/domain/entity/worker/worker_entity.dart';
+import 'package:skill_link/features/add_worker/domain/use_case/category/add_category_usecase.dart';
+import 'package:skill_link/features/add_worker/domain/use_case/category/get_all_categories_usecase.dart';
+import 'package:skill_link/features/add_worker/domain/use_case/worker/add_worker_usecase.dart';
 import 'package:skill_link/features/add_worker/presentation/widgets/location_picker_widget.dart';
-// dartz import removed — avoid symbol conflicts with Flutter's `State`
 
 class AddWorkerPresentation extends StatefulWidget {
   const AddWorkerPresentation({super.key});
@@ -25,7 +25,7 @@ class _AddWorkerPresentationState extends State<AddWorkerPresentation> {
   final TextEditingController _experienceController = TextEditingController();
   final TextEditingController _rateController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
-  // categories fetched from backend
+  final TextEditingController _portfolioController = TextEditingController();
   List<CategoryEntity> _categories = [];
   String? _selectedCategoryId;
   final TextEditingController _descriptionController = TextEditingController();
@@ -44,6 +44,7 @@ class _AddWorkerPresentationState extends State<AddWorkerPresentation> {
     _experienceController.dispose();
     _rateController.dispose();
     _locationController.dispose();
+    _portfolioController.dispose();
     _descriptionController.dispose();
     super.dispose();
   }
@@ -177,7 +178,6 @@ class _AddWorkerPresentationState extends State<AddWorkerPresentation> {
             SnackBar(content: Text('Category "$categoryName" added')),
           );
           await _loadCategories();
-          // Try to select the newly added category by name if available
           try {
             final match = _categories.firstWhere(
               (c) => c.categoryName.toLowerCase() == categoryName.toLowerCase(),
@@ -208,7 +208,7 @@ class _AddWorkerPresentationState extends State<AddWorkerPresentation> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFF003366),
-        title: const Text('ADD'),
+        title: const Text('Add Worker'),
         actions: [
           IconButton(
             onPressed: () {},
@@ -241,15 +241,20 @@ class _AddWorkerPresentationState extends State<AddWorkerPresentation> {
               const SizedBox(height: 12),
 
               _buildOutlinedField(
+                _portfolioController,
+                'Portfolio Link (Optional)',
+              ),
+              const SizedBox(height: 12),
+
+              _buildOutlinedField(
                 _descriptionController,
                 'Description',
                 maxLines: 4,
               ),
               const SizedBox(height: 12),
 
-              // Category dropdown (fetched from backend)
               _isLoadingCategories
-                  ? SizedBox(
+                  ? const SizedBox(
                     height: 56,
                     child: Center(child: CircularProgressIndicator()),
                   )
@@ -282,7 +287,7 @@ class _AddWorkerPresentationState extends State<AddWorkerPresentation> {
                     ],
                   )
                   : DropdownButtonFormField<String>(
-                    value: _selectedCategoryId,
+                    initialValue: _selectedCategoryId,
                     decoration: InputDecoration(
                       labelText: 'Category',
                       border: OutlineInputBorder(
@@ -308,7 +313,7 @@ class _AddWorkerPresentationState extends State<AddWorkerPresentation> {
                   ),
               const SizedBox(height: 12),
 
-              // Location picker row
+              // Location picker
               GestureDetector(
                 onTap: _openLocationPicker,
                 child: AbsorbPointer(
@@ -317,7 +322,6 @@ class _AddWorkerPresentationState extends State<AddWorkerPresentation> {
               ),
               const SizedBox(height: 12),
 
-              // Rate + unit
               Row(
                 children: [
                   Expanded(
@@ -359,10 +363,8 @@ class _AddWorkerPresentationState extends State<AddWorkerPresentation> {
                   ),
                 ],
               ),
-
               const SizedBox(height: 20),
 
-              // Media pickers
               Row(
                 children: [
                   Expanded(
@@ -384,11 +386,10 @@ class _AddWorkerPresentationState extends State<AddWorkerPresentation> {
               ),
               const SizedBox(height: 12),
 
-              // Simple preview counts
               Text('Images selected: ${_selectedImagePaths.length}'),
               Text('Videos selected: ${_selectedVideoPaths.length}'),
               const SizedBox(height: 12),
-              // OK button styled as pill
+
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -432,29 +433,6 @@ class _AddWorkerPresentationState extends State<AddWorkerPresentation> {
     );
   }
 
-  Widget _buildTextField(
-    TextEditingController controller,
-    String label, {
-    TextInputType keyboardType = TextInputType.text,
-    String? Function(String?)? validator,
-    int maxLines = 1,
-  }) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      maxLines: maxLines,
-      decoration: InputDecoration(
-        labelText: label,
-        border: const OutlineInputBorder(),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 14,
-        ),
-      ),
-      validator: validator,
-    );
-  }
-
   void _onSubmit() {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
@@ -462,22 +440,28 @@ class _AddWorkerPresentationState extends State<AddWorkerPresentation> {
   }
 
   Future<void> _submitToBackend() async {
-    // Use primary skill as the display name for the worker when name is not provided
     final skill = _skillController.text.trim();
     final name = skill.isNotEmpty ? skill : 'Worker';
     final experience = _experienceController.text.trim();
     final rate = double.tryParse(_rateController.text.trim()) ?? 0.0;
-    final location = _pickedAddress ?? _locationController.text.trim();
     final description = _descriptionController.text.trim();
+    final portfolioUrl = _portfolioController.text.trim();
+
+    final coordinates =
+        _pickedLatLng != null
+            ? jsonEncode([_pickedLatLng!.longitude, _pickedLatLng!.latitude])
+            : null;
 
     final entity = WorkerEntity(
       name: name,
       primarySkill: skill,
       experience: experience,
       description: description,
-      location: location,
+      location: _pickedAddress ?? _locationController.text.trim(),
       rate: rate,
+      portfolioUrl: portfolioUrl,
       categoryId: _selectedCategoryId,
+      coordinates: coordinates,
     );
 
     final usecase = serviceLocator<AddWorkerUsecase>();
@@ -519,19 +503,25 @@ class _AddWorkerPresentationState extends State<AddWorkerPresentation> {
   }
 
   void _openLocationPicker() async {
-    await Navigator.of(context).push(
+    final result = await Navigator.of(context).push(
       MaterialPageRoute(
         builder:
-            (_) => LocationPickerWidget(
-              initialAddress: _pickedAddress,
-              initialLatLng: _pickedLatLng,
-              onLocationSelected: (latlng, address) {
-                setState(() {
-                  _pickedLatLng = latlng;
-                  _pickedAddress = address;
-                  _locationController.text = address;
-                });
-              },
+            (_) => Scaffold(
+              appBar: AppBar(
+                title: const Text('Pick Location'),
+                backgroundColor: const Color(0xFF003366),
+              ),
+              body: SafeArea(
+                child: LocationPickerWidget(
+                  onLocationPicked: (latLng, address) {
+                    setState(() {
+                      _pickedLatLng = latLng;
+                      _pickedAddress = address;
+                      _locationController.text = address;
+                    });
+                  },
+                ),
+              ),
             ),
       ),
     );
@@ -540,8 +530,8 @@ class _AddWorkerPresentationState extends State<AddWorkerPresentation> {
   Future<void> _pickImages() async {
     try {
       final ImagePicker picker = ImagePicker();
-      final List<XFile>? files = await picker.pickMultiImage();
-      if (files == null || files.isEmpty) return;
+      final List<XFile> files = await picker.pickMultiImage();
+      if (files.isEmpty) return;
       setState(() {
         _selectedImagePaths.clear();
         _selectedImagePaths.addAll(files.map((f) => f.path));

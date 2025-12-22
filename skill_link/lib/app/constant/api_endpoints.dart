@@ -1,5 +1,4 @@
-import 'package:flutter/foundation.dart'
-    show kIsWeb, defaultTargetPlatform, TargetPlatform;
+import 'package:flutter/foundation.dart';
 
 class ApiEndpoints {
   ApiEndpoints._();
@@ -7,29 +6,26 @@ class ApiEndpoints {
   static const Duration connectionTimeout = Duration(seconds: 30);
   static const Duration receiveTimeout = Duration(seconds: 30);
 
-  // Network addresses for different environments (keep as constants)
   static const String androidEmulatorAddress = "http://10.0.2.2:3001";
   static const String iosSimulatorAddress = "http://localhost:3001";
-
-  // Default LAN address for real devices — update this if your PC IP changes
   static const String realDeviceAddress = "http://192.168.1.6:3001";
 
-  // Runtime-resolved server address. Chooses the correct host for the
-  // current platform (Android emulator, iOS simulator, web, or a real device).
   static String get serverAddress {
-    if (kIsWeb) return iosSimulatorAddress;
-
-    switch (defaultTargetPlatform) {
-      case TargetPlatform.android:
-        return androidEmulatorAddress;
-      case TargetPlatform.iOS:
-        return iosSimulatorAddress;
-      default:
-        return realDeviceAddress;
+    if (kIsWeb) {
+      return iosSimulatorAddress;
+    } else if (kDebugMode && !kIsWeb) {
+      // When debugging on a physical device, use the real device address
+      return realDeviceAddress;
+    } else if (defaultTargetPlatform == TargetPlatform.android) {
+      return androidEmulatorAddress;
+    } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+      return iosSimulatorAddress;
+    } else {
+      // Default for release builds or other platforms
+      return realDeviceAddress;
     }
   }
 
-  // Backwards-compatible alias used in parts of the codebase.
   static String get localNetworkAddress => serverAddress;
 
   static String get baseUrl => "$serverAddress/api/";
@@ -48,18 +44,15 @@ class ApiEndpoints {
   static String get uploadProfilePicture => "${baseUrl}auth/uploadImage";
 
   // ---------- Worker----------
-  // Worker endpoints — use dedicated /workers routes. Keep property aliases
-  // for backward compatibility with older clients.
   static String get createWorker => "${baseUrl}workers";
+  static String get getAllWorkers => "${baseUrl}workers";
+  static String get getWorkerById => "${baseUrl}workers/";
+  static String get deleteWorker => "${baseUrl}workers/";
+
+  // Aliases for compatibility
   static String get createProperty => createWorker;
-  static String get getAllProperties =>
-      "${baseUrl}workers"; // GET (returns workers)
-  static String get getAllWorkers => getAllProperties;
-  static String get getPropertyById =>
-      "${baseUrl}workers/"; // GET by ID (append ID)
-  static String get getWorkerById => getPropertyById;
-  static String get deleteWorker =>
-      "${baseUrl}workers/"; // DELETE by ID (append ID)
+  static String get getAllProperties => getAllWorkers;
+  static String get getPropertyById => getWorkerById;
   static String get deleteProperty => deleteWorker;
 
   static String updateProperty(String id) {
@@ -73,30 +66,18 @@ class ApiEndpoints {
   static String get updateCategory => "${baseUrl}category/"; // PUT by ID
   static String get deleteCategory => "${baseUrl}category/"; // DELETE by ID
 
-  // ---------- Blog ----------
-  static String get getAllBlogs => "${baseUrl}blogs"; // GET
-  static String get getBlogById => "${baseUrl}blogs/"; // GET by ID (append ID)
-  static String get createBlog => "${baseUrl}blogs"; // POST
-  static String get updateBlog => "${baseUrl}blogs/"; // PUT by ID (append ID)
-  static String get deleteBlog =>
-      "${baseUrl}blogs/"; // DELETE by ID (append ID)
-  static String get likeBlog =>
-      "${baseUrl}blogs/"; // POST like (append ID + /like)
-  static String get getFeaturedBlogs => "${baseUrl}blogs/featured"; // GET
-
   // ---------- Cart/Favorites ----------
   static String get getCart => "${baseUrl}cart"; // GET
   static String get addToCart => "${baseUrl}cart/add"; // POST
-  static String get removeFromCart =>
-      "${baseUrl}cart/remove/"; // DELETE (append propertyId)
+  static String get removeFromCart => "${baseUrl}cart/remove/"; // DELETE (append propertyId)
   static String get clearCart => "${baseUrl}cart/clear"; // DELETE
 
   // ---------- Chatbot ----------
   static String get sendChatQuery => "${baseUrl}chatbot/query"; // POST
 
   // --- Calendar/Booking Endpoints ---
-  static String getAvailableSlots(String propertyId) =>
-      "${baseUrl}calendar/properties/$propertyId/available-slots";
+  static String getAvailableSlots(String workerId) =>
+      "${baseUrl}calendar/workers/$workerId/available-slots";
   static String get bookVisit => "${baseUrl}calendar/book-visit";
   static String get manageAvailabilities =>
       "${baseUrl}calendar/availabilities"; // POST to create/update
@@ -105,7 +86,7 @@ class ApiEndpoints {
   static String deleteAvailabilityById(String availabilityId) =>
       "${baseUrl}calendar/availabilities/$availabilityId";
 
-  static String get getHirerBookings => "${baseUrl}calendar/Hirer/bookings";
+  static String get getHirerBookings => "${baseUrl}calendar/hirer/bookings";
   static String get getworkerBookings => "${baseUrl}calendar/worker/bookings";
   static String updateBookingStatus(String bookingId) =>
       "${baseUrl}calendar/bookings/$bookingId/status";

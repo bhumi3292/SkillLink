@@ -2,9 +2,9 @@
 const mongoose = require('mongoose');
 
 const BookingSchema = new mongoose.Schema({
-    property: {
+    workerListing: {
         type: mongoose.Schema.ObjectId,
-        ref: 'Property',
+        ref: 'Worker',
         required: true
     },
     Hirer: {
@@ -39,6 +39,6 @@ const BookingSchema = new mongoose.Schema({
     toObject: { virtuals: true }
 });
 
-BookingSchema.index({ property: 1, date: 1, timeSlot: 1, Hirer: 1 }, { unique: true, partialFilterExpression: { status: { $in: ['pending', 'confirmed'] } } });
+BookingSchema.index({ workerListing: 1, date: 1, timeSlot: 1, Hirer: 1 }, { unique: true, partialFilterExpression: { status: { $in: ['pending', 'confirmed'] } } });
 
 module.exports = mongoose.model('Booking', BookingSchema);

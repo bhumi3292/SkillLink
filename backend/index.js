@@ -29,7 +29,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // ========== Import & Use API Routes ==========
 
 const authRoutes = require("./routes/authRoutes");
-const propertyRoutes = require("./routes/propertyRoutes");
+const workerRoutes = require("./routes/workerRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
 const cartRoutes = require("./routes/cartRoute");
 
@@ -41,7 +41,7 @@ const chatbotRoutes = require('./routes/chatbotRoute');
 const chatRoutes = require('./routes/chatRoute');
 
 app.use("/api/auth", authRoutes);
-app.use("/api/properties", propertyRoutes);
+app.use("/api/workers", workerRoutes);
 app.use("/api/category", categoryRoutes);
 app.use("/api/cart", cartRoutes);
 
@@ -159,7 +159,7 @@ if (require.main === module) {
         });
 
         socket.on("sendMessage", async ({ chatId, senderId, text }) => {
-            console.log(chatId,senderId,text)
+            console.log(chatId, senderId, text)
             if (!chatId || !senderId || !text || text.trim() === '') {
                 socket.emit('messageError', { message: 'Missing chat ID, sender ID, or message text.' });
                 return;

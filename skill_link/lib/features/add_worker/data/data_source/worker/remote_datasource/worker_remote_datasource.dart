@@ -134,15 +134,19 @@ class WorkerRemoteDatasource {
       print('Adding Worker to: ${ApiEndpoints.createProperty}');
       // Validate required fields on the client before sending
       final missing = <String>[];
-      if (worker.name == null || worker.name!.trim().isEmpty)
+      if (worker.name == null || worker.name!.trim().isEmpty) {
         missing.add('name/title');
-      if (worker.description == null || worker.description!.trim().isEmpty)
+      }
+      if (worker.description == null || worker.description!.trim().isEmpty) {
         missing.add('description');
-      if (worker.location == null || worker.location!.trim().isEmpty)
+      }
+      if (worker.location == null || worker.location!.trim().isEmpty) {
         missing.add('location');
+      }
       if (worker.rate == null) missing.add('rate/price');
-      if (worker.categoryId == null || worker.categoryId!.trim().isEmpty)
+      if (worker.categoryId == null || worker.categoryId!.trim().isEmpty) {
         missing.add('categoryId');
+      }
 
       if (missing.isNotEmpty) {
         throw Exception('Missing required fields: ${missing.join(', ')}');

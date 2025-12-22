@@ -12,10 +12,10 @@ class CreateOrGetChatUsecase {
   CreateOrGetChatUsecase(this.repository);
   Future<Map<String, dynamic>> call({
     required String otherUserId,
-    String? propertyId,
+    String? workerId,
   }) => repository.createOrGetChat(
     otherUserId: otherUserId,
-    propertyId: propertyId,
+    workerId: workerId,
   );
 }
 

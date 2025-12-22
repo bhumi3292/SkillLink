@@ -9,9 +9,16 @@ class DioErrorInterceptor extends Interceptor {
     if (err.response != null) {
       final statusCode = err.response?.statusCode ?? 0;
       if (statusCode >= 300) {
-        errorMessage = err.response?.data['message']?.toString() ??
-            err.response?.statusMessage ??
-            'Unknown server error';
+        final data = err.response?.data;
+        if (data is Map<String, dynamic>) {
+          errorMessage = data['message']?.toString() ??
+              err.response?.statusMessage ??
+              'Unknown server error';
+        } else if (data is String) {
+          errorMessage = data;
+        } else {
+          errorMessage = err.response?.statusMessage ?? 'Unknown server error';
+        }
       } else {
         errorMessage = 'Something went wrong with the response (unexpected status code).';
       }

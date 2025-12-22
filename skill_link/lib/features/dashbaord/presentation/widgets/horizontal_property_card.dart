@@ -218,8 +218,8 @@ class _HorizontalPropertyCardState extends State<HorizontalPropertyCard> {
 
               return ClipRRect(
                 borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(12),
-                  topRight: Radius.circular(12),
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
                 ),
                 child: CachedNetworkImage(
                   imageUrl: imageUrl,
@@ -346,13 +346,12 @@ class _HorizontalPropertyCardState extends State<HorizontalPropertyCard> {
         width: 200,
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.2),
-              spreadRadius: 1,
-              blurRadius: 5,
-              offset: const Offset(0, 2),
+              color: const Color(0xFF003366).withOpacity(0.08),
+              spreadRadius: 0,
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -375,7 +374,8 @@ class _HorizontalPropertyCardState extends State<HorizontalPropertyCard> {
                     widget.property.title,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: 14,
+                      fontSize: 16,
+                      color: Color(0xFF003366),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -383,17 +383,20 @@ class _HorizontalPropertyCardState extends State<HorizontalPropertyCard> {
                   const SizedBox(height: 4),
                   Text(
                     widget.property.location,
-                    style: const TextStyle(color: Colors.grey, fontSize: 12),
+                    style: const TextStyle(
+                      color: Colors.blueGrey,
+                      fontSize: 13,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '₹ ${widget.property.price.toStringAsFixed(0)} /m',
+                    '₹ ${widget.property.price.toStringAsFixed(0)}/hr', // Updated usage
                     style: const TextStyle(
-                      color: Colors.black87,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
+                      color: Color(0xFFE65100), // Orange/Amber accent
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
                     ),
                   ),
                   const SizedBox(height: 8),

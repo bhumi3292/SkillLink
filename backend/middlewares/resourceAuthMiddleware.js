@@ -1,9 +1,8 @@
 // SkillLink_backend/middlewares/resourceAuthMiddleware.js
 
-// --- CORRECTED IMPORT PATH FOR AVAILABILITY ---
-const Availability = require('../models/calendar'); // Corrected from '../models/calendar'
+const Availability = require('../models/calendar');
 const Booking = require('../models/Booking');
-const Property = require('../models/Property');
+const Worker = require('../models/Worker');
 
 const isOwnerOrRelatedResource = (Model, resourceIdParam) => async (req, res, next) => {
     try {
@@ -18,6 +17,7 @@ const isOwnerOrRelatedResource = (Model, resourceIdParam) => async (req, res, ne
 
         // --- Authorization Logic ---
 
+        // 1. Direct ownership (e.g. Availability.worker, Booking.worker/Hirer, Worker.worker)
         if (resource.worker && resource.worker.toString() === userId.toString()) {
             return next();
         }
@@ -25,12 +25,23 @@ const isOwnerOrRelatedResource = (Model, resourceIdParam) => async (req, res, ne
             return next();
         }
 
-        if (resource.property) {
-            const property = await Property.findById(resource.property);
-            if (property && property.worker.toString() === userId.toString()) {
+        // 2. Indirect ownership via Worker Listing (e.g. Availability.workerListing -> Worker.worker)
+        // Check if resource has 'workerListing' field (renamed from property)
+        if (resource.workerListing) {
+            const listing = await Worker.findById(resource.workerListing);
+            if (listing && listing.worker.toString() === userId.toString()) {
                 return next();
             }
         }
+
+        // 3. Fallback for potential legacy field name if not migrated everywhere yet, or if I missed one
+        if (resource.property) {
+            const listing = await Worker.findById(resource.property);
+            if (listing && listing.worker.toString() === userId.toString()) {
+                return next();
+            }
+        }
+
 
         res.status(403).json({ success: false, message: 'Access denied: You are not authorized to perform this action on this resource.' });
 

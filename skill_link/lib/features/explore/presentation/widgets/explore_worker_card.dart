@@ -1,24 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:skill_link/features/explore/domain/entity/explore_property_entity.dart';
+import 'package:skill_link/features/explore/domain/entity/explore_worker_entity.dart';
 import 'package:skill_link/cores/utils/image_url_helper.dart';
 import 'package:skill_link/features/favourite/presentation/bloc/cart_bloc.dart';
 
-class ExplorePropertyCard extends StatefulWidget {
-  final ExplorePropertyEntity property;
+class ExploreWorkerCard extends StatefulWidget {
+  final ExploreWorkerEntity worker;
   final VoidCallback onTap;
 
-  const ExplorePropertyCard({
+  const ExploreWorkerCard({
     super.key,
-    required this.property,
+    required this.worker,
     required this.onTap,
   });
 
   @override
-  State<ExplorePropertyCard> createState() => _ExplorePropertyCardState();
+  State<ExploreWorkerCard> createState() => _ExploreWorkerCardState();
 }
 
-class _ExplorePropertyCardState extends State<ExplorePropertyCard> {
+class _ExploreWorkerCardState extends State<ExploreWorkerCard> {
   int _currentImageIndex = 0;
   final PageController _pageController = PageController();
 
@@ -32,13 +32,13 @@ class _ExplorePropertyCardState extends State<ExplorePropertyCard> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final hasImages =
-        widget.property.images != null && widget.property.images!.isNotEmpty;
+        widget.worker.images != null && widget.worker.images!.isNotEmpty;
     final hasVideos =
-        widget.property.videos != null && widget.property.videos!.isNotEmpty;
+        widget.worker.videos != null && widget.worker.videos!.isNotEmpty;
     final allMedia = <String>[];
 
-    if (hasImages) allMedia.addAll(widget.property.images!);
-    if (hasVideos) allMedia.addAll(widget.property.videos!);
+    if (hasImages) allMedia.addAll(widget.worker.images!);
+    if (hasVideos) allMedia.addAll(widget.worker.videos!);
 
     return GestureDetector(
       onTap: widget.onTap,
@@ -82,7 +82,7 @@ class _ExplorePropertyCardState extends State<ExplorePropertyCard> {
                                 final mediaUrl = allMedia[index];
                                 final isVideo =
                                     hasVideos &&
-                                    widget.property.videos!.contains(mediaUrl);
+                                    widget.worker.videos!.contains(mediaUrl);
 
                                 return Stack(
                                   children: [
@@ -192,7 +192,7 @@ class _ExplorePropertyCardState extends State<ExplorePropertyCard> {
                         : Container(
                           color: Colors.grey[300],
                           child: Icon(
-                            widget.property.workerName != null
+                            widget.worker.workerName != null
                                 ? Icons.person
                                 : Icons.home,
                             size: 48,
@@ -210,7 +210,7 @@ class _ExplorePropertyCardState extends State<ExplorePropertyCard> {
                 children: [
                   // Title
                   Text(
-                    widget.property.title ?? 'Unknown Service',
+                    widget.worker.title ?? 'Unknown Service',
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -221,12 +221,12 @@ class _ExplorePropertyCardState extends State<ExplorePropertyCard> {
                   const SizedBox(height: 4),
 
                   // Subtitle: show worker name or short description
-                  if (widget.property.workerName != null &&
-                      widget.property.workerName!.isNotEmpty)
+                  if (widget.worker.workerName != null &&
+                      widget.worker.workerName!.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 6.0),
                       child: Text(
-                        widget.property.workerName!,
+                        widget.worker.workerName!,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: Colors.grey[700],
                         ),
@@ -245,7 +245,7 @@ class _ExplorePropertyCardState extends State<ExplorePropertyCard> {
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
-                          widget.property.location ?? 'Unknown Location',
+                          widget.worker.location ?? 'Unknown Location',
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: Colors.grey[600],
                           ),
@@ -268,7 +268,7 @@ class _ExplorePropertyCardState extends State<ExplorePropertyCard> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Rs ${widget.property.price?.toStringAsFixed(0) ?? '0'}',
+                            'Rs ${widget.worker.price?.toStringAsFixed(0) ?? '0'}',
                             style: theme.textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: theme.primaryColor,
@@ -286,8 +286,8 @@ class _ExplorePropertyCardState extends State<ExplorePropertyCard> {
                       Row(
                         children: [
                           // Call button
-                          if (widget.property.workerPhone != null &&
-                              widget.property.workerPhone!.isNotEmpty)
+                          if (widget.worker.workerPhone != null &&
+                              widget.worker.workerPhone!.isNotEmpty)
                             IconButton(
                               icon: const Icon(Icons.call, color: Colors.green),
                               onPressed: () {
@@ -295,8 +295,8 @@ class _ExplorePropertyCardState extends State<ExplorePropertyCard> {
                               },
                             ),
                           // Message button
-                          if (widget.property.workerEmail != null &&
-                              widget.property.workerEmail!.isNotEmpty)
+                          if (widget.worker.workerEmail != null &&
+                              widget.worker.workerEmail!.isNotEmpty)
                             IconButton(
                               icon: const Icon(Icons.email, color: Colors.blue),
                               onPressed: () {
@@ -307,12 +307,12 @@ class _ExplorePropertyCardState extends State<ExplorePropertyCard> {
                             builder: (context, cartState) {
                               bool isFavorite = false;
                               if (cartState is CartLoaded &&
-                                  widget.property.id != null) {
+                                  widget.worker.id != null) {
                                 isFavorite =
                                     cartState.cart.items?.any(
                                       (item) =>
                                           item.property.id ==
-                                          widget.property.id,
+                                          widget.worker.id,
                                     ) ??
                                     false;
                               }
@@ -341,10 +341,10 @@ class _ExplorePropertyCardState extends State<ExplorePropertyCard> {
                                             : Colors.grey[600],
                                   ),
                                   onPressed: () {
-                                    if (widget.property.id != null &&
+                                    if (widget.worker.id != null &&
                                         !isFavorite) {
                                       context.read<CartBloc>().add(
-                                        AddToCartEvent(widget.property.id!),
+                                        AddToCartEvent(widget.worker.id!),
                                       );
                                     }
                                   },
@@ -358,8 +358,8 @@ class _ExplorePropertyCardState extends State<ExplorePropertyCard> {
                   ),
                   const SizedBox(height: 8),
                   // Skill chip
-                  if (widget.property.categoryName != null &&
-                      widget.property.categoryName!.isNotEmpty)
+                  if (widget.worker.categoryName != null &&
+                      widget.worker.categoryName!.isNotEmpty)
                     Wrap(
                       spacing: 6,
                       children: [
@@ -382,7 +382,7 @@ class _ExplorePropertyCardState extends State<ExplorePropertyCard> {
                               ),
                               const SizedBox(width: 6),
                               Text(
-                                widget.property.categoryName!,
+                                widget.worker.categoryName!,
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Colors.grey[800],

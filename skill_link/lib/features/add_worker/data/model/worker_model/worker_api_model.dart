@@ -16,7 +16,7 @@ class WorkerApiModel extends Equatable {
   final String categoryId;
   final double price;
   final String? description;
-  @JsonKey(name: 'worker') // Matches your Mongoose schema's field name
+  @JsonKey(name: 'worker') 
   final String workerId;
 
   // Add timestamps from Mongoose schema
@@ -61,7 +61,7 @@ class WorkerApiModel extends Equatable {
       id: id,
       images: images,
       videos: videos,
-      name: title, // API 'title' maps to entity 'name'
+      name: title, 
       location: location,
       categoryId: categoryId,
       rate: price,
@@ -78,11 +78,11 @@ class WorkerApiModel extends Equatable {
   factory WorkerApiModel.fromEntity(WorkerEntity entity) {
     return WorkerApiModel(
       id: entity.id,
-      images: entity.images ?? [], // Ensure non-nullable images list is handled
+      images: entity.images ?? [], 
       videos: entity.videos,
-      title: entity.name ?? '', // Map entity.name back to API title
+      title: entity.name ?? '', 
       location:
-          entity.location ?? '', // Ensure non-nullable location is handled
+          entity.location ?? '', 
       categoryId: entity.categoryId ?? '',
       price: entity.rate ?? 0.0, // Map entity.rate back to API price
       description: entity.description,

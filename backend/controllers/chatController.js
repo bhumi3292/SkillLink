@@ -1,13 +1,16 @@
 // SkillLink_backend/controllers/chat.controller.js
 const Chat = require('../models/chat');
 const User = require('../models/User');
-const Property = require('../models/Property');
+const Worker = require('../models/Worker');
 const { asyncHandler } = require('../utils/asyncHandler');
 
 
 exports.createOrGetChat = asyncHandler(async (req, res) => {
     const currentUserId = req.user._id;
-    const { otherUserId, propertyId } = req.body;
+    // propertyId passed from client is now referring to a Worker listing ID
+    const { otherUserId, workerListingId } = req.body;
+    // Backward compatibility if client still sends propertyId
+    const targetListingId = workerListingId || req.body.propertyId;
 
     if (!otherUserId) {
         return res.status(400).json({ success: false, message: "Other user ID is required." });
@@ -27,15 +30,15 @@ exports.createOrGetChat = asyncHandler(async (req, res) => {
     let query = { participants: { $all: [currentUserId, otherUserId] } };
     let chatName = `Chat between ${currentUser.fullName} and ${otherUser.fullName}`;
 
-    if (propertyId) {
-        const property = await Property.findById(propertyId);
-        if (!property) {
-            return res.status(404).json({ success: false, message: "Property not found." });
+    if (targetListingId) {
+        const listing = await Worker.findById(targetListingId);
+        if (!listing) {
+            return res.status(404).json({ success: false, message: "Worker listing not found." });
         }
-        query.property = propertyId;
-        chatName = `Chat for ${property.title}: ${currentUser.fullName} - ${otherUser.fullName}`;
+        query.workerListing = targetListingId; // Changed from property to workerListing
+        chatName = `Chat for ${listing.title}: ${currentUser.fullName} - ${otherUser.fullName}`;
     } else {
-        query.property = { $exists: false }; // For general direct messages not tied to a property
+        query.workerListing = { $exists: false }; // For general direct messages
     }
 
     let chat = await Chat.findOne(query);
@@ -44,7 +47,7 @@ exports.createOrGetChat = asyncHandler(async (req, res) => {
         chat = await Chat.create({
             name: chatName,
             participants: [currentUserId, otherUserId],
-            property: propertyId || null,
+            workerListing: targetListingId || null,
             messages: [] // Initialize messages array
         });
         return res.status(201).json({ success: true, message: "New chat created.", data: chat });
@@ -59,7 +62,7 @@ exports.getMyChats = asyncHandler(async (req, res) => {
 
     const chats = await Chat.find({ participants: userId })
         .populate('participants', 'fullName profilePicture')
-        .populate('property', 'title imageUrls')
+        .populate('workerListing', 'title images') // Populate workerListing instead of property
         .sort({ lastMessageAt: -1 });
 
     return res.status(200).json({ success: true, data: chats });
@@ -69,11 +72,11 @@ exports.getChatById = asyncHandler(async (req, res) => {
     const chatId = req.params.chatId;
     const userId = req.user._id;
 
-    // Populate participants and property, and also populate sender for each message in the messages array
+    // Populate participants and workerListing
     const chat = await Chat.findById(chatId)
         .populate('participants', 'fullName profilePicture')
-        .populate('property', 'title imageUrls')
-        .populate('messages.sender', 'fullName profilePicture')
+        .populate('workerListing', 'title images')
+        .populate('messages.sender', 'fullName profilePicture') // Populate sender
         .sort({ "messages.createdAt": 1 });
 
     if (!chat) {
@@ -89,8 +92,8 @@ exports.getChatById = asyncHandler(async (req, res) => {
 });
 
 
-// @desc    Get messages for a specific chat (adapted from your old message.controller)
-// @route   GET /api/chats/:chatId/messages -- You can use this route or just get all messages with getChatById
+// @desc    Get messages for a specific chat
+// @route   GET /api/chats/:chatId/messages
 // @access  Protected (user must be a participant)
 exports.getMessagesForChat = asyncHandler(async (req, res) => {
     const chatId = req.params.chatId;

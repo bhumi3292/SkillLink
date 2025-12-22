@@ -1,12 +1,12 @@
 // SkillLink_backend/controllers/cartController.js
 const Cart = require('../models/Cart'); // Assuming the model is named Cart.js
-const Property = require('../models/Property');
+const Worker = require('../models/Worker');
 const { asyncHandler } = require('../utils/asyncHandler'); // Assuming you have this utility
 
 exports.getCart = asyncHandler(async (req, res) => {
     const userId = req.user._id; // User ID from authenticated request
 
-    const cart = await Cart.findOne({ user: userId }).populate('items.property');
+    const cart = await Cart.findOne({ user: userId }).populate('items.worker');
 
     if (!cart) {
         // If a user doesn't have a cart yet, return an empty cart
@@ -18,16 +18,20 @@ exports.getCart = asyncHandler(async (req, res) => {
 
 exports.addToCart = asyncHandler(async (req, res) => {
     const userId = req.user._id;
-    const { propertyId } = req.body;
+    const { workerId } = req.body;
 
-    if (!propertyId) {
-        return res.status(400).json({ success: false, message: "Property ID is required to add to cart." });
+    // Use propertyId from body if workerId is missing, for backward compatibility
+    const targetWorkerId = workerId || req.body.propertyId;
+
+
+    if (!targetWorkerId) {
+        return res.status(400).json({ success: false, message: "Worker ID is required to add to cart." });
     }
 
-    // Validate if the property exists
-    const propertyExists = await Property.findById(propertyId);
-    if (!propertyExists) {
-        return res.status(404).json({ success: false, message: "Property not found." });
+    // Validate if the worker exists
+    const workerExists = await Worker.findById(targetWorkerId);
+    if (!workerExists) {
+        return res.status(404).json({ success: false, message: "Worker not found." });
     }
 
     let cart = await Cart.findOne({ user: userId });
@@ -36,26 +40,30 @@ exports.addToCart = asyncHandler(async (req, res) => {
         // If no cart exists for the user, create a new one
         cart = await Cart.create({
             user: userId,
-            items: [{ property: propertyId }]
+            items: [{ worker: targetWorkerId }]
         });
-        return res.status(201).json({ success: true, message: "Cart created and property added.", data: cart });
+        return res.status(201).json({ success: true, message: "Cart created and worker added.", data: cart });
     }
 
-    // Check if the property is already in the cart
-    const itemExists = cart.items.some(item => item.property.toString() === propertyId);
+    // Check if the worker is already in the cart
+    const itemExists = cart.items.some(item => item.worker.toString() === targetWorkerId);
 
     if (itemExists) {
-        return res.status(409).json({ success: false, message: "Property already in cart." });
+        return res.status(409).json({ success: false, message: "Worker already in cart." });
     } else {
-        // Add the new property to the existing cart
-        cart.items.push({ property: propertyId });
+        // Add the new worker to the existing cart
+        cart.items.push({ worker: targetWorkerId });
         await cart.save();
-        return res.status(200).json({ success: true, message: "Property added to cart.", data: cart });
+        return res.status(200).json({ success: true, message: "Worker added to cart.", data: cart });
     }
 });
 exports.removeFromCart = asyncHandler(async (req, res) => {
     const userId = req.user._id;
-    const { propertyId } = req.params; // Get propertyId from URL params
+    // Allow removing by propertyId in params for now, but treat it as workerId
+    const { propertyId } = req.params;
+
+    // Ideally we should use workerId, but let's stick to what routes provide if they use :propertyId
+    const targetId = propertyId;
 
     let cart = await Cart.findOne({ user: userId });
 
@@ -65,15 +73,15 @@ exports.removeFromCart = asyncHandler(async (req, res) => {
 
     // Filter out the item to be removed
     const initialItemCount = cart.items.length;
-    cart.items = cart.items.filter(item => item.property.toString() !== propertyId);
+    cart.items = cart.items.filter(item => item.worker.toString() !== targetId);
 
     if (cart.items.length === initialItemCount) {
-        // If no item was removed, it means the propertyId was not in the cart
-        return res.status(404).json({ success: false, message: "Property not found in cart." });
+        // If no item was removed, it means the ID was not in the cart
+        return res.status(404).json({ success: false, message: "Worker not found in cart." });
     }
 
     await cart.save();
-    res.status(200).json({ success: true, message: "Property removed from cart.", data: cart });
+    res.status(200).json({ success: true, message: "Worker removed from cart.", data: cart });
 });
 exports.clearCart = asyncHandler(async (req, res) => {
     const userId = req.user._id;

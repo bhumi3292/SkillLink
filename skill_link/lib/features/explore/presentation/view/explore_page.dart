@@ -1,12 +1,21 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:skill_link/features/explore/presentation/bloc/explore_bloc.dart';
-import 'package:skill_link/features/explore/presentation/widgets/explore_property_card.dart';
-import 'package:skill_link/features/explore/presentation/widgets/explore_search_bar.dart';
-import 'package:skill_link/features/explore/presentation/widgets/explore_filter_dialog.dart';
-import 'package:skill_link/features/favourite/presentation/bloc/cart_bloc.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:skill_link/app/service_locator/service_locator.dart';
-import 'package:skill_link/features/explore/presentation/view/property_detail_page.dart';
+import 'package:skill_link/core/services/location_service.dart';
+import 'package:skill_link/features/dashbaord/presentation/widgets/property_card_widget.dart';
+import 'package:skill_link/features/explore/domain/entity/explore_worker_entity.dart';
+import 'package:skill_link/features/explore/presentation/bloc/explore_bloc.dart';
+import 'package:skill_link/features/explore/presentation/utils/worker_converter.dart';
+import 'package:skill_link/features/explore/presentation/view/worker_detail_page.dart';
+import 'package:skill_link/features/explore/presentation/view/osm_map_widget.dart';
+import 'package:skill_link/features/explore/presentation/widgets/explore_filter_dialog.dart';
+import 'package:skill_link/features/explore/presentation/widgets/explore_search_bar.dart';
+import 'package:skill_link/features/favourite/presentation/bloc/cart_bloc.dart';
 
 class ExplorePage extends StatefulWidget {
   const ExplorePage({super.key});
@@ -21,24 +30,125 @@ class _ExplorePageState extends State<ExplorePage> {
   String? _selectedCategory;
   double? _minPrice;
   double? _maxPrice;
-  int? _minBedrooms;
-  int? _minBathrooms;
+
+  bool _isMapView = false;
+  Position? _currentPosition;
+  bool _nearMeOnly = false;
+  final MapController _mapController = MapController();
+  StreamSubscription<Position>? _positionStreamSubscription;
 
   @override
   void initState() {
     super.initState();
     _cartBloc = serviceLocator<CartBloc>();
     _cartBloc.add(GetCartEvent());
-    context.read<ExploreBloc>().add(GetPropertiesEvent());
+    context.read<ExploreBloc>().add(GetWorkersEvent());
+    _subscribeToLocationUpdates();
+  }
+
+  @override
+  void dispose() {
+    _positionStreamSubscription?.cancel();
+    _mapController.dispose();
+    super.dispose();
+  }
+
+  void _subscribeToLocationUpdates() async {
+    final locationService = serviceLocator<LocationService>();
+    final hasPermission = await locationService.requestPermission();
+    if (hasPermission && mounted) {
+      final position = await locationService.getCurrentPosition();
+      if (position != null && mounted) {
+        setState(() {
+          _currentPosition = position;
+        });
+        _mapController.move(
+          LatLng(position.latitude, position.longitude),
+          14.0,
+        );
+      }
+
+      _positionStreamSubscription = locationService.getPositionStream().listen((
+        position,
+      ) {
+        if (mounted) {
+          setState(() {
+            _currentPosition = position;
+          });
+        }
+      });
+    }
+  }
+
+  List<Marker> _buildMarkers(List<ExploreWorkerEntity> workers) {
+    final markers = <Marker>[];
+
+    // Add worker markers
+    for (final worker in workers) {
+      // Use coordinates (LatLng) when available; fallback to no marker
+      if (worker.coordinates != null) {
+        markers.add(
+          Marker(
+            width: 80.0,
+            height: 80.0,
+            point: worker.coordinates!,
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => WorkerDetailPage(worker: worker),
+                  ),
+                );
+              },
+              child: const Icon(
+                Icons.location_pin,
+                color: Colors.red,
+                size: 30,
+              ),
+            ),
+          ),
+        );
+      }
+    }
+
+    // Add user's current location marker
+    if (_currentPosition != null) {
+      markers.add(
+        Marker(
+          width: 80.0,
+          height: 80.0,
+          point: LatLng(
+            _currentPosition!.latitude,
+            _currentPosition!.longitude,
+          ),
+          child: const Icon(
+            Icons.person_pin_circle,
+            color: Colors.blue,
+            size: 40,
+          ),
+        ),
+      );
+    }
+
+    return markers;
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return SafeArea(
       child: Scaffold(
         backgroundColor: Colors.white,
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: () {
+            setState(() {
+              _isMapView = !_isMapView;
+            });
+          },
+          label: Text(_isMapView ? "List View" : "Map View"),
+          icon: Icon(_isMapView ? Icons.list : Icons.map),
+          backgroundColor: Theme.of(context).primaryColor,
+        ),
         body: Column(
           children: [
             // Header with Search Bar
@@ -60,13 +170,42 @@ class _ExplorePageState extends State<ExplorePage> {
                   ExploreSearchBar(
                     onSearchChanged: (value) {
                       _searchText = value;
-                      _filterProperties();
+                      _filterWorkers();
                     },
                     onFilterPressed: () async {
                       await _showFilterDialog();
                     },
                   ),
-                  // Filter Indicator
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      IconButton(
+                        tooltip: 'Show only workers near me (10 km)',
+                        onPressed: () {
+                          setState(() {
+                            _nearMeOnly = !_nearMeOnly;
+                          });
+                        },
+                        icon: Icon(
+                          Icons.near_me,
+                          color:
+                              _nearMeOnly
+                                  ? Theme.of(context).primaryColor
+                                  : Colors.grey,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        _nearMeOnly
+                            ? 'Showing workers near you'
+                            : 'Showing all workers',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
                   if (_hasActiveFilters())
                     Padding(
                       padding: const EdgeInsets.only(top: 12),
@@ -122,7 +261,7 @@ class _ExplorePageState extends State<ExplorePage> {
               ),
             ),
 
-            // Properties List
+            // Content Body
             Expanded(
               child: BlocBuilder<ExploreBloc, ExploreState>(
                 builder: (context, state) {
@@ -135,88 +274,108 @@ class _ExplorePageState extends State<ExplorePage> {
                         children: [
                           Icon(
                             Icons.error_outline,
-                            size: 64,
+                            size: 48,
                             color: Colors.grey[400],
                           ),
                           const SizedBox(height: 16),
-                          Text(
-                            'Error: ${state.message}',
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 16,
-                            ),
+                          const Text(
+                            "Something went wrong while loading workers.",
+                            style: TextStyle(color: Colors.grey),
                           ),
-                          const SizedBox(height: 16),
-                          ElevatedButton(
+                          TextButton(
                             onPressed: () {
                               context.read<ExploreBloc>().add(
-                                GetPropertiesEvent(),
+                                GetWorkersEvent(),
                               );
                             },
-                            child: const Text('Retry'),
+                            child: const Text("Retry"),
                           ),
                         ],
                       ),
                     );
                   } else if (state is ExploreLoaded) {
-                    if (state.filteredProperties.isEmpty) {
+                    // locally apply 'near me' proximity filter when enabled
+                    final locationService = serviceLocator<LocationService>();
+                    List<ExploreWorkerEntity> displayedWorkers =
+                        state.filteredWorkers;
+                    if (_nearMeOnly && _currentPosition != null) {
+                      displayedWorkers =
+                          displayedWorkers.where((w) {
+                            final coords = w.coordinates;
+                            if (coords == null) return false;
+                            final meters = locationService.calculateDistance(
+                              _currentPosition!.latitude,
+                              _currentPosition!.longitude,
+                              coords.latitude,
+                              coords.longitude,
+                            );
+                            return meters <= 10000; // within 10 km
+                          }).toList();
+                    }
+
+                    if (_isMapView) {
+                      final center =
+                          _currentPosition != null
+                              ? LatLng(
+                                _currentPosition!.latitude,
+                                _currentPosition!.longitude,
+                              )
+                              : const LatLng(27.7172, 85.3240);
+                      return OsmMapWidget(
+                        initialCenter: center,
+                        initialZoom: 14.0,
+                        mapController: _mapController,
+                        markers: _buildMarkers(displayedWorkers),
+                      );
+                    }
+
+                    if (displayedWorkers.isEmpty) {
                       return Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
                               Icons.search_off,
-                              size: 64,
+                              size: 48,
                               color: Colors.grey[400],
                             ),
                             const SizedBox(height: 16),
-                            Text(
-                              'No properties found',
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 18,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Try adjusting your search or filters',
-                              style: TextStyle(
-                                color: Colors.grey[500],
-                                fontSize: 14,
-                              ),
+                            const Text(
+                              "No workers found matching your criteria",
+                              style: TextStyle(color: Colors.grey),
                             ),
                           ],
                         ),
                       );
                     }
 
-                    return ListView.builder(
+                    return ListView(
                       padding: const EdgeInsets.all(16),
-                      itemCount: state.filteredProperties.length,
-                      itemBuilder: (context, index) {
-                        final property = state.filteredProperties[index];
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          child: BlocProvider.value(
-                            value: _cartBloc,
-                            child: ExplorePropertyCard(
-                              property: property,
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder:
-                                        (_) => PropertyDetailPage(
-                                          property: property,
-                                        ),
-                                  ),
-                                );
-                              },
+                      children: [
+                        ...displayedWorkers.map((worker) {
+                          final apiModel = WorkerConverter.toApiModel(worker);
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: BlocProvider.value(
+                              value: _cartBloc,
+                              child: PropertyCardWidget(
+                                property: apiModel,
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (_) =>
+                                              WorkerDetailPage(worker: worker),
+                                    ),
+                                  );
+                                },
+                                showFavoriteButton: true,
+                              ),
                             ),
-                          ),
-                        );
-                      },
+                          );
+                        }),
+                      ],
                     );
                   }
 
@@ -230,15 +389,13 @@ class _ExplorePageState extends State<ExplorePage> {
     );
   }
 
-  void _filterProperties() {
+  void _filterWorkers() {
     context.read<ExploreBloc>().add(
-      FilterPropertiesEvent(
+      FilterWorkersEvent(
         searchText: _searchText,
         categoryId: _selectedCategory,
         minPrice: _minPrice,
         maxPrice: _maxPrice,
-        minBedrooms: _minBedrooms,
-        minBathrooms: _minBathrooms,
       ),
     );
   }
@@ -250,8 +407,6 @@ class _ExplorePageState extends State<ExplorePage> {
           (context) => ExploreFilterDialog(
             initialMaxPrice: _maxPrice,
             initialCategory: _selectedCategory,
-            initialMinBedrooms: _minBedrooms,
-            initialMinBathrooms: _minBathrooms,
           ),
     );
 
@@ -260,19 +415,13 @@ class _ExplorePageState extends State<ExplorePage> {
         _maxPrice = result['maxPrice'];
         _minPrice = result['minPrice'];
         _selectedCategory = result['category'];
-        _minBedrooms = result['minBedrooms'];
-        _minBathrooms = result['minBathrooms'];
       });
-      _filterProperties();
+      _filterWorkers();
     }
   }
 
   bool _hasActiveFilters() {
-    return _selectedCategory != null ||
-        _minPrice != null ||
-        _maxPrice != null ||
-        _minBedrooms != null ||
-        _minBathrooms != null;
+    return _selectedCategory != null || _minPrice != null || _maxPrice != null;
   }
 
   void _clearAllFilters() {
@@ -280,9 +429,7 @@ class _ExplorePageState extends State<ExplorePage> {
       _selectedCategory = null;
       _minPrice = null;
       _maxPrice = null;
-      _minBedrooms = null;
-      _minBathrooms = null;
     });
-    _filterProperties();
+    _filterWorkers();
   }
 }

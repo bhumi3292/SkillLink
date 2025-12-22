@@ -1,12 +1,13 @@
 import 'package:dartz/dartz.dart';
 import 'package:skill_link/cores/error/failure.dart';
+import 'package:dio/dio.dart';
 import 'package:skill_link/cores/network/api_service.dart';
-import 'package:skill_link/features/explore/data/model/explore_property_model.dart';
+import 'package:skill_link/features/explore/data/model/explore_worker_model.dart';
 import 'package:skill_link/features/add_worker/data/model/worker_model/worker_api_model.dart';
-import 'package:skill_link/features/explore/presentation/utils/property_converter.dart';
+import 'package:skill_link/app/constant/api_endpoints.dart';
 
 abstract class ExploreRemoteDataSource {
-  Future<Either<Failure, List<ExplorePropertyModel>>> getAllProperties();
+  Future<Either<Failure, List<ExploreWorkerModel>>> getAllWorkers();
 }
 
 class ExploreRemoteDataSourceImpl implements ExploreRemoteDataSource {
@@ -15,11 +16,11 @@ class ExploreRemoteDataSourceImpl implements ExploreRemoteDataSource {
   ExploreRemoteDataSourceImpl(this.apiService);
 
   @override
-  Future<Either<Failure, List<ExplorePropertyModel>>> getAllProperties() async {
+  Future<Either<Failure, List<ExploreWorkerModel>>> getAllWorkers() async {
     try {
       // Fetch workers (previously properties). Backend exposes worker routes
-      // at /api/workers (also kept /api/properties for compatibility).
-      final response = await apiService.dio.get('/workers');
+      // at /api/properties (aliased to workers in frontend constants).
+      final response = await apiService.dio.get(ApiEndpoints.getAllWorkers.replaceFirst(ApiEndpoints.baseUrl, ''));
 
       if (response.statusCode == 200) {
         final responseData = response.data;
@@ -28,96 +29,65 @@ class ExploreRemoteDataSourceImpl implements ExploreRemoteDataSource {
         );
         print('ExploreRemoteDataSource - Response data: $responseData');
 
-        // Handle different response structures
-        List<dynamic> propertiesData;
-        if (responseData is Map<String, dynamic>) {
-          // If response is a map, look for 'data' or 'properties' key
-          if (responseData.containsKey('data')) {
-            propertiesData = responseData['data'] as List<dynamic>;
-            print(
-              'ExploreRemoteDataSource - Found data key with ${propertiesData.length} items',
-            );
-          } else if (responseData.containsKey('properties')) {
-            propertiesData = responseData['properties'] as List<dynamic>;
-            print(
-              'ExploreRemoteDataSource - Found properties key with ${propertiesData.length} items',
-            );
-          } else if (responseData.containsKey('results')) {
-            propertiesData = responseData['results'] as List<dynamic>;
-            print(
-              'ExploreRemoteDataSource - Found results key with ${propertiesData.length} items',
-            );
-          } else {
-            // If no specific key found, try to use the entire response as a list
-            // This handles cases where the API might return the array directly
-            print(
-              'ExploreRemoteDataSource - No data/properties/results key found in response',
-            );
-            return Left(
-              ServerFailure(
-                message: 'Invalid response format: expected properties array',
-              ),
-            );
+        // Normalize the response to extract a List<dynamic> of workers
+        List<dynamic> workerData = [];
+
+        try {
+          if (responseData is Map<String, dynamic>) {
+            dynamic maybe = responseData;
+            if (responseData.containsKey('data')) {
+              maybe = responseData['data'];
+            } else if (responseData.containsKey('properties'))
+              maybe = responseData['properties'];
+            else if (responseData.containsKey('results'))
+              maybe = responseData['results'];
+
+            if (maybe is List) {
+              workerData = maybe;
+            } else if (maybe is Map<String, dynamic>) {
+              // Look for common container keys
+              if (maybe.containsKey('workers') && maybe['workers'] is List) {
+                workerData = maybe['workers'];
+              } else if (maybe.containsKey('items') && maybe['items'] is List) {
+                workerData = maybe['items'];
+              } else if (maybe.containsKey('docs') && maybe['docs'] is List) {
+                workerData = maybe['docs'];
+              } else {
+                // Not a list container — try treating the map itself as a single item
+                workerData = [maybe];
+              }
+            } else {
+              // unexpected shape, leave workerData empty
+              workerData = [];
+            }
+          } else if (responseData is List) {
+            workerData = responseData;
           }
-        } else if (responseData is List<dynamic>) {
-          // If response is directly a list
-          propertiesData = responseData;
-          print(
-            'ExploreRemoteDataSource - Response is directly a list with ${propertiesData.length} items',
-          );
-        } else {
-          print(
-            'ExploreRemoteDataSource - Invalid response type: ${responseData.runtimeType}',
-          );
-          return Left(
-            ServerFailure(
-              message: 'Invalid response format: expected Map or List',
-            ),
-          );
+        } catch (e) {
+          print('ExploreRemoteDataSource - normalization error: $e');
+          workerData = [];
         }
 
-        final properties =
-            propertiesData.map((json) {
-              try {
-                // If JSON matches the property shape, use the existing parser
-                if (json is Map<String, dynamic> &&
-                    (json.containsKey('title') ||
-                        json.containsKey('bedrooms') ||
-                        json.containsKey('price'))) {
-                  return ExplorePropertyModel.fromJson(
-                    json as Map<String, dynamic>,
-                  );
-                }
+        final properties = <ExploreWorkerModel>[];
+        for (var item in workerData) {
+          try {
+            if (item is Map<String, dynamic>) {
+              properties.add(ExploreWorkerModel.fromJson(item));
+            } else if (item is String) {
+              // If the backend returns a JSON string, try to parse it defensively
+              print(
+                'ExploreRemoteDataSource - unexpected string item, skipping: $item',
+              );
+            } else {
+              print(
+                'ExploreRemoteDataSource - skipped unsupported item type: ${item.runtimeType}',
+              );
+            }
+          } catch (e) {
+            print('ExploreRemoteDataSource - failed to parse worker item: $e');
+          }
+        }
 
-                // Fallback: treat response as Worker object and convert
-                final workerApi = WorkerApiModel.fromJson(
-                  (json as Map<String, dynamic>),
-                );
-                // Use the worker fields to build an ExplorePropertyModel
-                return ExplorePropertyModel(
-                  id: workerApi.id,
-                  images: workerApi.images,
-                  videos: workerApi.videos,
-                  title: workerApi.title ?? workerApi.id,
-                  location: workerApi.location,
-                  bedrooms: null,
-                  bathrooms: null,
-                  categoryId: workerApi.categoryId,
-                  categoryName: null,
-                  price: workerApi.price,
-                  description: workerApi.description,
-                  workerId: workerApi.workerId,
-                  workerName: 'Worker',
-                  workerEmail: null,
-                  workerPhone: null,
-                );
-              } catch (e) {
-                // As a last resort, try property parser which may throw otherwise
-                return ExplorePropertyModel.fromJson(
-                  json as Map<String, dynamic>,
-                );
-              }
-            }).toList();
         return Right(properties);
       } else {
         return Left(
@@ -128,6 +98,21 @@ class ExploreRemoteDataSourceImpl implements ExploreRemoteDataSource {
       }
     } catch (e) {
       print('ExploreRemoteDataSource Error: $e');
+      // Provide more details for Dio errors
+      try {
+        if (e is DioException) {
+          print('DioException type: ${e.type}');
+          print(
+            'Request Options: ${e.requestOptions.method} ${e.requestOptions.path}',
+          );
+          print('DioException message: ${e.message}');
+          print(
+            'DioException response: ${e.response?.statusCode} ${e.response?.data}',
+          );
+        }
+      } catch (logErr) {
+        print('Error logging DioException details: $logErr');
+      }
       return Left(NetworkFailure(message: e.toString()));
     }
   }

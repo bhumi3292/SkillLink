@@ -21,6 +21,7 @@ import 'package:skill_link/features/favourite/presentation/bloc/cart_bloc.dart';
 import 'package:skill_link/features/auth/presentation/view_model/login_view_model/login_view_model.dart';
 import 'package:skill_link/features/auth/presentation/view_model/register_view_model/register_view_model.dart';
 import 'package:skill_link/features/profile/presentation/view_model/profile_view_model.dart';
+import 'package:skill_link/features/notification/domain/notification_handler.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -61,6 +62,7 @@ class _MyAppState extends State<MyApp> {
           BlocProvider(create: (_) => serviceLocator<ProfileViewModel>()),
         ],
         child: GetMaterialApp(
+          navigatorKey: NotificationHandler.navigatorKey,
           title: 'SkillLink',
           debugShowCheckedModeBanner: false,
           theme: getApplication(),

@@ -1,47 +1,47 @@
-// routes/propertyRoutes.js
+// routes/workerRoutes.js
 const express = require('express');
 const router = express.Router();
 
 const {
-    createProperty,
-    getAllProperties,
-    getOneProperty,
-    updateProperty,
-    deleteProperty
-} = require('../controllers/property/propertyController');
+    createWorker,
+    getAllWorkers,
+    getOneWorker,
+    updateWorker,
+    deleteWorker
+} = require('../controllers/worker/workerController');
 
 const {
     authenticateUser,
     isworker,
-    isPropertyOwner
+    isPropertyOwner // Rename this later if needed, but logic currently checks role ownership
 } = require('../middlewares/authorizedUser');
 
-const uploadPropertyMedia = require('../middlewares/property/propertyMediaUpload');
+const uploadWorkerMedia = require('../middlewares/worker/workerMediaUpload');
 
 router.post(
     '/',
     authenticateUser,
     isworker,
-    uploadPropertyMedia, // Middleware to handle file uploads
-    createProperty
+    uploadWorkerMedia, // Middleware to handle file uploads
+    createWorker
 );
 
-router.get('/', getAllProperties);
-router.get('/:id', getOneProperty);
+router.get('/', getAllWorkers);
+router.get('/:id', getOneWorker);
 
 router.put(
     '/:id',
     authenticateUser,
     isworker,
-    uploadPropertyMedia, // Middleware to handle new file uploads
-    updateProperty
+    uploadWorkerMedia, // Middleware to handle new file uploads
+    updateWorker
 );
 
 router.delete(
     '/:id',
     authenticateUser,
     isworker,
-    deleteProperty // Delete logic is now in the controller
+    deleteWorker // Delete logic is now in the controller
 );
 
 module.exports = router;

@@ -1,7 +1,7 @@
+import 'package:skill_link/features/explore/presentation/view/worker_detail_page.dart';
 import 'package:flutter/material.dart';
 import '../../domain/entity/favourite_item.dart';
-import 'package:skill_link/features/explore/domain/entity/explore_property_entity.dart';
-import 'package:skill_link/features/explore/presentation/view/property_detail_page.dart';
+import 'package:skill_link/features/explore/domain/entity/explore_worker_entity.dart';
 
 class FavouriteItemWidget extends StatelessWidget {
   final FavouriteItem item;
@@ -16,8 +16,8 @@ class FavouriteItemWidget extends StatelessWidget {
           context,
           MaterialPageRoute(
             builder:
-                (context) => PropertyDetailPage(
-                  property: ExplorePropertyEntity(
+                (context) => WorkerDetailPage(
+                  worker: ExploreWorkerEntity(
                     id: item.id,
                     title: item.title,
                   ),

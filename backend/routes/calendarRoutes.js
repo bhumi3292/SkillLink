@@ -5,8 +5,7 @@ const router = express.Router();
 const calendarController = require('../controllers/calendarController');
 const { authenticateUser, requireRole } = require('../middlewares/auth'); // Your consolidated auth & role middleware
 
-const { isOwnerOrRelatedResource } = require('../middlewares/resourceAuthMiddleware'); // Your new resource auth middleware
-
+const { isOwnerOrRelatedResource } = require('../middlewares/resourceAuthMiddleware');
 
 const Availability = require('../models/calendar');
 const Booking = require('../models/Booking');
@@ -43,8 +42,9 @@ router.delete('/availabilities/:id',
 
 // --- Hirer Calendar Routes ---
 
-router.get('/properties/:propertyId/available-slots',
-    calendarController.getAvailableSlotsForProperty
+// Updated to match rename: properties -> workers (or workerListing)
+router.get('/workers/:workerListingId/available-slots',
+    calendarController.getAvailableSlotsForWorkerListing
 );
 
 router.post('/book-visit',
@@ -66,7 +66,7 @@ router.get('/worker/bookings',
 
 router.put('/bookings/:id/status',
     requireRole('worker'),
-    // Ensures the authenticated worker is the owner of the property associated with this booking
+    // Ensures the authenticated worker is the owner of the workerListing associated with this booking
     isOwnerOrRelatedResource(Booking, 'id'),
     calendarController.updateBookingStatus
 );

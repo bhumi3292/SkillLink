@@ -8,16 +8,16 @@ const AvailabilitySchema = new mongoose.Schema({ // <-- First argument: Schema f
         required: true,
         index: true
     },
-    property: {
+    workerListing: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Property',
+        ref: 'Worker',
         required: true,
         index: true
     },
     date: {
         type: Date, // Store as actual Date object
         required: true,
-        set: function(val) {
+        set: function (val) {
             const d = new Date(val);
             d.setUTCHours(0, 0, 0, 0);
             return d;
@@ -33,6 +33,6 @@ const AvailabilitySchema = new mongoose.Schema({ // <-- First argument: Schema f
 });
 
 // Add a compound unique index to ensure only one availability entry per property per date
-AvailabilitySchema.index({ worker: 1, property: 1, date: 1 }, { unique: true });
+AvailabilitySchema.index({ worker: 1, workerListing: 1, date: 1 }, { unique: true });
 
 module.exports = mongoose.model('Availability', AvailabilitySchema);

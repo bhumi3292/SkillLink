@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const Property = require("../models/Property");
+const Worker = require("../models/Worker");
 
 // Define authenticateUser function
 const authenticateUser = (req, res, next) => {
@@ -34,21 +34,21 @@ const isworker = (req, res, next) => {
     return res.status(403).json({ success: false, message: "Access denied: worker only" });
 };
 
-// Define isPropertyOwner function
-const isPropertyOwner = async (req, res, next) => {
+// Define isWorkerOwner function
+const isWorkerOwner = async (req, res, next) => {
     try {
-        const property = await Property.findById(req.params.id);
-        if (!property) {
-            return res.status(404).json({ success: false, message: "Property not found" });
+        const worker = await Worker.findById(req.params.id);
+        if (!worker) {
+            return res.status(404).json({ success: false, message: "Worker profile not found" });
         }
 
-        if (property.worker.toString() !== req.user._id) {
-            return res.status(403).json({ success: false, message: "Access denied: You do not own this property" });
+        if (worker.worker.toString() !== req.user._id) {
+            return res.status(403).json({ success: false, message: "Access denied: You do not own this worker profile" });
         }
 
         next();
     } catch (error) {
-        console.error("Error in isPropertyOwner:", error);
+        console.error("Error in isWorkerOwner:", error);
         return res.status(500).json({ success: false, message: "Server error" });
     }
 };
@@ -57,5 +57,5 @@ const isPropertyOwner = async (req, res, next) => {
 module.exports = {
     authenticateUser,
     isworker,
-    isPropertyOwner,
+    isWorkerOwner,
 };

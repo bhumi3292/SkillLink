@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="NONE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="38a0e715-1e02-4e76-a058-0611c87ad390" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/skill_link/lib/core/services/location_service.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/skill_link/lib/core/services/notification_service.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/skill_link/lib/features/contact_worker/presentation/view/contact_worker_page.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/skill_link/lib/features/explore/data/model/explore_worker_model.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/skill_link/lib/features/explore/presentation/utils/worker_converter.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/skill_link/lib/features/explore/presentation/view/worker_detail_page.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/skill_link/lib/features/notification/domain/notification_handler.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/skill_link/tools/check_balance.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/skill_link/tools/check_output.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Dart_Packages.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Dart_SDK.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/skilllink.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/skilllink.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.vscode/settings.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/controllers/calendarController.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/controllers/calendarController.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/controllers/cartController.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/controllers/cartController.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/controllers/chatController.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/controllers/chatController.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/controllers/chatbotController.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/controllers/chatbotController.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/controllers/notificationController.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/controllers/property/propertyController.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/controllers/worker/workerController.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/controllers/worker/workerController.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/index.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/middlewares/authorizedUser.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/middlewares/authorizedUser.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/middlewares/property/propertyMediaUpload.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/middlewares/resourceAuthMiddleware.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/middlewares/resourceAuthMiddleware.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/middlewares/worker/workerMediaUpload.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/middlewares/worker/workerMediaUpload.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/models/Booking.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/models/Booking.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/models/Notification.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/models/Property.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/models/Worker.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/models/Worker.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/models/calendar.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/models/calendar.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/models/cart.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/models/cart.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/models/chat.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/models/chat.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/routes/calendarRoutes.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/routes/calendarRoutes.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/routes/notificationRoutes.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/routes/propertyRoutes.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/routes/workerRoutes.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/routes/workerRoutes.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/scripts/migratePropertiesToWorkers.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/scripts/seedWorkers.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/uploads/images-1765528933016-819021882.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/backend/uploads/images-1766336193752-393525778.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/uploads/images-1765531464278-389529298.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/uploads/images-1765532652463-983909390.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/uploads/images-1765533072333-867944794.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/uploads/profilePicture-1765472808620.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/android/app/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/android/app/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/android/app/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/android/app/src/main/AndroidManifest.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/android/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/android/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/app/app.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/app/app.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/app/constant/api_endpoints.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/app/constant/api_endpoints.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/app/service_locator/service_locator.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/app/service_locator/service_locator.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/cores/network/dio_error_interceptor.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/cores/network/dio_error_interceptor.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/add_worker/data/data_source/worker/remote_datasource/worker_remote_datasource.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/add_worker/data/data_source/worker/remote_datasource/worker_remote_datasource.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/add_worker/data/model/worker_model/worker_api_model.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/add_worker/data/model/worker_model/worker_api_model.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/add_worker/domain/entity/worker/worker_entity.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/add_worker/domain/entity/worker/worker_entity.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/add_worker/presentation/view/add_worker_presentation.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/add_worker/presentation/view/add_worker_presentation.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/add_worker/presentation/widgets/location_picker_widget.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/add_worker/presentation/widgets/location_picker_widget.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/booking/presentation/view/booking_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/booking/presentation/view/booking_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/booking/presentation/widgets/booking_modal.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/booking/presentation/widgets/booking_modal.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/chat/data/data_source/chat_rest_data_source.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/chat/data/data_source/chat_rest_data_source.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/chat/data/repository/chat_repository.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/chat/data/repository/chat_repository.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/chat/domain/use_case/chat_usecases.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/chat/domain/use_case/chat_usecases.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/chat/presentation/bloc/chat_bloc.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/chat/presentation/bloc/chat_bloc.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/contact_worker/presentation/view/contact_landlord_page.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/dashbaord/data/data_source/remote_datasource/dashboard_remote_datasource.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/dashbaord/data/data_source/remote_datasource/dashboard_remote_datasource.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/dashbaord/presentation/view/dashboard.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/dashbaord/presentation/view/dashboard.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/dashbaord/presentation/widgets/horizontal_property_card.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/dashbaord/presentation/widgets/horizontal_property_card.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/dashbaord/presentation/widgets/property_card_widget.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/dashbaord/presentation/widgets/property_card_widget.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/explore/data/data_source/explore_remote_data_source.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/explore/data/data_source/explore_remote_data_source.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/explore/data/model/explore_property_model.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/explore/data/repository/explore_repository_impl.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/explore/data/repository/explore_repository_impl.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/explore/domain/entity/explore_property_entity.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/explore/domain/entity/explore_worker_entity.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/explore/domain/repository/explore_repository.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/explore/domain/repository/explore_repository.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/explore/domain/use_case/get_all_properties_usecase.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/explore/domain/use_case/get_all_workers_usecase.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/explore/presentation/bloc/explore_bloc.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/explore/presentation/bloc/explore_bloc.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/explore/presentation/utils/property_converter.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/explore/presentation/view/explore_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/explore/presentation/view/explore_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/explore/presentation/view/property_detail_page.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/explore/presentation/widgets/explore_filter_dialog.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/explore/presentation/widgets/explore_filter_dialog.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/explore/presentation/widgets/explore_item_widget.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/explore/presentation/widgets/explore_item_widget.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/explore/presentation/widgets/explore_property_card.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/explore/presentation/widgets/explore_worker_card.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/favourite/presentation/widgets/cart_item_widget.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/favourite/presentation/widgets/cart_item_widget.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/favourite/presentation/widgets/favourite_item_widget.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/favourite/presentation/widgets/favourite_item_widget.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/main.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/main.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/macos/Flutter/GeneratedPluginRegistrant.swift" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/macos/Flutter/GeneratedPluginRegistrant.swift" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/pubspec.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/pubspec.yaml" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 2
+}</component>
+  <component name="ProjectId" id="379iFcm7snnMsiRhnbTXUHrGfRe" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
+    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
+    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;dart.analysis.tool.window.visible&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;E:/SkillLink/skill_link&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;project.propVCSSupport.DirectoryMappings&quot;,
+    &quot;show.migrate.to.gradle.popup&quot;: &quot;false&quot;
+  }
+}</component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="E:\SkillLink\skill_link" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="E:\SkillLink" />
+    </key>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="38a0e715-1e02-4e76-a058-0611c87ad390" name="Changes" comment="" />
+      <created>1766321586870</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1766321586870</updated>
+    </task>
+    <servers />
+  </component>
+</project>

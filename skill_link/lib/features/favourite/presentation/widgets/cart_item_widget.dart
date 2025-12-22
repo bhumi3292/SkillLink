@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:skill_link/features/favourite/domain/entity/cart/cart_item_entity.dart';
 import 'package:skill_link/cores/utils/image_url_helper.dart';
-import 'package:skill_link/features/explore/presentation/view/property_detail_page.dart';
-import 'package:skill_link/features/explore/presentation/utils/property_converter.dart';
+import 'package:skill_link/features/explore/presentation/view/worker_detail_page.dart';
+import 'package:skill_link/features/explore/presentation/utils/worker_converter.dart';
 
 class CartItemWidget extends StatelessWidget {
   final CartItemEntity cartItem;
@@ -24,13 +24,13 @@ class CartItemWidget extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: () {
-          final exploreProperty = PropertyConverter.fromPropertyEntity(
+          final exploreWorker = WorkerConverter.fromWorkerEntity(
             property,
           );
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => PropertyDetailPage(property: exploreProperty),
+              builder: (_) => WorkerDetailPage(worker: exploreWorker),
             ),
           );
         },

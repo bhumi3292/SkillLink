@@ -8,24 +8,29 @@ android {
     namespace = "com.example.skill_link"
     compileSdk = flutter.compileSdkVersion
 
-    // Updated to NDK 27.0.12077973 for plugin compatibility
+    // You already set this; keep it
     ndkVersion = "27.0.12077973"
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
-    }
 
     defaultConfig {
         applicationId = "com.example.skill_link"
-        minSdk = flutter.minSdkVersion
+        minSdk = flutter.minSdkVersion  // must be >= 21
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        multiDexEnabled = true
+    }
+
+    compileOptions {
+        // Enable Java 8+ API desugaring
+        isCoreLibraryDesugaringEnabled = true
+
+        // Use Java 11 compatibility (works with Android Gradle Plugin 8.x)
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_11.toString()
     }
 
     buildTypes {
@@ -37,4 +42,9 @@ android {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // Desugaring library version 2.1.5 satisfies requirement of flutter_local_notifications >= 2.1.4
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
 }

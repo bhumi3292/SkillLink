@@ -5,18 +5,23 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:skill_link/app/shared_pref/token_shared_prefs.dart';
 import 'package:skill_link/app/service_locator/service_locator.dart';
 
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:skill_link/features/profile/presentation/view_model/profile_view_model.dart';
+
 // Import your ApiEndpoints file
 import '../../../../app/constant/api_endpoints.dart';
 
 class BookingModal extends StatefulWidget {
   final String propertyId;
   final String propertyTitle;
+  final String workerId; // NEW
   final VoidCallback? onBookingSuccess;
 
   const BookingModal({
     super.key,
     required this.propertyId,
     required this.propertyTitle,
+    required this.workerId, // NEW
     this.onBookingSuccess,
   });
 
@@ -65,7 +70,7 @@ class _BookingModalState extends State<BookingModal> {
 
       // Using ApiEndpoints.baseUrl here
       final response = await Dio().get(
-        '${ApiEndpoints.baseUrl}calendar/properties/${widget.propertyId}/available-slots',
+        ApiEndpoints.getAvailableSlots(widget.propertyId),
         queryParameters: {'date': formattedDate},
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
@@ -142,11 +147,25 @@ class _BookingModalState extends State<BookingModal> {
         return;
       }
 
-      // Using ApiEndpoints.baseUrl here
+      // Get Hirer ID from ProfileViewModel
+      final profileState = context.read<ProfileViewModel>().state;
+      final hirerId = profileState.user?.userId;
+
+      if (hirerId == null) {
+        setState(() {
+          _error = 'Unable to identify user. Please log in again.';
+          _booking = false;
+        });
+        return;
+      }
+
       await Dio().post(
-        '${ApiEndpoints.baseUrl}calendar/book-visit',
+        ApiEndpoints.bookVisit,
         data: {
-          'propertyId': widget.propertyId,
+          'workerListingId':
+              widget.propertyId, // Renamed propertyId to workerListingId
+          'workerId': widget.workerId, // NEW: Passing workerId
+          'hirerId': hirerId, // NEW: Passing hirerId
           'date': formattedDate,
           'timeSlot': _selectedSlot,
         },

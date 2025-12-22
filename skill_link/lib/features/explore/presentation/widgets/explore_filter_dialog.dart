@@ -3,15 +3,11 @@ import 'package:flutter/material.dart';
 class ExploreFilterDialog extends StatefulWidget {
   final double? initialMaxPrice;
   final String? initialCategory;
-  final int? initialMinBedrooms;
-  final int? initialMinBathrooms;
 
   const ExploreFilterDialog({
     super.key,
     this.initialMaxPrice,
     this.initialCategory,
-    this.initialMinBedrooms,
-    this.initialMinBathrooms,
   });
 
   @override
@@ -22,8 +18,6 @@ class _ExploreFilterDialogState extends State<ExploreFilterDialog> {
   late TextEditingController _maxPriceController;
   late TextEditingController _minPriceController;
   String? _selectedCategory;
-  int? _selectedMinBedrooms;
-  int? _selectedMinBathrooms;
 
   @override
   void initState() {
@@ -33,8 +27,6 @@ class _ExploreFilterDialogState extends State<ExploreFilterDialog> {
     );
     _minPriceController = TextEditingController();
     _selectedCategory = widget.initialCategory;
-    _selectedMinBedrooms = widget.initialMinBedrooms;
-    _selectedMinBathrooms = widget.initialMinBathrooms;
   }
 
   @override
@@ -49,8 +41,6 @@ class _ExploreFilterDialogState extends State<ExploreFilterDialog> {
       _maxPriceController.clear();
       _minPriceController.clear();
       _selectedCategory = null;
-      _selectedMinBedrooms = null;
-      _selectedMinBathrooms = null;
     });
   }
 
@@ -61,12 +51,12 @@ class _ExploreFilterDialogState extends State<ExploreFilterDialog> {
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text('Filter Properties'),
+          const Text('Filter Workers'),
           TextButton(onPressed: _resetFilters, child: const Text('Reset')),
         ],
       ),
       content: SizedBox(
-        width: MediaQuery.of(context).size.width * 0.85, // Increased width
+        width: MediaQuery.of(context).size.width * 0.85,
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -74,7 +64,7 @@ class _ExploreFilterDialogState extends State<ExploreFilterDialog> {
             children: [
               // Price Range
               const Text(
-                'Price Range',
+                'Hourly Rate Range',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
               const SizedBox(height: 8),
@@ -84,7 +74,7 @@ class _ExploreFilterDialogState extends State<ExploreFilterDialog> {
                     child: TextField(
                       controller: _minPriceController,
                       decoration: const InputDecoration(
-                        labelText: 'Min Price',
+                        labelText: 'Min Rate',
                         hintText: '0',
                         prefixIcon: Icon(Icons.attach_money),
                       ),
@@ -96,7 +86,7 @@ class _ExploreFilterDialogState extends State<ExploreFilterDialog> {
                     child: TextField(
                       controller: _maxPriceController,
                       decoration: const InputDecoration(
-                        labelText: 'Max Price',
+                        labelText: 'Max Rate',
                         hintText: 'No limit',
                         prefixIcon: Icon(Icons.attach_money),
                       ),
@@ -110,7 +100,7 @@ class _ExploreFilterDialogState extends State<ExploreFilterDialog> {
 
               // Category Filter
               const Text(
-                'WorkerType',
+                'Skill Category',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
               const SizedBox(height: 8),
@@ -124,122 +114,40 @@ class _ExploreFilterDialogState extends State<ExploreFilterDialog> {
                 items: [
                   const DropdownMenuItem<String>(
                     value: null,
-                    child: Text('All Types'),
+                    child: Text('All Skills'),
                   ),
                   const DropdownMenuItem<String>(
-                    value: 'apartment',
-                    child: Text('Apartment'),
+                    value: 'Plumbing',
+                    child: Text('Plumbing'),
                   ),
                   const DropdownMenuItem<String>(
-                    value: 'house',
-                    child: Text('House'),
+                    value: 'Electrical',
+                    child: Text('Electrical'),
                   ),
                   const DropdownMenuItem<String>(
-                    value: 'villa',
-                    child: Text('Villa'),
+                    value: 'Cleaning',
+                    child: Text('Cleaning'),
                   ),
                   const DropdownMenuItem<String>(
-                    value: 'condo',
-                    child: Text('Condo'),
+                    value: 'Painting',
+                    child: Text('Painting'),
                   ),
                   const DropdownMenuItem<String>(
-                    value: 'studio',
-                    child: Text('Studio'),
+                    value: 'Carpentry',
+                    child: Text('Carpentry'),
                   ),
                   const DropdownMenuItem<String>(
-                    value: 'penthouse',
-                    child: Text('Penthouse'),
+                    value: 'Moving',
+                    child: Text('Moving'),
+                  ),
+                  const DropdownMenuItem<String>(
+                    value: 'Other',
+                    child: Text('Other'),
                   ),
                 ],
                 onChanged: (value) {
                   setState(() {
                     _selectedCategory = value;
-                  });
-                },
-              ),
-
-              const SizedBox(height: 24),
-
-              // Bedrooms Filter
-              const Text(
-                'Bedrooms',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-              const SizedBox(height: 8),
-              DropdownButtonFormField<int>(
-                initialValue: _selectedMinBedrooms,
-                decoration: const InputDecoration(
-                  labelText: 'Minimum Bedrooms',
-                  prefixIcon: Icon(Icons.bed),
-                  border: OutlineInputBorder(),
-                ),
-                items: [
-                  const DropdownMenuItem<int>(value: null, child: Text('Any')),
-                  const DropdownMenuItem<int>(
-                    value: 1,
-                    child: Text('1+ Bedroom'),
-                  ),
-                  const DropdownMenuItem<int>(
-                    value: 2,
-                    child: Text('2+ Bedrooms'),
-                  ),
-                  const DropdownMenuItem<int>(
-                    value: 3,
-                    child: Text('3+ Bedrooms'),
-                  ),
-                  const DropdownMenuItem<int>(
-                    value: 4,
-                    child: Text('4+ Bedrooms'),
-                  ),
-                  const DropdownMenuItem<int>(
-                    value: 5,
-                    child: Text('5+ Bedrooms'),
-                  ),
-                ],
-                onChanged: (value) {
-                  setState(() {
-                    _selectedMinBedrooms = value;
-                  });
-                },
-              ),
-
-              const SizedBox(height: 24),
-
-              // Bathrooms Filter
-              const Text(
-                'Bathrooms',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-              const SizedBox(height: 8),
-              DropdownButtonFormField<int>(
-                initialValue: _selectedMinBathrooms,
-                decoration: const InputDecoration(
-                  labelText: 'Minimum Bathrooms',
-                  prefixIcon: Icon(Icons.bathtub_outlined),
-                  border: OutlineInputBorder(),
-                ),
-                items: [
-                  const DropdownMenuItem<int>(value: null, child: Text('Any')),
-                  const DropdownMenuItem<int>(
-                    value: 1,
-                    child: Text('1+ Bathroom'),
-                  ),
-                  const DropdownMenuItem<int>(
-                    value: 2,
-                    child: Text('2+ Bathrooms'),
-                  ),
-                  const DropdownMenuItem<int>(
-                    value: 3,
-                    child: Text('3+ Bathrooms'),
-                  ),
-                  const DropdownMenuItem<int>(
-                    value: 4,
-                    child: Text('4+ Bathrooms'),
-                  ),
-                ],
-                onChanged: (value) {
-                  setState(() {
-                    _selectedMinBathrooms = value;
                   });
                 },
               ),
@@ -262,8 +170,6 @@ class _ExploreFilterDialogState extends State<ExploreFilterDialog> {
               'maxPrice': maxPrice,
               'minPrice': minPrice,
               'category': _selectedCategory,
-              'minBedrooms': _selectedMinBedrooms,
-              'minBathrooms': _selectedMinBathrooms,
             });
           },
           child: const Text('Apply Filters'),

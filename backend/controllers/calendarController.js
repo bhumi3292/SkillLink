@@ -2,7 +2,7 @@
 
 const Availability = require('../models/calendar'); // Your Availability model
 const Booking = require('../models/Booking'); // Your Booking model
-const Property = require('../models/Property'); // Your Property model
+const Worker = require('../models/Worker'); // Your Worker model
 const User = require('../models/User');
 
 const normalizeDateString = (dateInput) => {
@@ -13,31 +13,31 @@ const normalizeDateString = (dateInput) => {
 
 
 exports.createAvailability = async (req, res) => {
-    const { propertyId, date, timeSlots } = req.body;
+    const { workerListingId, date, timeSlots } = req.body;
     const workerId = req.user._id;
 
-    if (!propertyId || !date || !Array.isArray(timeSlots) || timeSlots.length === 0) {
-        return res.status(400).json({ success: false, message: 'Property ID, date, and at least one time slot are required.' });
+    if (!workerListingId || !date || !Array.isArray(timeSlots) || timeSlots.length === 0) {
+        return res.status(400).json({ success: false, message: 'Worker Listing ID, date, and at least one time slot are required.' });
     }
 
     try {
         const normalizedDate = normalizeDateString(date);
 
-        const property = await Property.findOne({ _id: propertyId, worker: workerId });
-        if (!property) {
-            return res.status(404).json({ success: false, message: 'Property not found or does not belong to you.' });
+        const workerListing = await Worker.findOne({ _id: workerListingId, worker: workerId });
+        if (!workerListing) {
+            return res.status(404).json({ success: false, message: 'Worker listing not found or does not belong to you.' });
         }
 
         let availability = await Availability.findOne({
             worker: workerId,
-            property: propertyId,
+            workerListing: workerListingId,
             date: new Date(normalizedDate) // Query using Date object as stored in DB
         });
 
         if (availability) {
             // When updating, ensure we don't add slots that are currently booked
             const existingBookedSlots = await Booking.find({
-                property: propertyId,
+                workerListing: workerListingId,
                 date: normalizedDate, // Query using string as stored in Booking
                 status: { $in: ['pending', 'confirmed'] }
             }).select('timeSlot -_id');
@@ -56,7 +56,7 @@ exports.createAvailability = async (req, res) => {
         } else {
             // When creating new availability, filter out any slots that might already be booked
             const existingBookedSlots = await Booking.find({
-                property: propertyId,
+                workerListing: workerListingId,
                 date: normalizedDate,
                 status: { $in: ['pending', 'confirmed'] }
             }).select('timeSlot -_id');
@@ -70,7 +70,7 @@ exports.createAvailability = async (req, res) => {
 
             availability = new Availability({
                 worker: workerId,
-                property: propertyId,
+                workerListing: workerListingId,
                 date: new Date(normalizedDate), // Store as Date object in DB
                 timeSlots: initialTimeSlots
             });
@@ -80,7 +80,7 @@ exports.createAvailability = async (req, res) => {
     } catch (error) {
         console.error('Error in createAvailability:', error);
         if (error.code === 11000) { // MongoDB duplicate key error (if compound unique index on Availability is hit)
-            return res.status(409).json({ success: false, message: 'Availability for this property and date already exists. Please update it instead.' });
+            return res.status(409).json({ success: false, message: 'Availability for this listing and date already exists. Please update it instead.' });
         }
         res.status(500).json({ success: false, message: 'Server error creating or updating availability.', error: error.message });
     }
@@ -94,7 +94,7 @@ exports.getworkerAvailabilities = async (req, res) => {
 
     try {
         const availabilities = await Availability.find({ worker: workerId })
-            .populate('property', 'title address images')
+            .populate('workerListing', 'title location images')
             .sort({ date: 1, 'timeSlots': 1 }); // Sort by date and then time slots (lexicographically)
 
         // For consistency, convert date back to 'YYYY-MM-DD' string for frontend
@@ -138,7 +138,7 @@ exports.updateAvailability = async (req, res) => {
         if (removedSlots.length > 0) {
             // Check for existing active bookings for the slots being removed
             const existingBookings = await Booking.countDocuments({
-                property: availability.property,
+                workerListing: availability.workerListing,
                 date: normalizedDate, // Query using normalized date string
                 timeSlot: { $in: removedSlots },
                 status: { $in: ['pending', 'confirmed'] }
@@ -177,7 +177,7 @@ exports.deleteAvailability = async (req, res) => {
 
         // Check for existing active bookings for any slot on this date
         const existingBookings = await Booking.countDocuments({
-            property: availability.property,
+            workerListing: availability.workerListing,
             date: normalizedDate, // Query using normalized date string
             status: { $in: ['pending', 'confirmed'] }
         });
@@ -199,8 +199,8 @@ exports.deleteAvailability = async (req, res) => {
 
 // --- Hirer Specific Controller Functions ---
 
-exports.getAvailableSlotsForProperty = async (req, res) => {
-    const { propertyId } = req.params;
+exports.getAvailableSlotsForWorkerListing = async (req, res) => {
+    const { workerListingId } = req.params;
     const { date } = req.query;
 
     if (!date) {
@@ -211,7 +211,7 @@ exports.getAvailableSlotsForProperty = async (req, res) => {
         const normalizedDate = normalizeDateString(date);
 
         const availability = await Availability.findOne({
-            property: propertyId,
+            workerListing: workerListingId,
             date: new Date(normalizedDate) // Query using Date object
         });
 
@@ -219,16 +219,16 @@ exports.getAvailableSlotsForProperty = async (req, res) => {
             return res.status(200).json({ success: true, availableSlots: [], message: 'No availability found for this date.' });
         }
 
-        // Find all active bookings for this property and date
+        // Find all active bookings for this listing and date
         const bookedSlots = await Booking.find({
-            property: propertyId,
+            workerListing: workerListingId,
             date: normalizedDate, // Query using normalized date string
             status: { $in: ['pending', 'confirmed'] }
         }).select('timeSlot -_id');
 
         const bookedTimeSlots = new Set(bookedSlots.map(booking => booking.timeSlot));
 
-        // Filter out booked slots from the worker's available slots
+        // Filter out booked slots
         const trulyAvailableSlots = availability.timeSlots.filter(
             slot => !bookedTimeSlots.has(slot)
         ).sort((a, b) => a.localeCompare(b)); // Sort for consistent order
@@ -237,24 +237,24 @@ exports.getAvailableSlotsForProperty = async (req, res) => {
             success: true,
             date: normalizedDate, // Return as string
             availableSlots: trulyAvailableSlots,
-            property: propertyId
+            workerListing: workerListingId
         });
 
     } catch (error) {
-        console.error('Error in getAvailableSlotsForProperty:', error);
+        console.error('Error in getAvailableSlotsForWorkerListing:', error);
         res.status(500).json({ success: false, message: 'Server error fetching available slots.', error: error.message });
     }
 };
 
-// @desc    Book a visit for a property
+// @desc    Book a visit for a worker listing
 // @route   POST /api/calendar/book-visit
 // @access  Private (Hirer)
 exports.bookVisit = async (req, res) => {
-    const { propertyId, date, timeSlot } = req.body;
+    const { workerListingId, date, timeSlot } = req.body;
     const HirerId = req.user._id;
 
-    if (!propertyId || !date || !timeSlot) {
-        return res.status(400).json({ success: false, message: 'Property ID, date, and time slot are required.' });
+    if (!workerListingId || !date || !timeSlot) {
+        return res.status(400).json({ success: false, message: 'Worker Listing ID, date, and time slot are required.' });
     }
 
     try {
@@ -262,7 +262,7 @@ exports.bookVisit = async (req, res) => {
 
         // 1. Verify availability and get worker ID from Availability
         const availability = await Availability.findOne({
-            property: propertyId,
+            workerListing: workerListingId,
             date: new Date(normalizedDate), // Query with Date object
             timeSlots: timeSlot // Check if the specific time slot is in the array
         });
@@ -274,7 +274,7 @@ exports.bookVisit = async (req, res) => {
 
         // 2. Check if the slot is already booked (pending or confirmed)
         const existingActiveBooking = await Booking.findOne({
-            property: propertyId,
+            workerListing: workerListingId,
             date: normalizedDate,
             timeSlot: timeSlot,
             status: { $in: ['pending', 'confirmed'] }
@@ -284,10 +284,10 @@ exports.bookVisit = async (req, res) => {
             return res.status(409).json({ success: false, message: 'This time slot is already booked. Please choose another.' });
         }
 
-        // 3. Prevent Hirer from booking the same property at the same time (if they already have a pending/confirmed booking for this exact slot)
+        // 3. Prevent Hirer from booking the same listing at the same time
         const HirerExistingBooking = await Booking.findOne({
             Hirer: HirerId,
-            property: propertyId,
+            workerListing: workerListingId,
             date: normalizedDate,
             timeSlot: timeSlot,
             status: { $in: ['pending', 'confirmed'] }
@@ -299,8 +299,8 @@ exports.bookVisit = async (req, res) => {
         // 4. Create the new booking
         const newBooking = new Booking({
             Hirer: HirerId,
-            worker: workerId, // Assign worker ID from availability
-            property: propertyId,
+            worker: workerId, // Assign worker ID from availability (the provider)
+            workerListing: workerListingId,
             date: normalizedDate, // Store as string
             timeSlot: timeSlot,
             status: 'pending' // Initial status
@@ -316,7 +316,7 @@ exports.bookVisit = async (req, res) => {
 
     } catch (error) {
         console.error('Error in bookVisit:', error);
-        if (error.code === 11000) { // MongoDB duplicate key error (if compound unique index on Booking is hit)
+        if (error.code === 11000) { // MongoDB duplicate key error
             return res.status(409).json({ success: false, message: 'You already have an active booking for this specific time slot.' });
         }
         res.status(500).json({ success: false, message: 'Server error booking visit.', error: error.message });
@@ -329,14 +329,14 @@ exports.getHirerBookings = async (req, res) => {
 
     try {
         const bookings = await Booking.find({ Hirer: HirerId })
-            .populate('property', 'title address images')
-            .populate('worker', 'fullName email phoneNumber') // Populate worker details
+            .populate('workerListing', 'title location images')
+            .populate('worker', 'fullName email phoneNumber') // Populate worker (provider) details
             .sort({ date: 1, timeSlot: 1 });
 
-        // Ensure date is returned as YYYY-MM-DD string for consistency with frontend
+        // Ensure date is returned as YYYY-MM-DD string
         const formattedBookings = bookings.map(booking => ({
             ...booking.toObject(),
-            date: normalizeDateString(booking.date), // Convert Date object back to string
+            date: normalizeDateString(booking.date),
         }));
 
         res.status(200).json({ success: true, bookings: formattedBookings });
@@ -348,7 +348,7 @@ exports.getHirerBookings = async (req, res) => {
 
 // --- Shared/worker Management Controller Functions for Bookings ---
 
-// @desc    Get all bookings for the authenticated worker's properties
+// @desc    Get all bookings for the authenticated worker's listings
 // @route   GET /api/calendar/worker/bookings
 // @access  Private (worker)
 exports.getworkerBookings = async (req, res) => {
@@ -357,20 +357,18 @@ exports.getworkerBookings = async (req, res) => {
     try {
         const bookings = await Booking.find({
             $or: [
-                // Assuming 'worker' field exists directly on Booking model
-                // If not, this part might not match anything, but is harmless if property.worker is checked below
                 { worker: userId },
                 { Hirer: userId }
             ]
         })
             .populate('Hirer', 'fullName email phoneNumber') // Populate Hirer details
-            .populate('property', 'title address images')
+            .populate('workerListing', 'title location images')
             .sort({ date: 1, timeSlot: 1 });
 
-        // Ensure date is returned as YYYY-MM-DD string for consistency with frontend
+        // Ensure date is returned as YYYY-MM-DD string
         const formattedBookings = bookings.map(booking => ({
             ...booking.toObject(),
-            date: normalizeDateString(booking.date), // Convert Date object back to string
+            date: normalizeDateString(booking.date),
         }));
 
         res.status(200).json({ success: true, bookings: formattedBookings });
@@ -385,7 +383,7 @@ exports.updateBookingStatus = async (req, res) => {
     const { status } = req.body;
     const workerId = req.user._id;
 
-    // Frontend uses 'Confirmed', 'Rejected', 'Cancelled'. Convert to lowercase for enum.
+    // Frontend uses 'Confirmed', 'Rejected', 'Cancelled'.
     const validStatuses = ['pending', 'confirmed', 'rejected', 'cancelled'];
     const newStatus = status.toLowerCase();
 
@@ -394,9 +392,9 @@ exports.updateBookingStatus = async (req, res) => {
     }
 
     try {
-        const booking = await Booking.findById(id).populate('property'); // Populate property to access worker ID
+        const booking = await Booking.findById(id).populate('workerListing');
         if (!booking || booking.worker.toString() !== workerId.toString()) {
-            return res.status(404).json({ success: false, message: 'Booking not found or does not belong to your properties.' });
+            return res.status(404).json({ success: false, message: 'Booking not found or does not belong to your listings.' });
         }
 
         // Prevent reverting status from confirmed/rejected/cancelled back to pending
@@ -414,7 +412,7 @@ exports.updateBookingStatus = async (req, res) => {
             // Slot needs to be freed up
             const normalizedDate = normalizeDateString(booking.date);
             const availability = await Availability.findOne({
-                property: booking.property,
+                workerListing: booking.workerListing,
                 date: new Date(normalizedDate) // Query with Date object
             });
 
@@ -424,14 +422,12 @@ exports.updateBookingStatus = async (req, res) => {
                     availability.timeSlots.push(booking.timeSlot);
                     availability.timeSlots.sort((a, b) => a.localeCompare(b)); // Keep sorted
                     await availability.save();
-                    console.log(`Slot ${booking.timeSlot} re-added to availability for property ${booking.property.title} on ${normalizedDate}.`);
+                    console.log(`Slot ${booking.timeSlot} re-added to availability for listing ${booking.workerListing.title} on ${normalizedDate}.`);
                 }
             } else {
-                console.warn(`Availability for property ${booking.property._id} on ${normalizedDate} not found when updating booking status to ${newStatus}. Slot not re-added.`);
+                console.warn(`Availability for listing ${booking.workerListing._id} on ${normalizedDate} not found when updating booking status to ${newStatus}. Slot not re-added.`);
             }
         }
-        // No explicit availability update needed if status changes to 'confirmed',
-        // as 'bookVisit' already removed the slot.
 
         await booking.save();
 
@@ -441,18 +437,18 @@ exports.updateBookingStatus = async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error updating booking status.', error: error.message });
     }
 };
+
 exports.deleteBooking = async (req, res) => {
     const { id } = req.params;
-    const userId = req.user._id; // Current user performing the action
+    const userId = req.user._id;
 
     try {
-        const booking = await Booking.findById(id).populate('property'); // Populate property to access worker ID
+        const booking = await Booking.findById(id).populate('workerListing');
 
         if (!booking) {
             return res.status(404).json({ success: false, message: 'Booking not found.' });
         }
 
-        // Authorization: Only the Hirer who made the booking or the worker of the property can cancel/delete
         if (booking.Hirer.toString() !== userId.toString() && booking.worker.toString() !== userId.toString()) {
             return res.status(403).json({ success: false, message: 'Access denied: You are not authorized to cancel this booking.' });
         }
@@ -469,20 +465,17 @@ exports.deleteBooking = async (req, res) => {
         if (oldStatus === 'pending' || oldStatus === 'confirmed') {
             const normalizedDate = normalizeDateString(booking.date);
             const availability = await Availability.findOne({
-                property: booking.property._id,
-                date: new Date(normalizedDate) // Query with Date object
+                workerListing: booking.workerListing._id,
+                date: new Date(normalizedDate)
             });
 
             if (availability) {
-                // Add the time slot back if it's not already there
                 if (!availability.timeSlots.includes(booking.timeSlot)) {
                     availability.timeSlots.push(booking.timeSlot);
-                    availability.timeSlots.sort((a, b) => a.localeCompare(b)); // Keep sorted
+                    availability.timeSlots.sort((a, b) => a.localeCompare(b));
                     await availability.save();
-                    console.log(`Slot ${booking.timeSlot} re-added to availability for property ${booking.property.title} on ${normalizedDate} due to booking cancellation.`);
+                    console.log(`Slot ${booking.timeSlot} re-added availability.`);
                 }
-            } else {
-                console.warn(`Availability for property ${booking.property._id} on ${normalizedDate} not found when cancelling booking ${id}. Slot not re-added.`);
             }
         }
 

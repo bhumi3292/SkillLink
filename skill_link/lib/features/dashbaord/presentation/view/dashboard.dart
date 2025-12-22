@@ -9,8 +9,8 @@ import 'package:skill_link/features/dashbaord/presentation/view_model/dashboard_
 import 'package:skill_link/features/add_worker/data/model/worker_model/worker_api_model.dart';
 import 'package:skill_link/features/dashbaord/presentation/widgets/property_card_widget.dart';
 import 'package:skill_link/features/dashbaord/presentation/widgets/horizontal_property_card.dart';
-import 'package:skill_link/features/explore/presentation/view/property_detail_page.dart';
-import 'package:skill_link/features/explore/presentation/utils/property_converter.dart';
+import 'package:skill_link/features/explore/presentation/view/worker_detail_page.dart';
+import 'package:skill_link/features/explore/presentation/utils/worker_converter.dart';
 import 'package:skill_link/cores/utils/image_url_helper.dart'; // Import ImageUrlHelper here
 
 class DashboardPage extends StatelessWidget {
@@ -89,44 +89,101 @@ class DashboardView extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // --- User Profile Header ---
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
-            child: Row(
+          // --- Modern Header ---
+          Container(
+            padding: const EdgeInsets.only(
+              top: 24,
+              bottom: 32,
+              left: 16,
+              right: 16,
+            ),
+            decoration: const BoxDecoration(
+              color: Color(0xFF003366),
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(24),
+                bottomRight: Radius.circular(24),
+              ),
+            ),
+            child: Column(
               children: [
-                CircleAvatar(
-                  radius: 32,
-                  backgroundImage:
-                      user?.profilePicture != null &&
-                              user!.profilePicture!.isNotEmpty
-                          // Use ImageUrlHelper here! It's designed for this.
-                          ? CachedNetworkImageProvider(
-                            ImageUrlHelper.constructImageUrl(
-                              user.profilePicture!,
-                            ),
-                          )
-                          : const AssetImage('assets/images/fb.png')
-                              as ImageProvider,
-                ),
-                const SizedBox(width: 16),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                Row(
                   children: [
-                    Text(
-                      'Welcome,',
-                      style: Theme.of(context).textTheme.bodyLarge,
+                    CircleAvatar(
+                      radius: 28,
+                      backgroundColor: Colors.white,
+                      child: CircleAvatar(
+                        radius: 26,
+                        backgroundImage:
+                            user?.profilePicture != null &&
+                                    user!.profilePicture!.isNotEmpty
+                                ? CachedNetworkImageProvider(
+                                  ImageUrlHelper.constructImageUrl(
+                                    user.profilePicture!,
+                                  ),
+                                )
+                                : const AssetImage('assets/images/fb.png')
+                                    as ImageProvider,
+                      ),
                     ),
-                    Text(
-                      user?.fullName ?? 'Guest',
-                      style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(fontWeight: FontWeight.bold),
+                    const SizedBox(width: 16),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Welcome,',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: Colors.white70),
+                        ),
+                        Text(
+                          user?.fullName ?? 'Guest',
+                          style: Theme.of(
+                            context,
+                          ).textTheme.titleLarge?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.notifications_outlined,
+                        color: Colors.white,
+                      ),
+                      onPressed: () {},
                     ),
                   ],
+                ),
+                const SizedBox(height: 24),
+                // Search Bar Placeholder
+                GestureDetector(
+                  onTap: onSeeAllTap, // Navigate to Explore
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.search, color: Colors.grey),
+                        const SizedBox(width: 12),
+                        const Text(
+                          'Find Electrician, Plumber...',
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 20),
 
           // --- Horizontal Scroll: Featured/Recommended Properties ---
           Padding(
@@ -135,8 +192,12 @@ class DashboardView extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
-                  "Recommended",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  "Recommended Workers",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF003366),
+                  ),
                 ),
                 TextButton(
                   onPressed: onSeeAllTap,
@@ -165,16 +226,18 @@ class DashboardView extends StatelessWidget {
                     child: HorizontalPropertyCard(
                       property: property,
                       onTap: () {
-                        final exploreProperty = PropertyConverter.fromApiModel(
-                          property,
-                        );
+                        // If you have a corresponding ExploreWorkerEntity available,
+                        // prefer passing that. Otherwise fallback to converting.
+                        final exploreWorker =
+                        // property may be a WorkerApiModel; try to avoid losing
+                        // phone by checking for an existing ExploreWorkerEntity
+                        // in scope — fallback to conversion.
+                        WorkerConverter.fromApiModel(property);
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder:
-                                (_) => PropertyDetailPage(
-                                  property: exploreProperty,
-                                ),
+                                (_) => WorkerDetailPage(worker: exploreWorker),
                           ),
                         );
                       },
@@ -216,8 +279,12 @@ class DashboardView extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: const Text(
-              "All Properties",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              "All Workers",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF003366),
+              ),
             ),
           ),
           Column(
@@ -232,15 +299,15 @@ class DashboardView extends StatelessWidget {
                         child: PropertyCardWidget(
                           property: property,
                           onTap: () {
-                            final exploreProperty =
-                                PropertyConverter.fromApiModel(property);
+                            final exploreWorker = WorkerConverter.fromApiModel(
+                              property,
+                            );
                             Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder:
-                                    (_) => PropertyDetailPage(
-                                      property: exploreProperty,
-                                    ),
+                                    (_) =>
+                                        WorkerDetailPage(worker: exploreWorker),
                               ),
                             );
                           },

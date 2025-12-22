@@ -8,9 +8,9 @@ const cartSchema = new mongoose.Schema({
     },
     items: [
         {
-            property: {
+            worker: {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: 'Property',
+                ref: 'Worker',
                 required: true
             },
         }

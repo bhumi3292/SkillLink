@@ -164,7 +164,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     try {
       final chat = await createOrGetChatUsecase(
         otherUserId: event.otherUserId,
-        propertyId: event.propertyId,
+        workerId: event.propertyId,
       );
       final messages = await getMessagesForChatUsecase(chat['_id']);
       emit(ChatLoaded(chat: chat, messages: messages));

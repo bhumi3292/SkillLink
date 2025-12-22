@@ -29,9 +29,9 @@ const upload = multer({
     },
 });
 
-const uploadPropertyMedia = upload.fields([
+const uploadWorkerMedia = upload.fields([
     { name: "images", maxCount: 10 },
     { name: "videos", maxCount: 3 },
 ]);
 
-module.exports = uploadPropertyMedia;
+module.exports = uploadWorkerMedia;

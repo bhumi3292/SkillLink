@@ -1,300 +1,231 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart';
+import 'package:http/http.dart' as http;
+import 'package:latlong2/latlong.dart';
 
 class LocationPickerWidget extends StatefulWidget {
-  final Function(LatLng, String) onLocationSelected;
-  final String? initialAddress;
-  final LatLng? initialLatLng;
+  final Function(LatLng, String) onLocationPicked;
 
-  const LocationPickerWidget({
-    super.key,
-    required this.onLocationSelected,
-    this.initialAddress,
-    this.initialLatLng,
-  });
+  const LocationPickerWidget({super.key, required this.onLocationPicked});
 
   @override
   State<LocationPickerWidget> createState() => _LocationPickerWidgetState();
 }
 
 class _LocationPickerWidgetState extends State<LocationPickerWidget> {
-  late GoogleMapController mapController;
-  LatLng _selectedLocation = const LatLng(
-    27.7172,
-    85.3240,
-  ); // Kathmandu default
-  String _selectedAddress = '';
-  Set<Marker> _markers = {};
-  bool _isLoading = true;
+  final MapController _mapController = MapController();
+  final TextEditingController _addressController = TextEditingController();
+  LatLng _center = const LatLng(27.7172, 85.3240); // Default: Kathmandu
+  Timer? _debounce;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    if (widget.initialLatLng != null) {
-      _selectedLocation = widget.initialLatLng!;
-      _selectedAddress = widget.initialAddress ?? '';
-    }
-    _getAddressFromLatLng(_selectedLocation);
-    _getCurrentLocation();
+    _determinePosition();
   }
 
-  Future<void> _getCurrentLocation() async {
-    try {
-      final permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        final newPermission = await Geolocator.requestPermission();
-        if (newPermission == LocationPermission.denied ||
-            newPermission == LocationPermission.deniedForever) {
-          setState(() => _isLoading = false);
-          return;
-        }
-      }
+  @override
+  void dispose() {
+    _mapController.dispose();
+    _addressController.dispose();
+    _debounce?.cancel();
+    super.dispose();
+  }
 
-      final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
+  /// 1. Get current user location
+  Future<void> _determinePosition() async {
+    setState(() => _isLoading = true);
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    // Check if location services are enabled
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      setState(() => _isLoading = false);
+      return;
+    }
+
+    // Check permissions
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        setState(() => _isLoading = false);
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      setState(() => _isLoading = false);
+      return;
+    }
+
+    // Get position
+    try {
+      Position position = await Geolocator.getCurrentPosition();
+      LatLng newCenter = LatLng(position.latitude, position.longitude);
 
       setState(() {
-        _selectedLocation = LatLng(position.latitude, position.longitude);
-        _isLoading = false;
+        _center = newCenter;
       });
-
-      await _getAddressFromLatLng(_selectedLocation);
-      _updateMarker(_selectedLocation);
+      _mapController.move(newCenter, 16.0);
+      _getAddress(newCenter);
     } catch (e) {
+      debugPrint("Error getting location: $e");
+    } finally {
       setState(() => _isLoading = false);
-      debugPrint('Error getting location: $e');
     }
   }
 
-  Future<void> _getAddressFromLatLng(LatLng location) async {
+  /// 2. Reverse Geocoding: LatLng -> Address String using Nominatim (Free)
+  Future<void> _getAddress(LatLng coords) async {
     try {
-      final placemarks = await placemarkFromCoordinates(
-        location.latitude,
-        location.longitude,
+      final url = Uri.parse(
+        'https://nominatim.openstreetmap.org/reverse?format=json&lat=${coords.latitude}&lon=${coords.longitude}',
+      );
+      final response = await http.get(
+        url,
+        headers: {'User-Agent': 'com.example.skill_link'},
       );
 
-      if (placemarks.isNotEmpty) {
-        final pm = placemarks.first;
-        setState(() {
-          _selectedAddress =
-              '${pm.street}, ${pm.locality}, ${pm.administrativeArea}, ${pm.country}';
-        });
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final address = data['display_name'] ?? "Unknown Location";
+
+        if (mounted) {
+          setState(() {
+            _addressController.text = address;
+          });
+          widget.onLocationPicked(coords, address);
+        }
       }
     } catch (e) {
-      debugPrint('Error getting address: $e');
+      debugPrint("Geocoding error: $e");
     }
   }
 
-  void _updateMarker(LatLng location) {
-    setState(() {
-      _markers = {
-        Marker(
-          markerId: const MarkerId('selected-location'),
-          position: location,
-          infoWindow: const InfoWindow(title: 'Selected Location'),
-        ),
-      };
-    });
-  }
+  /// 3. Search Address -> LatLng (Forward Geocoding)
+  Future<void> _onSearch() async {
+    if (_addressController.text.isEmpty) return;
 
-  void _onMapTapped(LatLng location) async {
-    setState(() {
-      _selectedLocation = location;
-    });
-    _updateMarker(location);
-    await _getAddressFromLatLng(location);
-  }
+    try {
+      final url = Uri.parse(
+        'https://nominatim.openstreetmap.org/search?q=${_addressController.text}&format=json&limit=1',
+      );
+      final response = await http.get(
+        url,
+        headers: {'User-Agent': 'com.example.skill_link'},
+      );
 
-  void _confirmLocation() {
-    widget.onLocationSelected(_selectedLocation, _selectedAddress);
-    Navigator.pop(context);
+      if (response.statusCode == 200) {
+        final List data = json.decode(response.body);
+        if (data.isNotEmpty) {
+          final lat = double.parse(data[0]['lat']);
+          final lon = double.parse(data[0]['lon']);
+          final latLng = LatLng(lat, lon);
+          final displayName = data[0]['display_name'];
+
+          setState(() {
+            _center = latLng;
+            _addressController.text = displayName; // Update to full name
+          });
+          _mapController.move(latLng, 16.0);
+          widget.onLocationPicked(latLng, displayName);
+        }
+      }
+    } catch (e) {
+      debugPrint("Search error: $e");
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Select Worker Location'),
-        backgroundColor: const Color(0xFF003366),
-        elevation: 0,
-        actions: [
-          // Get current location button in app bar
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Center(
-              child: Tooltip(
-                message: 'Get current device location',
-                child: TextButton.icon(
-                  onPressed: _getCurrentLocation,
-                  icon: const Icon(Icons.my_location, color: Colors.white),
-                  label: const Text(
-                    'Current',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
+    return Column(
+      children: [
+        // Address Search Bar
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: TextField(
+            controller: _addressController,
+            decoration: InputDecoration(
+              labelText: 'Search or Move Map',
+              prefixIcon: const Icon(Icons.location_on, color: Colors.blue),
+              suffixIcon: IconButton(
+                icon: const Icon(Icons.search),
+                onPressed: _onSearch,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
               ),
             ),
+            onSubmitted: (_) => _onSearch(),
           ),
-        ],
-      ),
-      body:
-          _isLoading
-              ? const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 16),
-                    Text('Getting your location...'),
-                  ],
+        ),
+
+        Expanded(
+          child: Stack(
+            children: [
+              // 1. The Map
+              FlutterMap(
+                mapController: _mapController,
+                options: MapOptions(
+                  initialCenter: _center,
+                  initialZoom: 16.0,
+                  onPositionChanged: (position, hasGesture) {
+                    if (hasGesture) {
+                      // Debounce to prevent hitting API too many times while dragging
+                      if (_debounce?.isActive ?? false) _debounce!.cancel();
+                      _debounce = Timer(const Duration(milliseconds: 800), () {
+                        if (position.center != null) {
+                          _getAddress(position.center!);
+                        }
+                      });
+                    }
+                  },
                 ),
-              )
-              : Stack(
                 children: [
-                  GoogleMap(
-                    onMapCreated: (controller) => mapController = controller,
-                    initialCameraPosition: CameraPosition(
-                      target: _selectedLocation,
-                      zoom: 15.0,
-                    ),
-                    onTap: _onMapTapped,
-                    markers: _markers,
-                    myLocationEnabled: true,
-                    myLocationButtonEnabled: true,
-                    zoomControlsEnabled: true,
-                  ),
-                  // Center pin indicator
-                  Center(
-                    child: Pointer(
-                      child: Image.asset(
-                        'assets/images/map_pin.png',
-                        width: 40,
-                        height: 40,
-                        errorBuilder: (context, error, stackTrace) {
-                          return const Icon(
-                            Icons.location_on,
-                            color: Color(0xFF003366),
-                            size: 40,
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                  // Info panel at bottom
-                  Positioned(
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(16),
-                          topRight: Radius.circular(16),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.1),
-                            blurRadius: 10,
-                            spreadRadius: 2,
-                          ),
-                        ],
-                      ),
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Selected Location',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            _selectedAddress.isEmpty
-                                ? 'Tap on map to select location'
-                                : _selectedAddress,
-                            style: const TextStyle(fontSize: 14),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Lat: ${_selectedLocation.latitude.toStringAsFixed(4)}, Lng: ${_selectedLocation.longitude.toStringAsFixed(4)}',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: ElevatedButton.icon(
-                                  onPressed: _getCurrentLocation,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.blue,
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 10,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                  ),
-                                  icon: const Icon(Icons.location_searching),
-                                  label: const Text('Use Current Location'),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: _confirmLocation,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF003366),
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 12,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              child: const Text(
-                                'Confirm Location',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                  TileLayer(
+                    urlTemplate:
+                        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    userAgentPackageName: 'com.example.skill_link',
                   ),
                 ],
               ),
+
+              // 2. The Static Center Pin
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    bottom: 35,
+                  ), // Adjust icon tip to center
+                  child: Icon(Icons.location_on, color: Colors.red, size: 50),
+                ),
+              ),
+
+              // 3. Current Location Button
+              Positioned(
+                bottom: 20,
+                right: 20,
+                child: FloatingActionButton(
+                  onPressed: _determinePosition,
+                  backgroundColor: const Color(0xFF003366),
+                  child: _isLoading
+                      ? const Padding(
+                        padding: EdgeInsets.all(12.0),
+                        child: CircularProgressIndicator(color: Colors.white),
+                      )
+                      : const Icon(Icons.my_location, color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
-  }
-}
-
-// Pointer class for center map pin
-class Pointer extends StatelessWidget {
-  final Widget child;
-
-  const Pointer({super.key, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return IgnorePointer(child: child);
   }
 }

@@ -2,15 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dio/dio.dart';
 import 'package:intl/intl.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:skill_link/core/services/location_service.dart';
 import 'package:skill_link/cores/utils/image_url_helper.dart';
 import 'package:skill_link/features/profile/presentation/view_model/profile_view_model.dart';
-import 'package:skill_link/features/profile/presentation/view_model/profile_state.dart';
 import 'package:skill_link/features/auth/presentation/view_model/login_view_model/login_view_model.dart';
 import 'package:skill_link/features/auth/presentation/view_model/login_view_model/login_state.dart';
 import 'package:skill_link/app/shared_pref/token_shared_prefs.dart';
 import 'package:skill_link/app/service_locator/service_locator.dart';
+import 'package:skill_link/features/booking/presentation/view/worker_navigation_page.dart';
 
-// Import your ApiEndpoints file
 import '../../../../app/constant/api_endpoints.dart';
 
 class BookingPage extends StatefulWidget {
@@ -40,14 +41,6 @@ class _BookingPageState extends State<BookingPage> {
   Future<void> _loadUserInfo() async {
     final profileState = context.read<ProfileViewModel>().state;
 
-    debugPrint(
-      'BookingPage - Profile state loading: ${profileState.isLoading}',
-    );
-    debugPrint('BookingPage - Profile state user: ${profileState.user?.email}');
-    debugPrint(
-      'BookingPage - Profile state user role: ${profileState.user?.stakeholder}',
-    );
-
     if (profileState.isLoading) {
       setState(() {
         _isLoading = true;
@@ -58,13 +51,11 @@ class _BookingPageState extends State<BookingPage> {
     final user = profileState.user;
 
     if (user != null) {
-      debugPrint('BookingPage - Setting user role: ${user.stakeholder}');
       setState(() {
         _userRole = user.stakeholder;
       });
       await _fetchBookings();
     } else {
-      debugPrint('BookingPage - No user found, showing login error');
       setState(() {
         _error = 'Please log in to view your bookings.';
         _isLoading = false;
@@ -79,11 +70,9 @@ class _BookingPageState extends State<BookingPage> {
 
   Future<void> _fetchBookings() async {
     if (_userRole == null) {
-      debugPrint('BookingPage - User role is null, cannot fetch bookings');
       return;
     }
 
-    debugPrint('BookingPage - Fetching bookings for role: $_userRole');
     setState(() {
       _isLoading = true;
       _error = null;
@@ -92,7 +81,6 @@ class _BookingPageState extends State<BookingPage> {
     try {
       final token = await _getToken();
       if (token == null || token.isEmpty) {
-        debugPrint('BookingPage - No token found');
         setState(() {
           _error = 'Please log in to view your bookings.';
           _isLoading = false;
@@ -101,13 +89,12 @@ class _BookingPageState extends State<BookingPage> {
       }
 
       String endpoint;
-      print(_userRole);
-      if (_userRole == 'Hirer') {
-        endpoint = '${ApiEndpoints.baseUrl}calendar/Hirer/bookings';
-      } else if (_userRole == 'worker') {
+      final role = _userRole?.toLowerCase();
+      if (role == 'hirer') {
+        endpoint = '${ApiEndpoints.baseUrl}calendar/hirer/bookings';
+      } else if (role == 'worker') {
         endpoint = '${ApiEndpoints.baseUrl}calendar/worker/bookings';
       } else {
-        debugPrint('BookingPage - Invalid user role: $_userRole');
         setState(() {
           _error = 'Invalid user role.';
           _isLoading = false;
@@ -115,33 +102,26 @@ class _BookingPageState extends State<BookingPage> {
         return;
       }
 
-      debugPrint('BookingPage - Making API call to: $endpoint');
       final response = await Dio().get(
         endpoint,
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
 
-      debugPrint('BookingPage - API response status: ${response.statusCode}');
-      debugPrint('BookingPage - API response data: ${response.data}');
-
       if (response.data['success']) {
         final bookings = List<Map<String, dynamic>>.from(
           response.data['bookings'] ?? [],
         );
-        debugPrint('BookingPage - Found ${bookings.length} bookings');
         setState(() {
           _bookings = bookings;
           _isLoading = false;
         });
       } else {
-        debugPrint('BookingPage - API returned success: false');
         setState(() {
           _error = response.data['message'] ?? 'Failed to fetch bookings.';
           _isLoading = false;
         });
       }
     } catch (e) {
-      debugPrint('BookingPage - Error fetching bookings: $e');
       if (e is DioException) {
         setState(() {
           _error =
@@ -153,32 +133,33 @@ class _BookingPageState extends State<BookingPage> {
         });
       }
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if(mounted){
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
   Future<void> _cancelBooking(String bookingId) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Cancel Booking'),
-            content: const Text(
-              'Are you sure you want to cancel this booking? This action cannot be undone.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('No'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Yes, Cancel'),
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        title: const Text('Cancel Booking'),
+        content: const Text(
+          'Are you sure you want to cancel this booking? This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('No'),
           ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Yes, Cancel'),
+          ),
+        ],
+      ),
     );
 
     if (confirmed != true) return;
@@ -211,7 +192,6 @@ class _BookingPageState extends State<BookingPage> {
 
       await _fetchBookings(); // Refresh the list
     } catch (e) {
-      debugPrint('Error cancelling booking: $e');
       if (mounted) {
         String errorMessage = 'Failed to cancel booking.';
         if (e is DioException) {
@@ -230,25 +210,24 @@ class _BookingPageState extends State<BookingPage> {
         status == 'Confirmed'
             ? 'confirm'
             : status == 'Rejected'
-            ? 'reject'
-            : 'cancel';
+                ? 'reject'
+                : 'cancel';
     final confirmed = await showDialog<bool>(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: Text('$statusText Booking'),
-            content: Text('Are you sure you want to $statusText this booking?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('No'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: Text('Yes, $statusText'),
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        title: Text('$statusText Booking'),
+        content: Text('Are you sure you want to $statusText this booking?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('No'),
           ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text('Yes, $statusText'),
+          ),
+        ],
+      ),
     );
 
     if (confirmed != true) return;
@@ -282,7 +261,6 @@ class _BookingPageState extends State<BookingPage> {
 
       await _fetchBookings(); // Refresh the list
     } catch (e) {
-      debugPrint('Error updating booking status: $e');
       if (mounted) {
         String errorMessage = 'Failed to update booking status.';
         if (e is DioException) {
@@ -327,7 +305,7 @@ class _BookingPageState extends State<BookingPage> {
   }
 
   Widget _buildBookingCard(Map<String, dynamic> booking) {
-    final property = booking['worker'] ?? {};
+    final property = booking['property'] ?? booking['worker'] ?? {};
     final hirer = booking['Hirer'];
     final worker = booking['worker'];
     final status = booking['status'] ?? 'pending';
@@ -335,11 +313,11 @@ class _BookingPageState extends State<BookingPage> {
     final timeSlot = booking['timeSlot'] ?? '';
     final bookingId = booking['_id'] ?? '';
 
-    // Get Workerimage using ImageUrlHelper
     String? imageUrl;
-    if (property['images'] != null && (property['images'] as List).isNotEmpty) {
+    if (property is Map &&
+        property['images'] != null &&
+        (property['images'] as List).isNotEmpty) {
       final imagePath = property['images'][0];
-      // CORRECTED LINE: Removed ApiEndpoints.imageUrl as a second argument
       imageUrl = ImageUrlHelper.constructImageUrl(imagePath);
     }
 
@@ -357,7 +335,6 @@ class _BookingPageState extends State<BookingPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Workerheader with image
             Row(
               children: [
                 if (imageUrl != null && imageUrl.isNotEmpty)
@@ -368,20 +345,19 @@ class _BookingPageState extends State<BookingPage> {
                       width: 64,
                       height: 64,
                       fit: BoxFit.cover,
-                      errorBuilder:
-                          (context, error, stackTrace) => Container(
-                            width: 64,
-                            height: 64,
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade300,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(
-                              Icons.home,
-                              color: Colors.grey,
-                              size: 24,
-                            ),
-                          ),
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        width: 64,
+                        height: 64,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.home,
+                          color: Colors.grey,
+                          size: 24,
+                        ),
+                      ),
                     ),
                   )
                 else
@@ -400,16 +376,17 @@ class _BookingPageState extends State<BookingPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        property['title'] ?? 'Unknown Property',
+                        (property is Map ? property['title'] : 'Worker Service') ??
+                            'Unknown Service',
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF003366),
                         ),
                       ),
-                      if (property['location'] != null)
+                      if (property is Map && property['location'] != null)
                         Text(
-                          property['location'],
+                          (property['location'] is Map ? property['location']['type'] : property['location']) ?? '',
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey.shade600,
@@ -421,8 +398,6 @@ class _BookingPageState extends State<BookingPage> {
               ],
             ),
             const SizedBox(height: 16),
-
-            // Booking details
             Column(
               children: [
                 Row(
@@ -468,8 +443,6 @@ class _BookingPageState extends State<BookingPage> {
                     ),
                   ],
                 ),
-
-                // Show Hirer info for workers
                 if (_userRole == 'worker' && hirer != null) ...[
                   const SizedBox(height: 4),
                   Row(
@@ -496,9 +469,7 @@ class _BookingPageState extends State<BookingPage> {
                     ],
                   ),
                 ],
-
-                // Show worker info for Hirers
-                if (_userRole == 'Hirer' && worker != null) ...[
+                if (_userRole == 'Hirer' && worker != null && worker is Map) ...[
                   const SizedBox(height: 4),
                   Row(
                     children: [
@@ -524,7 +495,6 @@ class _BookingPageState extends State<BookingPage> {
                     ],
                   ),
                 ],
-
                 const SizedBox(height: 8),
                 Row(
                   children: [
@@ -537,11 +507,11 @@ class _BookingPageState extends State<BookingPage> {
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
-                        vertical: 2,
+                        vertical: 4,
                       ),
                       decoration: BoxDecoration(
                         color: _getStatusBackgroundColor(status),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         status.toUpperCase(),
@@ -556,94 +526,69 @@ class _BookingPageState extends State<BookingPage> {
                 ),
               ],
             ),
+            if (_userRole == 'worker' && status.toLowerCase() == 'confirmed')
+              Padding(
+                padding: const EdgeInsets.only(top: 16.0),
+                child: Center(
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      final locationService = serviceLocator<LocationService>();
+                      final hasPermission = await locationService.requestPermission();
+                      if (!hasPermission) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Location permission is required.')),
+                          );
+                        }
+                        return;
+                      }
 
-            const SizedBox(height: 16),
+                      final position = await locationService.getCurrentPosition();
+                      if (position == null) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Could not get current location.')),
+                          );
+                        }
+                        return;
+                      }
+                      final workerLocation = LatLng(position.latitude, position.longitude);
 
-            // Action buttons
-            if (_userRole == 'Hirer' && status.toLowerCase() == 'pending')
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () => _cancelBooking(bookingId),
-                  icon: const Icon(Icons.cancel),
-                  label: const Text('Cancel Booking'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red.shade600,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      if (hirer != null &&
+                          hirer['location'] != null &&
+                          hirer['location']['coordinates'] is List &&
+                          hirer['location']['coordinates'].length == 2) {
+                        final coords = hirer['location']['coordinates'];
+                        final hirerLocation = LatLng(coords[1], coords[0]);
+
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => WorkerNavigationPage(
+                              workerInitialLocation: workerLocation,
+                              hirerLocation: hirerLocation,
+                            ),
+                          ),
+                        );
+                      } else {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Hirer location not available.')),
+                          );
+                        }
+                      }
+                    },
+                    icon: const Icon(Icons.navigation),
+                    label: const Text('Start Navigation'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).primaryColor,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                   ),
                 ),
-              ),
-
-            // worker actions
-            if (_userRole == 'worker' &&
-                status.toLowerCase() != 'cancelled' &&
-                status.toLowerCase() != 'rejected')
-              Row(
-                children: [
-                  if (status.toLowerCase() != 'confirmed')
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed:
-                            () => _updateBookingStatus(bookingId, 'Confirmed'),
-                        icon: const Icon(Icons.check_circle, size: 16),
-                        label: const Text('Confirm'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green.shade600,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                      ),
-                    ),
-                  if (status.toLowerCase() != 'confirmed' &&
-                      status.toLowerCase() != 'rejected')
-                    const SizedBox(width: 8),
-                  if (status.toLowerCase() != 'rejected' &&
-                      status.toLowerCase() != 'confirmed')
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed:
-                            () => _updateBookingStatus(bookingId, 'Rejected'),
-                        icon: const Icon(Icons.cancel, size: 16),
-                        label: const Text('Reject'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red.shade600,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                      ),
-                    ),
-                  if ((status.toLowerCase() != 'rejected' &&
-                          status.toLowerCase() != 'confirmed') ||
-                      status.toLowerCase() == 'confirmed')
-                    const SizedBox(width: 8),
-                  if (status.toLowerCase() != 'cancelled')
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed:
-                            () => _updateBookingStatus(bookingId, 'Cancelled'),
-                        icon: const Icon(Icons.block, size: 16),
-                        label: const Text('Cancel'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.grey.shade600,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
               ),
           ],
         ),
@@ -653,226 +598,49 @@ class _BookingPageState extends State<BookingPage> {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocListener(
-      listeners: [
-        BlocListener<LoginViewModel, LoginState>(
-          listener: (context, loginState) {
-            debugPrint(
-              'BookingPage - Login state: ${loginState.isSuccess}, shouldNavigate: ${loginState.shouldNavigateToHome}',
-            );
-
-            if (loginState.isSuccess &&
-                loginState.shouldNavigateToHome &&
-                _userRole == null) {
-              debugPrint('BookingPage - Login successful, reloading user info');
-              _loadUserInfo();
-            }
-          },
-        ),
-        BlocListener<ProfileViewModel, ProfileState>(
-          listener: (context, profileState) {
-            debugPrint(
-              'BookingPage - Profile state loading: ${profileState.isLoading}',
-            );
-            debugPrint(
-              'BookingPage - Profile state user: ${profileState.user?.email}',
-            );
-            debugPrint('BookingPage - Current user role: $_userRole');
-
-            if (!profileState.isLoading &&
-                profileState.user == null &&
-                _userRole != null) {
-              debugPrint('BookingPage - User logged out, clearing data');
-              setState(() {
-                _userRole = null;
-                _bookings = [];
-                _error = 'Please log in to view your bookings.';
-                _isLoading = false;
-              });
-            }
-          },
-        ),
-      ],
-      child: Scaffold(
-        backgroundColor: Colors.grey.shade100,
-        appBar: AppBar(
-          title: Text(
-            _userRole == 'worker'
-                ? 'Your WorkerBookings'
-                : 'Your Scheduled Visits',
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          backgroundColor: const Color(0xFF003366),
-          foregroundColor: Colors.white,
-          elevation: 0,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: _fetchBookings,
-              tooltip: 'Refresh bookings',
-            ),
-          ],
-        ),
-        body: Container(
-          margin: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(
-                  0.1,
-                ), // Corrected withValues to withOpacity
-                spreadRadius: 1,
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child:
-              _isLoading
-                  ? const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        CircularProgressIndicator(color: Color(0xFF003366)),
-                        SizedBox(height: 16),
-                        Text(
-                          'Loading bookings...',
-                          style: TextStyle(fontSize: 16),
-                        ),
-                      ],
-                    ),
-                  )
-                  : _error != null
-                  ? Center(
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('My Bookings'),
+        backgroundColor: Theme.of(context).primaryColor,
+        elevation: 0,
+      ),
+      body: BlocListener<LoginViewModel, LoginState>(
+        listener: (context, state) {
+          // When the login state changes (e.g., after logout), reload user info.
+          // A simple check for the initial state often works for this.
+          if (state.runtimeType.toString() == 'LoginInitial') {
+            _loadUserInfo();
+          }
+        },
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _error != null
+                ? Center(
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            _error!,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              color: Colors.red,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          ElevatedButton.icon(
-                            onPressed: _loadUserInfo, // Retry fetching info
-                            icon: const Icon(Icons.refresh),
-                            label: const Text('Retry'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF003366),
-                              foregroundColor: Colors.white,
-                            ),
-                          ),
-                        ],
+                      child: Text(
+                        _error!,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.red, fontSize: 16),
                       ),
                     ),
                   )
-                  : _bookings.isEmpty
-                  ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.info_outline,
-                          size: 64,
-                          color: Colors.grey.shade400,
+                : _bookings.isEmpty
+                    ? const Center(
+                        child: Text(
+                          'You have no bookings yet.',
+                          style: TextStyle(fontSize: 16, color: Colors.grey),
                         ),
-                        const SizedBox(height: 16),
-                        Text(
-                          _userRole == 'worker'
-                              ? 'No bookings have been made for your properties yet.'
-                              : 'You have no scheduled visits.',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey.shade600,
-                          ),
-                          textAlign: TextAlign.center,
+                      )
+                    : RefreshIndicator(
+                        onRefresh: _fetchBookings,
+                        child: ListView.builder(
+                          itemCount: _bookings.length,
+                          itemBuilder: (context, index) {
+                            return _buildBookingCard(_bookings[index]);
+                          },
                         ),
-                        if (_userRole == 'Hirer') ...[
-                          const SizedBox(height: 24),
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFE3F2FD),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: const Color(0xFF90CAF9),
-                              ),
-                            ),
-                            child: Column(
-                              children: [
-                                const Text(
-                                  'Ready to schedule a visit?',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF003366),
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                const Text(
-                                  'Browse properties in the Explore section and book a visit to see them in person!',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                ElevatedButton.icon(
-                                  onPressed: () {
-                                    // Navigate to explore page
-                                    Navigator.pushNamed(context, '/home');
-                                  },
-                                  icon: const Icon(Icons.explore),
-                                  label: const Text('Explore Properties'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF003366),
-                                    foregroundColor: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  )
-                  : RefreshIndicator(
-                    onRefresh: _fetchBookings,
-                    child: ListView.builder(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      itemCount: _bookings.length,
-                      // Displaying in reverse order to show newest first
-                      itemBuilder:
-                          (context, index) => _buildBookingCard(
-                            _bookings[_bookings.length - 1 - index],
-                          ),
-                    ),
-                  ),
-        ),
-        floatingActionButton:
-            _userRole == 'Hirer' && _bookings.isNotEmpty
-                ? FloatingActionButton.extended(
-                  onPressed: () {
-                    // Navigate to explore page
-                    Navigator.pushNamed(context, '/home');
-                  },
-                  icon: const Icon(Icons.add),
-                  label: const Text('Book More'),
-                  backgroundColor: const Color(0xFF003366),
-                  foregroundColor: Colors.white,
-                )
-                : null,
+                      ),
       ),
     );
   }

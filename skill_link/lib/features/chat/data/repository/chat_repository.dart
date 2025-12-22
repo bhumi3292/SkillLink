@@ -13,14 +13,14 @@ class ChatRepository {
 
   Future<Map<String, dynamic>> createOrGetChat({
     required String otherUserId,
-    String? propertyId,
+    String? workerId,
   }) {
     print(
-      '[DEBUG] ChatRepository.createOrGetChat: otherUserId=$otherUserId, propertyId=$propertyId',
+      '[DEBUG] ChatRepository.createOrGetChat: otherUserId=$otherUserId, workerId=$workerId',
     );
     return restDataSource.createOrGetChat(
       otherUserId: otherUserId,
-      propertyId: propertyId,
+      workerId: workerId,
     );
   }
 

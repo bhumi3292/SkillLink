@@ -15,7 +15,7 @@ class DashboardRemoteDatasourceImpl implements DashboardRemoteDatasource {
   @override
   Future<List<WorkerApiModel>> getDashboardProperties() async {
     try {
-      final response = await _apiService.dio.get('/properties');
+      final response = await _apiService.dio.get('/workers');
 
       if (response.statusCode == 200 && response.data['success'] == true) {
         final List<dynamic> propertiesJson = response.data['data'];

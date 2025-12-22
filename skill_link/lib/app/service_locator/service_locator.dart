@@ -1,12 +1,16 @@
 import 'package:get_it/get_it.dart';
 import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:skill_link/cores/network/api_service.dart';
+import 'package:skill_link/core/services/notification_service.dart';
+import 'package:skill_link/core/services/location_service.dart';
+
+import 'package:skill_link/app/shared_pref/token_shared_prefs.dart';
 
 // Auth
 import 'package:skill_link/features/auth/data/data_source/local_datasource/user_local_datasource.dart';
 import 'package:skill_link/features/auth/data/data_source/remote_datasource/user_remote_datasource.dart';
-import 'package:skill_link/features/auth/data/repository/local_repository/user_local_repository.dart';
 import 'package:skill_link/features/auth/data/repository/remote_repository/register_remote_repository.dart'; // Assumed to be UserRemoteRepository
 import 'package:skill_link/features/auth/domain/repository/user_repository.dart';
 
@@ -24,23 +28,18 @@ import 'package:skill_link/features/profile/domain/use_case/update_profile_useca
 import 'package:skill_link/features/profile/presentation/view_model/profile_view_model.dart';
 import 'package:skill_link/features/profile/domain/use_case/upload_profile_picture_usecase.dart';
 
-// Property
+// Add Worker (Property)
 import 'package:skill_link/features/add_worker/data/data_source/worker/remote_datasource/worker_remote_datasource.dart';
 import 'package:skill_link/features/add_worker/data/repository/worker/remote_repository/worker_remote_repository.dart';
 import 'package:skill_link/features/add_worker/domain/repository/property_repository.dart';
-import 'package:skill_link/features/add_worker/domain/use_case/worker/get_all_worker_usecase.dart';
 import 'package:skill_link/features/add_worker/domain/use_case/worker/add_worker_usecase.dart';
-import 'package:skill_link/features/add_worker/domain/use_case/worker/update_worker_usecase.dart';
-import 'package:skill_link/features/add_worker/domain/use_case/worker/delete_worker_usecase.dart';
 import 'package:skill_link/features/add_worker/domain/use_case/category/get_all_categories_usecase.dart';
 import 'package:skill_link/features/add_worker/domain/use_case/category/add_category_usecase.dart';
-
-// Category
 import 'package:skill_link/features/add_worker/data/data_source/category/remote_datasource/category_remote_datasource.dart';
 import 'package:skill_link/features/add_worker/data/repository/category/remote_repository/category_remote_repository.dart';
 import 'package:skill_link/features/add_worker/domain/repository/category_repository.dart';
 
-// Cart
+// Cart (Favourite)
 import 'package:skill_link/features/favourite/data/datasource/cart_api_service.dart';
 import 'package:skill_link/features/favourite/data/repository/cart_repository_impl.dart';
 import 'package:skill_link/features/favourite/domain/repository/cart_repository.dart';
@@ -56,265 +55,214 @@ import 'package:skill_link/features/dashbaord/data/repository/dashboard_reposito
 import 'package:skill_link/features/dashbaord/domain/repository/dashboard_repository.dart';
 import 'package:skill_link/features/dashbaord/domain/use_case/get_dashboard_properties_usecase.dart';
 import 'package:skill_link/features/dashbaord/presentation/view_model/dashboard_view_model.dart';
+// Note: Dashboard might rely on user usecases too for greeting
 
 // Explore
 import 'package:skill_link/features/explore/data/data_source/explore_remote_data_source.dart';
 import 'package:skill_link/features/explore/data/repository/explore_repository_impl.dart';
 import 'package:skill_link/features/explore/domain/repository/explore_repository.dart';
-import 'package:skill_link/features/explore/domain/use_case/get_all_properties_usecase.dart';
+import 'package:skill_link/features/explore/domain/use_case/get_all_workers_usecase.dart';
 import 'package:skill_link/features/explore/presentation/bloc/explore_bloc.dart';
 
-// // Chatbot
-// import 'package:skill_link/features/chatbot/data/data_source/remote_datasource/chatbot_remote_datasource.dart';
-// import 'package:skill_link/features/chatbot/data/repository/chatbot_repository_impl.dart';
-// import 'package:skill_link/features/chatbot/domain/repository/chatbot_repository.dart';
-// import 'package:skill_link/features/chatbot/domain/use_case/send_chat_query_usecase.dart';
-
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:skill_link/app/shared_pref/token_shared_prefs.dart';
-
+// Chat
 import 'package:skill_link/features/chat/data/data_source/chat_rest_data_source.dart';
 import 'package:skill_link/features/chat/data/data_source/chat_socket_data_source.dart';
-import 'package:skill_link/features/chat/data/repository/chat_repository.dart';
-import 'package:skill_link/features/chat/domain/use_case/chat_usecases.dart';
+import 'package:skill_link/features/chat/data/repository/chat_repository.dart'; // Ensure this file exists and exports the repository interface
+// import 'package:skill_link/features/chat/data/repository/chat_repository_impl.dart'; // Removed unused import
+// Note: Imports for Chat usecases were implicit in original, I'll make them explicit if needed OR rely on default exports
+import 'package:skill_link/features/chat/domain/use_case/chat_usecases.dart'; // Assuming a barrel file or individual files
 import 'package:skill_link/features/chat/presentation/bloc/chat_bloc.dart';
 
 final serviceLocator = GetIt.instance;
 
 Future<void> initDependencies() async {
+  // --- External ---
   final sharedPreferences = await SharedPreferences.getInstance();
-  serviceLocator.registerSingleton<SharedPreferences>(sharedPreferences);
-  serviceLocator.registerSingleton<TokenSharedPrefs>(
-    TokenSharedPrefs(sharedPreferences: sharedPreferences),
+  serviceLocator.registerLazySingleton<SharedPreferences>(
+    () => sharedPreferences,
   );
-  _initApiService();
-  _initAuthAndProfileModules();
-  _initPropertyModules();
-  _initCartModules();
+  serviceLocator.registerLazySingleton<Dio>(() => Dio());
+  serviceLocator.registerLazySingleton<TokenSharedPrefs>(
+    () => TokenSharedPrefs(sharedPreferences: serviceLocator()),
+  );
+
+  // --- Core ---
+  serviceLocator.registerLazySingleton<ApiService>(
+    () => ApiService(serviceLocator(), serviceLocator()),
+  );
+  serviceLocator.registerLazySingleton<NotificationService>(
+    () => NotificationService(),
+  ); // Assuming constructor
+  serviceLocator.registerLazySingleton<LocationService>(
+    () => LocationService(),
+  );
+
+  // --- Modules ---
+  _initAuthModules();
+  _initProfileModules();
+  _initAddWorkerModules();
+  _initFavouriteModules();
   _initDashboardModules();
   _initExploreModules();
   _initChatModules();
-  //_initChatbotModules();
 }
 
-void _initApiService() {
-  serviceLocator.registerLazySingleton<Dio>(() => Dio());
-  serviceLocator.registerLazySingleton<ApiService>(
-    () => ApiService(serviceLocator<Dio>(), serviceLocator<TokenSharedPrefs>()),
+void _initAuthModules() {
+  // Data Sources
+  serviceLocator.registerLazySingleton<UserLocalDatasource>(
+    () => UserLocalDatasource(),
+  );
+  serviceLocator.registerLazySingleton<UserRemoteDatasource>(
+    () => UserRemoteDatasource(
+      apiService: serviceLocator(),
+      sharedPreferences: serviceLocator(),
+    ),
+  );
+
+  // Repository
+  serviceLocator.registerLazySingleton<IUserRepository>(
+    () => UserRemoteRepository(
+      dataSource: serviceLocator(),
+      apiService: serviceLocator(),
+      tokenSharedPrefs: serviceLocator(),
+    ),
+  );
+
+  // Usecases
+  serviceLocator.registerLazySingleton<UserLoginUsecase>(
+    () => UserLoginUsecase(userRepository: serviceLocator()),
+  );
+  serviceLocator.registerLazySingleton<UserRegisterUsecase>(
+    () => UserRegisterUsecase(userRepository: serviceLocator()),
+  );
+  serviceLocator.registerLazySingleton<UserGetCurrentUsecase>(
+    () => UserGetCurrentUsecase(
+      userRepository: serviceLocator(),
+    ), // Needs repository
+  );
+  serviceLocator.registerLazySingleton<UpdateUserProfileUsecase>(
+    () => UpdateUserProfileUsecase(serviceLocator()),
+  );
+
+  // Blocs / ViewModels
+  serviceLocator.registerFactory<LoginViewModel>(
+    () => LoginViewModel(loginUserUseCase: serviceLocator()),
+  );
+  serviceLocator.registerFactory<RegisterUserViewModel>(
+    () => RegisterUserViewModel(serviceLocator()),
   );
 }
 
-void _initPropertyModules() {
-  // --- WorkerData Sources ---
-  serviceLocator.registerFactory<WorkerRemoteDatasource>(
-    () => WorkerRemoteDatasource(dio: serviceLocator<Dio>()),
+void _initProfileModules() {
+  serviceLocator.registerLazySingleton<ProfileRemoteDataSource>(
+    () => ProfileRemoteDataSource(apiService: serviceLocator()),
   );
 
-  serviceLocator.registerFactory<CategoryRemoteDatasource>(
-    () => CategoryRemoteDatasource(dio: serviceLocator<Dio>()),
+  serviceLocator.registerLazySingleton<ProfileRepositoryImpl>(
+    () => ProfileRepositoryImpl(remoteDataSource: serviceLocator()),
   );
 
-  // --- WorkerRepositories ---
-  serviceLocator.registerFactory<IWorkerRepository>(
+  serviceLocator.registerLazySingleton<UpdateProfileUsecase>(
+    () => UpdateProfileUsecase(
+      repository: serviceLocator<ProfileRepositoryImpl>(),
+    ),
+  );
+  serviceLocator.registerLazySingleton<UploadProfilePictureUsecase>(
+    () => UploadProfilePictureUsecase(
+      userRepository: serviceLocator<IUserRepository>(),
+    ),
+  );
+
+  serviceLocator.registerFactory<ProfileViewModel>(
+    () => ProfileViewModel(
+      updateProfileUsecase: serviceLocator(),
+      uploadProfilePictureUsecase: serviceLocator(),
+      userGetCurrentUsecase: serviceLocator(),
+      updateUserProfileUsecase: serviceLocator(),
+      tokenSharedPrefs: serviceLocator(),
+    ),
+  );
+}
+
+void _initAddWorkerModules() {
+  // Worker
+  serviceLocator.registerLazySingleton<WorkerRemoteDatasource>(
+    () => WorkerRemoteDatasource(dio: serviceLocator()),
+  );
+  serviceLocator.registerLazySingleton<IWorkerRepository>(
     () => WorkerRemoteRepository(
       remoteDataSource: serviceLocator<WorkerRemoteDatasource>(),
     ),
   );
 
-  serviceLocator.registerFactory<ICategoryRepository>(
+  // Category
+  serviceLocator.registerLazySingleton<CategoryRemoteDatasource>(
+    () => CategoryRemoteDatasource(dio: serviceLocator()),
+  );
+  serviceLocator.registerLazySingleton<ICategoryRepository>(
     () => CategoryRemoteRepository(
       remoteDataSource: serviceLocator<CategoryRemoteDatasource>(),
     ),
   );
 
-  // --- WorkerUsecases ---
-  serviceLocator.registerFactory<GetAllWorkersUsecase>(
-    () => GetAllWorkersUsecase(serviceLocator<IWorkerRepository>()),
-  );
-
-  serviceLocator.registerFactory<AddWorkerUsecase>(
-    () => AddWorkerUsecase(repository: serviceLocator<IWorkerRepository>()),
-  );
-
-  serviceLocator.registerFactory<UpdateWorkerUsecase>(
-    () => UpdateWorkerUsecase(serviceLocator<IWorkerRepository>()),
-  );
-
-  serviceLocator.registerFactory<DeleteWorkerUsecase>(
-    () => DeleteWorkerUsecase(serviceLocator<IWorkerRepository>()),
-  );
-
-  serviceLocator.registerFactory<GetAllCategoriesUsecase>(
+  // UseCases
+  serviceLocator.registerLazySingleton<GetAllCategoriesUsecase>(
     () => GetAllCategoriesUsecase(serviceLocator<ICategoryRepository>()),
   );
-
-  serviceLocator.registerFactory<AddCategoryUsecase>(
+  serviceLocator.registerLazySingleton<AddWorkerUsecase>(
+    () => AddWorkerUsecase(repository: serviceLocator<IWorkerRepository>()),
+  );
+  serviceLocator.registerLazySingleton<AddCategoryUsecase>(
     () => AddCategoryUsecase(serviceLocator<ICategoryRepository>()),
   );
-
-  // --- WorkerViewModels/Blocs ---
-  // NOTE: AddPropertyBloc is not yet implemented, commenting out for now
-  // serviceLocator.registerFactory<AddPropertyBloc>(
-  //   () => AddPropertyBloc(
-  //     addPropertyUsecase: serviceLocator<AddPropertyUsecase>(),
-  //     updatePropertyUsecase: serviceLocator<UpdatePropertyUsecase>(),
-  //     getAllCategoriesUsecase: serviceLocator<GetAllCategoriesUsecase>(),
-  //     tokenSharedPrefs: serviceLocator<TokenSharedPrefs>(),
-  //   ),
-  // );
 }
 
-void _initCartModules() {
-  // --- Cart Data Sources ---
-  serviceLocator.registerFactory<CartApiService>(
-    () => CartApiServiceImpl(serviceLocator<ApiService>()),
+void _initFavouriteModules() {
+  serviceLocator.registerLazySingleton<CartApiService>(
+    () => CartApiServiceImpl(serviceLocator()),
+  );
+  serviceLocator.registerLazySingleton<CartRepository>(
+    () => CartRepositoryImpl(serviceLocator()),
   );
 
-  // --- Cart Repositories ---
-  serviceLocator.registerFactory<CartRepository>(
-    () => CartRepositoryImpl(serviceLocator<CartApiService>()),
+  serviceLocator.registerLazySingleton<GetCartUseCase>(
+    () => GetCartUseCase(serviceLocator()),
+  );
+  serviceLocator.registerLazySingleton<AddToCartUseCase>(
+    () => AddToCartUseCase(serviceLocator()),
+  );
+  serviceLocator.registerLazySingleton<RemoveFromCartUseCase>(
+    () => RemoveFromCartUseCase(serviceLocator()),
+  );
+  serviceLocator.registerLazySingleton<ClearCartUseCase>(
+    () => ClearCartUseCase(serviceLocator()),
   );
 
-  // --- Cart Usecases ---
-  serviceLocator.registerFactory<GetCartUseCase>(
-    () => GetCartUseCase(serviceLocator<CartRepository>()),
-  );
-
-  serviceLocator.registerFactory<AddToCartUseCase>(
-    () => AddToCartUseCase(serviceLocator<CartRepository>()),
-  );
-
-  serviceLocator.registerFactory<RemoveFromCartUseCase>(
-    () => RemoveFromCartUseCase(serviceLocator<CartRepository>()),
-  );
-
-  serviceLocator.registerFactory<ClearCartUseCase>(
-    () => ClearCartUseCase(serviceLocator<CartRepository>()),
-  );
-
-  // --- Cart Bloc ---
   serviceLocator.registerFactory<CartBloc>(
     () => CartBloc(
-      getCartUseCase: serviceLocator<GetCartUseCase>(),
-      addToCartUseCase: serviceLocator<AddToCartUseCase>(),
-      removeFromCartUseCase: serviceLocator<RemoveFromCartUseCase>(),
-      clearCartUseCase: serviceLocator<ClearCartUseCase>(),
-    ),
-  );
-}
-
-void _initAuthAndProfileModules() {
-  // --- Data Sources ---
-  serviceLocator.registerFactory<UserLocalDatasource>(
-    () => UserLocalDatasource(),
-  );
-  serviceLocator.registerFactory<UserRemoteDatasource>(
-    () => UserRemoteDatasource(
-      apiService: serviceLocator<ApiService>(),
-      sharedPreferences: serviceLocator<SharedPreferences>(),
-    ),
-  );
-
-  // --- Repositories ---
-  serviceLocator.registerFactory<UserLocalRepository>(
-    () => UserLocalRepository(),
-  );
-  serviceLocator.registerFactory<UserRemoteRepository>(
-    () => UserRemoteRepository(
-      dataSource: serviceLocator<UserRemoteDatasource>(),
-      apiService: serviceLocator<ApiService>(),
-      tokenSharedPrefs: serviceLocator<TokenSharedPrefs>(),
-    ),
-  );
-
-  // --- Repository Selection (Concrete Implementation for Interface) ---
-  serviceLocator.registerFactory<IUserRepository>(
-    () => serviceLocator<UserRemoteRepository>(),
-  );
-
-  // --- Usecases ---
-  serviceLocator.registerFactory<UserLoginUsecase>(
-    () => UserLoginUsecase(userRepository: serviceLocator<IUserRepository>()),
-  );
-  serviceLocator.registerFactory<UserRegisterUsecase>(
-    () =>
-        UserRegisterUsecase(userRepository: serviceLocator<IUserRepository>()),
-  );
-  serviceLocator.registerFactory<UserGetCurrentUsecase>(
-    () => UserGetCurrentUsecase(
-      userRepository: serviceLocator<IUserRepository>(),
-    ),
-  );
-  serviceLocator.registerFactory<UploadProfilePictureUsecase>(
-    () => UploadProfilePictureUsecase(
-      userRepository: serviceLocator<IUserRepository>(),
-    ),
-  );
-  serviceLocator.registerLazySingleton<UpdateUserProfileUsecase>(
-    () => UpdateUserProfileUsecase(serviceLocator<IUserRepository>()),
-  );
-
-  // --- ViewModels ---
-  serviceLocator.registerFactory<LoginViewModel>(
-    () => LoginViewModel(loginUserUseCase: serviceLocator<UserLoginUsecase>()),
-  );
-
-  serviceLocator.registerFactory<RegisterUserViewModel>(
-    () => RegisterUserViewModel(serviceLocator<UserRegisterUsecase>()),
-  );
-
-  serviceLocator.registerFactory<ProfileRemoteDataSource>(
-    () => ProfileRemoteDataSource(apiService: serviceLocator<ApiService>()),
-  );
-  serviceLocator.registerFactory<ProfileRepositoryImpl>(
-    () => ProfileRepositoryImpl(
-      remoteDataSource: serviceLocator<ProfileRemoteDataSource>(),
-    ),
-  );
-  serviceLocator.registerFactory<UpdateProfileUsecase>(
-    () => UpdateProfileUsecase(
-      repository: serviceLocator<ProfileRepositoryImpl>(),
-    ),
-  );
-  serviceLocator.registerFactory<ProfileViewModel>(
-    () => ProfileViewModel(
-      userGetCurrentUsecase: serviceLocator<UserGetCurrentUsecase>(),
-      uploadProfilePictureUsecase:
-          serviceLocator<UploadProfilePictureUsecase>(),
-      updateUserProfileUsecase: serviceLocator<UpdateUserProfileUsecase>(),
-      updateProfileUsecase: serviceLocator<UpdateProfileUsecase>(),
-      tokenSharedPrefs: serviceLocator<TokenSharedPrefs>(),
+      getCartUseCase: serviceLocator(),
+      addToCartUseCase: serviceLocator(),
+      removeFromCartUseCase: serviceLocator(),
+      clearCartUseCase: serviceLocator(),
     ),
   );
 }
 
 void _initDashboardModules() {
-  // --- Dashboard Data Sources ---
-  serviceLocator.registerFactory<DashboardRemoteDatasource>(
-    () =>
-        DashboardRemoteDatasourceImpl(apiService: serviceLocator<ApiService>()),
+  serviceLocator.registerLazySingleton<DashboardRemoteDatasource>(
+    () => DashboardRemoteDatasourceImpl(apiService: serviceLocator()),
   );
-
-  // --- Dashboard Repositories ---
-  serviceLocator.registerFactory<DashboardRepository>(
+  serviceLocator.registerLazySingleton<DashboardRepository>(
     () => DashboardRepositoryImpl(
       remoteDatasource: serviceLocator<DashboardRemoteDatasource>(),
     ),
   );
-
-  // --- Dashboard Usecases ---
-  serviceLocator.registerFactory<GetDashboardPropertiesUsecase>(
-    () => GetDashboardPropertiesUsecase(
-      repository: serviceLocator<DashboardRepository>(),
-    ),
+  serviceLocator.registerLazySingleton<GetDashboardPropertiesUsecase>(
+    () => GetDashboardPropertiesUsecase(repository: serviceLocator()),
   );
 
-  // --- Dashboard ViewModels/Blocs ---
   serviceLocator.registerFactory<DashboardViewModel>(
-    () => DashboardViewModel(
-      getDashboardPropertiesUsecase:
-          serviceLocator<GetDashboardPropertiesUsecase>(),
-    ),
+    () => DashboardViewModel(getDashboardPropertiesUsecase: serviceLocator()),
   );
 }
 
@@ -330,14 +278,14 @@ void _initExploreModules() {
   );
 
   // --- Explore Usecases ---
-  serviceLocator.registerFactory<GetExplorePropertiesUsecase>(
-    () => GetExplorePropertiesUsecase(serviceLocator<ExploreRepository>()),
+  serviceLocator.registerFactory<GetAllWorkersUsecase>(
+    () => GetAllWorkersUsecase(serviceLocator<ExploreRepository>()),
   );
 
   // --- Explore Bloc ---
   serviceLocator.registerFactory<ExploreBloc>(
     () => ExploreBloc(
-      getAllPropertiesUsecase: serviceLocator<GetExplorePropertiesUsecase>(),
+      getAllWorkersUsecase: serviceLocator<GetAllWorkersUsecase>(),
     ),
   );
 }
@@ -349,6 +297,9 @@ void _initChatModules() {
   serviceLocator.registerLazySingleton<ChatSocketDataSource>(
     () => ChatSocketDataSource(),
   );
+  // Assuming ChatRepository is the interface and ChatRepositoryImpl is the implementation
+  // BUT the original code had ChatRepository as the class being instantiated.
+  // I will follow the original code pattern for Chat.
   serviceLocator.registerLazySingleton<ChatRepository>(
     () => ChatRepository(
       restDataSource: serviceLocator<ChatRestDataSource>(),
@@ -397,6 +348,3 @@ void _initChatModules() {
     ),
   );
 }
-
-// Legacy setup function removed — property-based registrations
-// were migrated to worker-named usecases in _initPropertyModules.

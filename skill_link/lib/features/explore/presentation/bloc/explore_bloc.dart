@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:skill_link/features/explore/domain/entity/explore_property_entity.dart';
-import 'package:skill_link/features/explore/domain/use_case/get_all_properties_usecase.dart';
+import 'package:skill_link/features/explore/domain/entity/explore_worker_entity.dart';
+import 'package:skill_link/features/explore/domain/use_case/get_all_workers_usecase.dart';
 
 // Events
 abstract class ExploreEvent extends Equatable {
@@ -11,23 +11,19 @@ abstract class ExploreEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-class GetPropertiesEvent extends ExploreEvent {}
+class GetWorkersEvent extends ExploreEvent {}
 
-class FilterPropertiesEvent extends ExploreEvent {
+class FilterWorkersEvent extends ExploreEvent {
   final String searchText;
   final String? categoryId;
   final double? minPrice;
   final double? maxPrice;
-  final int? minBedrooms;
-  final int? minBathrooms;
 
-  const FilterPropertiesEvent({
+  const FilterWorkersEvent({
     required this.searchText,
     this.categoryId,
     this.minPrice,
     this.maxPrice,
-    this.minBedrooms,
-    this.minBathrooms,
   });
 
   @override
@@ -36,8 +32,6 @@ class FilterPropertiesEvent extends ExploreEvent {
     categoryId,
     minPrice,
     maxPrice,
-    minBedrooms,
-    minBathrooms,
   ];
 }
 
@@ -54,16 +48,16 @@ class ExploreInitial extends ExploreState {}
 class ExploreLoading extends ExploreState {}
 
 class ExploreLoaded extends ExploreState {
-  final List<ExplorePropertyEntity> properties;
-  final List<ExplorePropertyEntity> filteredProperties;
+  final List<ExploreWorkerEntity> workers;
+  final List<ExploreWorkerEntity> filteredWorkers;
 
   const ExploreLoaded({
-    required this.properties,
-    required this.filteredProperties,
+    required this.workers,
+    required this.filteredWorkers,
   });
 
   @override
-  List<Object?> get props => [properties, filteredProperties];
+  List<Object?> get props => [workers, filteredWorkers];
 }
 
 class ExploreError extends ExploreState {
@@ -77,82 +71,68 @@ class ExploreError extends ExploreState {
 
 // Bloc
 class ExploreBloc extends Bloc<ExploreEvent, ExploreState> {
-  final GetExplorePropertiesUsecase getAllPropertiesUsecase;
-  List<ExplorePropertyEntity> _allProperties = [];
+  final GetAllWorkersUsecase getAllWorkersUsecase;
+  List<ExploreWorkerEntity> _allWorkers = [];
 
-  ExploreBloc({required this.getAllPropertiesUsecase})
+  ExploreBloc({required this.getAllWorkersUsecase})
     : super(ExploreInitial()) {
-    on<GetPropertiesEvent>(_onGetProperties);
-    on<FilterPropertiesEvent>(_onFilterProperties);
+    on<GetWorkersEvent>(_onGetWorkers);
+    on<FilterWorkersEvent>(_onFilterWorkers);
   }
 
-  Future<void> _onGetProperties(
-    GetPropertiesEvent event,
+  Future<void> _onGetWorkers(
+    GetWorkersEvent event,
     Emitter<ExploreState> emit,
   ) async {
     emit(ExploreLoading());
 
-    final result = await getAllPropertiesUsecase();
-    result.fold((failure) => emit(ExploreError(failure.message)), (properties) {
-      _allProperties = properties;
+    final result = await getAllWorkersUsecase();
+    result.fold((failure) => emit(ExploreError(failure.message)), (workers) {
+      _allWorkers = workers;
       emit(
-        ExploreLoaded(properties: properties, filteredProperties: properties),
+        ExploreLoaded(workers: workers, filteredWorkers: workers),
       );
     });
   }
 
-  void _onFilterProperties(
-    FilterPropertiesEvent event,
+  void _onFilterWorkers(
+    FilterWorkersEvent event,
     Emitter<ExploreState> emit,
   ) {
-    final filteredProperties =
-        _allProperties.where((property) {
+    final filteredWorkers =
+        _allWorkers.where((worker) {
           // Search text filter - search in title, location, and description
           final searchLower = event.searchText.toLowerCase();
           final matchesSearch =
               event.searchText.isEmpty ||
-              (property.title?.toLowerCase().contains(searchLower) ?? false) ||
-              (property.location?.toLowerCase().contains(searchLower) ??
+              (worker.title?.toLowerCase().contains(searchLower) ?? false) ||
+              (worker.location?.toLowerCase().contains(searchLower) ??
                   false) ||
-              (property.description?.toLowerCase().contains(searchLower) ??
+              (worker.description?.toLowerCase().contains(searchLower) ??
                   false);
 
           // Category filter
           final matchesCategory =
               event.categoryId == null ||
-              property.categoryId == event.categoryId;
+              worker.categoryId == event.categoryId;
 
           // Price range filter
-          final propertyPrice = property.price ?? 0;
+          final workerPrice = worker.price ?? 0;
           final matchesMinPrice =
-              event.minPrice == null || propertyPrice >= event.minPrice!;
+              event.minPrice == null || workerPrice >= event.minPrice!;
           final matchesMaxPrice =
-              event.maxPrice == null || propertyPrice <= event.maxPrice!;
-
-          // Bedrooms filter
-          final propertyBedrooms = property.bedrooms ?? 0;
-          final matchesMinBedrooms =
-              event.minBedrooms == null ||
-              propertyBedrooms >= event.minBedrooms!;
-
-          // Bathrooms filter
-          final propertyBathrooms = property.bathrooms ?? 0;
-          final matchesMinBathrooms =
-              event.minBathrooms == null ||
-              propertyBathrooms >= event.minBathrooms!;
+              event.maxPrice == null || workerPrice <= event.maxPrice!;
 
           return matchesSearch &&
               matchesCategory &&
               matchesMinPrice &&
-              matchesMaxPrice &&
-              matchesMinBedrooms &&
-              matchesMinBathrooms;
+              matchesMaxPrice;
         }).toList();
 
     emit(
       ExploreLoaded(
-        properties: _allProperties,
-        filteredProperties: filteredProperties,
+        workers: _allWorkers,
+        filteredWorkers: filteredWorkers,
       ),
     );
   }
