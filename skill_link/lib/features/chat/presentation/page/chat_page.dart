@@ -5,6 +5,7 @@ import 'package:skill_link/features/chat/data/model/chat_message_model.dart';
 import 'package:skill_link/app/service_locator/service_locator.dart';
 import 'package:skill_link/app/shared_pref/token_shared_prefs.dart';
 import 'package:skill_link/features/chat/data/repository/chat_repository.dart';
+import 'package:skill_link/cores/utils/image_url_helper.dart';
 
 import '../../../../app/constant/api_endpoints.dart';
 
@@ -154,8 +155,8 @@ class _ChatList extends StatelessWidget {
                       ? DateTime.tryParse(chat['lastMessageAt'])
                       : null;
               final avatarUrl =
-                  participants.isNotEmpty
-                      ? participants.first['profilePicture']
+                  participants.isNotEmpty && participants.first['profilePicture'] != null
+                      ? ImageUrlHelper.constructImageUrl(participants.first['profilePicture'])
                       : null;
               print(
                 '[DEBUG] ChatList item: chatId=$chatId, chatName=$chatName, lastMessage=$lastMessage',
@@ -300,7 +301,7 @@ class _ChatView extends StatelessWidget {
                   children: [
                     if (other != null && other['profilePicture'] != null)
                       CircleAvatar(
-                        backgroundImage: NetworkImage(other['profilePicture']),
+                        backgroundImage: NetworkImage(ImageUrlHelper.constructImageUrl(other['profilePicture'])),
                         radius: 26,
                       )
                     else

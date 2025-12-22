@@ -27,7 +27,7 @@ exports.createOrGetChat = asyncHandler(async (req, res) => {
         return res.status(404).json({ success: false, message: "One or both users not found." });
     }
 
-    let query = { participants: { $all: [currentUserId, otherUserId] } };
+    let query;
     let chatName = `Chat between ${currentUser.fullName} and ${otherUser.fullName}`;
 
     if (targetListingId) {
@@ -35,21 +35,44 @@ exports.createOrGetChat = asyncHandler(async (req, res) => {
         if (!listing) {
             return res.status(404).json({ success: false, message: "Worker listing not found." });
         }
-        query.workerListing = targetListingId; // Changed from property to workerListing
+        // Query for chat with specific participants AND specific workerListing
+        query = {
+            $and: [
+                { participants: { $all: [currentUserId, otherUserId] } },
+                { workerListing: targetListingId }
+            ]
+        };
         chatName = `Chat for ${listing.title}: ${currentUser.fullName} - ${otherUser.fullName}`;
     } else {
-        query.workerListing = { $exists: false }; // For general direct messages
+        // Query for chat with specific participants AND no workerListing
+        query = {
+            $and: [
+                { participants: { $all: [currentUserId, otherUserId] } },
+                {
+                    $or: [
+                        { workerListing: { $exists: false } },
+                        { workerListing: null }
+                    ]
+                }
+            ]
+        };
     }
 
-    let chat = await Chat.findOne(query);
+    console.log('[DEBUG] Chat query:', JSON.stringify(query));
+    let chat = await Chat.findOne(query).populate('participants', 'fullName profilePicture');
 
     if (!chat) {
-        chat = await Chat.create({
+        // Build payload without setting workerListing when not present so the field is not added as null
+        const chatPayload = {
             name: chatName,
             participants: [currentUserId, otherUserId],
-            workerListing: targetListingId || null,
             messages: [] // Initialize messages array
-        });
+        };
+        if (targetListingId) chatPayload.workerListing = targetListingId;
+
+        chat = await Chat.create(chatPayload);
+        // Populate participants for the newly created chat
+        chat = await Chat.findById(chat._id).populate('participants', 'fullName profilePicture');
         return res.status(201).json({ success: true, message: "New chat created.", data: chat });
     }
 

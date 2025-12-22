@@ -145,14 +145,6 @@ class DashboardView extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const Spacer(),
-                    IconButton(
-                      icon: const Icon(
-                        Icons.notifications_outlined,
-                        color: Colors.white,
-                      ),
-                      onPressed: () {},
-                    ),
                   ],
                 ),
                 const SizedBox(height: 24),
