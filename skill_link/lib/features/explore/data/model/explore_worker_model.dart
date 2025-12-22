@@ -33,17 +33,56 @@ class ExploreWorkerModel extends ExploreWorkerEntity {
       coords = LatLng(c[1], c[0]); // Lat, Lng
     }
 
-    // Parse address string
+    // Parse address string: attempt many possible keys returned by different APIs
     String? address;
     if (json['location'] is String) {
-      address = json['location'];
+      address = json['location']?.toString();
     } else if (json['location'] is Map) {
+      final loc = json['location'] as Map<String, dynamic>;
       address =
-          json['location']['address']?.toString() ??
-          json['location']['formattedAddress']?.toString();
+          loc['address']?.toString() ??
+          loc['formattedAddress']?.toString() ??
+          loc['formatted_address']?.toString() ??
+          loc['display_name']?.toString() ??
+          loc['name']?.toString() ??
+          loc['description']?.toString() ??
+          loc['fullAddress']?.toString() ??
+          loc['address_line']?.toString();
+
+      // If address still missing, try to build from components
+      if ((address == null || address.isEmpty)) {
+        final parts = <String>[];
+        for (final key in [
+          'street',
+          'street1',
+          'street_address',
+          'road',
+          'city',
+          'town',
+          'village',
+          'suburb',
+          'state',
+          'region',
+          'country',
+        ]) {
+          final value = loc[key];
+          if (value != null && value.toString().trim().isNotEmpty) {
+            parts.add(value.toString().trim());
+          }
+        }
+        if (parts.isNotEmpty) {
+          address = parts.join(', ');
+        }
+      }
     }
-    if (address == null && json['address'] is String) {
-      address = json['address'];
+
+    // Fallback top-level fields
+    if ((address == null || address.isEmpty) && json['address'] is String) {
+      address = json['address']?.toString();
+    }
+    if ((address == null || address.isEmpty) &&
+        json['formattedAddress'] is String) {
+      address = json['formattedAddress']?.toString();
     }
 
     return ExploreWorkerModel(

@@ -37,19 +37,14 @@ class _OsmMapWidgetState extends State<OsmMapWidget> {
       child: FlutterMap(
         mapController: _controller,
         options: MapOptions(
-          initialCenter: widget.initialCenter,
+          initialCenter: widget.initialCenter, // Corrected from 'center'
           initialZoom: widget.initialZoom,
+          interactiveFlags: InteractiveFlag.all,
         ),
         children: [
           TileLayer(
             urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-            userAgentPackageName: 'com.example.skill_link',
-            tileProvider: NetworkTileProvider(
-              headers: {
-                'User-Agent':
-                    'SkillLinkApp/1.0 (contact: youremail@example.com)',
-              },
-            ),
+            userAgentPackageName: 'com.example.skill_link', 
           ),
           if (widget.markers.isNotEmpty) MarkerLayer(markers: widget.markers),
         ],

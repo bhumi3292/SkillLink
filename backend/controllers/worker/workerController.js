@@ -4,10 +4,11 @@ const Worker = require("../../models/Worker");
 const Category = require("../../models/Category");
 const User = require('../../models/User');
 
-// Helper to extract file paths from Multer's `req.files`
+// Helper to extract and normalize file paths from Multer's `req.files`
 const extractFilePaths = (files) => {
     if (!files) return [];
-    return files.map(file => file.path);
+    // Normalize path separators to be web-compatible (forward slashes)
+    return files.map(file => file.path.replace(/\\/g, '/'));
 };
 
 // Helper to delete files from the filesystem

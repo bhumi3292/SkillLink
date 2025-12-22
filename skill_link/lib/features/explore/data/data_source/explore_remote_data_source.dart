@@ -3,7 +3,6 @@ import 'package:skill_link/cores/error/failure.dart';
 import 'package:dio/dio.dart';
 import 'package:skill_link/cores/network/api_service.dart';
 import 'package:skill_link/features/explore/data/model/explore_worker_model.dart';
-import 'package:skill_link/features/add_worker/data/model/worker_model/worker_api_model.dart';
 import 'package:skill_link/app/constant/api_endpoints.dart';
 
 abstract class ExploreRemoteDataSource {

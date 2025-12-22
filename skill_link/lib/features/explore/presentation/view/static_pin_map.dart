@@ -62,7 +62,9 @@ class _StaticPinMapState extends State<StaticPinMap> {
       setState(() {
         _center = LatLng(pos.latitude, pos.longitude);
       });
-      _mapController.move(_center, widget.initialZoom);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _mapController.move(_center, widget.initialZoom);
+      });
       _reverseGeocode(_center);
     } catch (e) {
       // ignore errors and keep default
@@ -142,8 +144,12 @@ class _StaticPinMapState extends State<StaticPinMap> {
       if (!hasPermission) return;
       final pos = await Geolocator.getCurrentPosition();
       final newCenter = LatLng(pos.latitude, pos.longitude);
-      _mapController.move(newCenter, widget.initialZoom);
-      setState(() => _center = newCenter);
+      if (mounted) {
+        setState(() => _center = newCenter);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _mapController.move(newCenter, widget.initialZoom);
+        });
+      }
       _reverseGeocode(newCenter);
     } catch (_) {}
   }

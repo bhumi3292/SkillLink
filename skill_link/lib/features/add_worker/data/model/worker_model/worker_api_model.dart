@@ -16,7 +16,7 @@ class WorkerApiModel extends Equatable {
   final String categoryId;
   final double price;
   final String? description;
-  @JsonKey(name: 'worker') 
+  @JsonKey(name: 'worker')
   final String workerId;
 
   // Add timestamps from Mongoose schema
@@ -41,14 +41,88 @@ class WorkerApiModel extends Equatable {
   // Normalizes nested objects (e.g. categoryId: { _id }) before using
   // the generated deserializer to keep parsing robust.
   factory WorkerApiModel.fromJson(Map<String, dynamic> json) {
+    // Create a defensive copy and normalize common nested shapes that
+    // the generated deserializer expects as simple types.
     final normalized = Map<String, dynamic>.from(json);
+
+    // Normalize categoryId which may be an object
     if (normalized['categoryId'] is Map<String, dynamic>) {
       normalized['categoryId'] =
           normalized['categoryId']['_id']?.toString() ?? '';
     }
+
+    // Normalize worker which may be an object
     if (normalized['worker'] is Map<String, dynamic>) {
       normalized['worker'] = normalized['worker']['_id']?.toString() ?? '';
     }
+
+    // Normalize images: backend sometimes returns list of objects
+    // or list of strings. Convert objects to a string path when possible.
+    if (normalized['images'] is List) {
+      final raw = normalized['images'] as List;
+      normalized['images'] =
+          raw
+              .map((e) {
+                if (e == null) return '';
+                if (e is String) return e;
+                if (e is Map<String, dynamic>) {
+                  return (e['path'] ??
+                              e['url'] ??
+                              e['filename'] ??
+                              e['_id'] ??
+                              e['image'])
+                          ?.toString() ??
+                      '';
+                }
+                return e.toString();
+              })
+              .where((s) => (s as String).isNotEmpty)
+              .toList();
+    } else if (normalized['images'] == null) {
+      normalized['images'] = <String>[];
+    }
+
+    // Normalize videos similarly
+    if (normalized['videos'] is List) {
+      final raw = normalized['videos'] as List;
+      normalized['videos'] =
+          raw
+              .map((e) {
+                if (e == null) return '';
+                if (e is String) return e;
+                if (e is Map<String, dynamic>) {
+                  return (e['path'] ??
+                              e['url'] ??
+                              e['filename'] ??
+                              e['_id'] ??
+                              e['video'])
+                          ?.toString() ??
+                      '';
+                }
+                return e.toString();
+              })
+              .where((s) => (s as String).isNotEmpty)
+              .toList();
+    }
+
+    // Normalize location: if it's an object, try to extract a readable address
+    if (normalized['location'] is Map<String, dynamic>) {
+      final loc = normalized['location'] as Map<String, dynamic>;
+      normalized['location'] =
+          (loc['address'] ??
+                  loc['formattedAddress'] ??
+                  loc['name'] ??
+                  loc['description'])
+              ?.toString() ??
+          '';
+    }
+
+    // Ensure price can be parsed as a num/string that the generated code can handle
+    if (normalized['price'] is String) {
+      final p = double.tryParse(normalized['price']);
+      if (p != null) normalized['price'] = p;
+    }
+
     return _$WorkerApiModelFromJson(normalized);
   }
 
@@ -61,7 +135,7 @@ class WorkerApiModel extends Equatable {
       id: id,
       images: images,
       videos: videos,
-      name: title, 
+      name: title,
       location: location,
       categoryId: categoryId,
       rate: price,
@@ -78,11 +152,10 @@ class WorkerApiModel extends Equatable {
   factory WorkerApiModel.fromEntity(WorkerEntity entity) {
     return WorkerApiModel(
       id: entity.id,
-      images: entity.images ?? [], 
+      images: entity.images ?? [],
       videos: entity.videos,
-      title: entity.name ?? '', 
-      location:
-          entity.location ?? '', 
+      title: entity.name ?? '',
+      location: entity.location ?? '',
       categoryId: entity.categoryId ?? '',
       price: entity.rate ?? 0.0, // Map entity.rate back to API price
       description: entity.description,

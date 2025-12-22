@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:skill_link/app/constant/api_endpoints.dart';
+import 'dart:convert';
+
 import 'package:skill_link/features/add_worker/data/model/worker_model/worker_api_model.dart';
 import 'package:skill_link/features/add_worker/domain/entity/worker/worker_entity.dart';
 
@@ -169,6 +171,52 @@ class WorkerRemoteDatasource {
         formData.fields.add(MapEntry('categoryId', worker.categoryId!));
       }
 
+      // Try to include coordinates in multiple formats for backend compatibility.
+      // Backend expects `coordinates` as a JSON string (e.g. "[lng, lat]").
+      double? lat;
+      double? lng;
+      if (worker.coordinates != null && worker.coordinates!.isNotEmpty) {
+        final raw = worker.coordinates!.trim();
+        try {
+          final decoded = jsonDecode(raw);
+          if (decoded is List && decoded.length == 2) {
+            // Assume [lng, lat]
+            lng = (decoded[0] as num).toDouble();
+            lat = (decoded[1] as num).toDouble();
+          } else if (decoded is Map) {
+            if (decoded['lat'] != null && decoded['lng'] != null) {
+              lat = (decoded['lat'] as num).toDouble();
+              lng = (decoded['lng'] as num).toDouble();
+            }
+          }
+        } catch (_) {
+          // Not JSON - try comma separated 'lat,lng' or 'lng,lat'
+          final parts = raw.split(',').map((s) => s.trim()).toList();
+          if (parts.length == 2) {
+            final a = double.tryParse(parts[0]);
+            final b = double.tryParse(parts[1]);
+            if (a != null && b != null) {
+              // Heuristic: if latitude is in typical range (-90..90) assume parts[0] is lat
+              if (a.abs() <= 90 && b.abs() <= 180) {
+                lat = a;
+                lng = b;
+              } else if (b.abs() <= 90 && a.abs() <= 180) {
+                lat = b;
+                lng = a;
+              }
+            }
+          }
+        }
+
+        // If we could parse lat/lng add them to the form data
+        if (lat != null && lng != null) {
+          formData.fields.add(MapEntry('latitude', lat.toString()));
+          formData.fields.add(MapEntry('longitude', lng.toString()));
+          // Send coordinates as [lng, lat] JSON string which backend expects
+          formData.fields.add(MapEntry('coordinates', jsonEncode([lng, lat])));
+        }
+      }
+
       // Add images
       for (int i = 0; i < imagePaths.length; i++) {
         final imageFile = await MultipartFile.fromFile(
@@ -274,6 +322,46 @@ class WorkerRemoteDatasource {
           filename: 'video_$i.mp4',
         );
         formData.files.add(MapEntry('videos', videoFile));
+      }
+
+      // Include coordinates if provided on the worker entity (same parsing logic as add)
+      double? lat;
+      double? lng;
+      if (worker.coordinates != null && worker.coordinates!.isNotEmpty) {
+        final raw = worker.coordinates!.trim();
+        try {
+          final decoded = jsonDecode(raw);
+          if (decoded is List && decoded.length == 2) {
+            lng = (decoded[0] as num).toDouble();
+            lat = (decoded[1] as num).toDouble();
+          } else if (decoded is Map) {
+            if (decoded['lat'] != null && decoded['lng'] != null) {
+              lat = (decoded['lat'] as num).toDouble();
+              lng = (decoded['lng'] as num).toDouble();
+            }
+          }
+        } catch (_) {
+          final parts = raw.split(',').map((s) => s.trim()).toList();
+          if (parts.length == 2) {
+            final a = double.tryParse(parts[0]);
+            final b = double.tryParse(parts[1]);
+            if (a != null && b != null) {
+              if (a.abs() <= 90 && b.abs() <= 180) {
+                lat = a;
+                lng = b;
+              } else if (b.abs() <= 90 && a.abs() <= 180) {
+                lat = b;
+                lng = a;
+              }
+            }
+          }
+        }
+
+        if (lat != null && lng != null) {
+          formData.fields.add(MapEntry('latitude', lat.toString()));
+          formData.fields.add(MapEntry('longitude', lng.toString()));
+          formData.fields.add(MapEntry('coordinates', jsonEncode([lng, lat])));
+        }
       }
 
       print('Updating Workerwith form data');

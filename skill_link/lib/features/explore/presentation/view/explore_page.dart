@@ -12,10 +12,11 @@ import 'package:skill_link/features/explore/domain/entity/explore_worker_entity.
 import 'package:skill_link/features/explore/presentation/bloc/explore_bloc.dart';
 import 'package:skill_link/features/explore/presentation/utils/worker_converter.dart';
 import 'package:skill_link/features/explore/presentation/view/worker_detail_page.dart';
-import 'package:skill_link/features/explore/presentation/view/osm_map_widget.dart';
 import 'package:skill_link/features/explore/presentation/widgets/explore_filter_dialog.dart';
 import 'package:skill_link/features/explore/presentation/widgets/explore_search_bar.dart';
 import 'package:skill_link/features/favourite/presentation/bloc/cart_bloc.dart';
+
+enum WorkerFilter { all, nearby }
 
 class ExplorePage extends StatefulWidget {
   const ExplorePage({super.key});
@@ -30,12 +31,13 @@ class _ExplorePageState extends State<ExplorePage> {
   String? _selectedCategory;
   double? _minPrice;
   double? _maxPrice;
+  WorkerFilter _currentFilter = WorkerFilter.all;
 
-  bool _isMapView = false;
+  bool _isMapView = false; // Default to List View
   Position? _currentPosition;
-  bool _nearMeOnly = false;
   final MapController _mapController = MapController();
   StreamSubscription<Position>? _positionStreamSubscription;
+  final bool _followUser = true;
 
   @override
   void initState() {
@@ -43,7 +45,7 @@ class _ExplorePageState extends State<ExplorePage> {
     _cartBloc = serviceLocator<CartBloc>();
     _cartBloc.add(GetCartEvent());
     context.read<ExploreBloc>().add(GetWorkersEvent());
-    _subscribeToLocationUpdates();
+    _initializeAndSubscribeToLocation();
   }
 
   @override
@@ -53,39 +55,62 @@ class _ExplorePageState extends State<ExplorePage> {
     super.dispose();
   }
 
-  void _subscribeToLocationUpdates() async {
+  Future<void> _initializeAndSubscribeToLocation() async {
     final locationService = serviceLocator<LocationService>();
     final hasPermission = await locationService.requestPermission();
-    if (hasPermission && mounted) {
-      final position = await locationService.getCurrentPosition();
-      if (position != null && mounted) {
-        setState(() {
-          _currentPosition = position;
-        });
-        _mapController.move(
-          LatLng(position.latitude, position.longitude),
-          14.0,
-        );
-      }
 
-      _positionStreamSubscription = locationService.getPositionStream().listen((
-        position,
-      ) {
+    if (hasPermission && mounted) {
+      try {
+        final position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high,
+        );
         if (mounted) {
           setState(() {
             _currentPosition = position;
           });
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              _mapController.move(
+                LatLng(position.latitude, position.longitude),
+                15.0,
+              );
+            }
+          });
         }
-      });
+
+        _positionStreamSubscription = locationService
+            .getPositionStream()
+            .listen((position) {
+              if (mounted) {
+                setState(() {
+                  _currentPosition = position;
+                });
+                if (_followUser) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted) {
+                      _mapController.move(
+                        LatLng(position.latitude, position.longitude),
+                        15.0,
+                      );
+                    }
+                  });
+                }
+              }
+            });
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to get location: ${e.toString()}')),
+          );
+        }
+      }
     }
   }
 
   List<Marker> _buildMarkers(List<ExploreWorkerEntity> workers) {
     final markers = <Marker>[];
 
-    // Add worker markers
     for (final worker in workers) {
-      // Use coordinates (LatLng) when available; fallback to no marker
       if (worker.coordinates != null) {
         markers.add(
           Marker(
@@ -103,8 +128,8 @@ class _ExplorePageState extends State<ExplorePage> {
               },
               child: const Icon(
                 Icons.location_pin,
-                color: Colors.red,
-                size: 30,
+                color: Colors.purple,
+                size: 35,
               ),
             ),
           ),
@@ -112,7 +137,6 @@ class _ExplorePageState extends State<ExplorePage> {
       }
     }
 
-    // Add user's current location marker
     if (_currentPosition != null) {
       markers.add(
         Marker(
@@ -151,7 +175,6 @@ class _ExplorePageState extends State<ExplorePage> {
         ),
         body: Column(
           children: [
-            // Header with Search Bar
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -161,7 +184,6 @@ class _ExplorePageState extends State<ExplorePage> {
                     color: Colors.grey.withOpacity(0.1),
                     spreadRadius: 1,
                     blurRadius: 3,
-                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
@@ -176,92 +198,27 @@ class _ExplorePageState extends State<ExplorePage> {
                       await _showFilterDialog();
                     },
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      IconButton(
-                        tooltip: 'Show only workers near me (10 km)',
-                        onPressed: () {
-                          setState(() {
-                            _nearMeOnly = !_nearMeOnly;
-                          });
-                        },
-                        icon: Icon(
-                          Icons.near_me,
-                          color:
-                              _nearMeOnly
-                                  ? Theme.of(context).primaryColor
-                                  : Colors.grey,
-                        ),
-                      ),
+                      const Text('Nearby only'),
                       const SizedBox(width: 8),
-                      Text(
-                        _nearMeOnly
-                            ? 'Showing workers near you'
-                            : 'Showing all workers',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
-                        ),
+                      Switch(
+                        value: _currentFilter == WorkerFilter.nearby,
+                        onChanged: (val) {
+                          setState(() {
+                            _currentFilter =
+                                val ? WorkerFilter.nearby : WorkerFilter.all;
+                          });
+                          _filterWorkers();
+                        },
                       ),
                     ],
                   ),
-                  if (_hasActiveFilters())
-                    Padding(
-                      padding: const EdgeInsets.only(top: 12),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Theme.of(
-                                context,
-                              ).primaryColor.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.filter_list,
-                                  size: 16,
-                                  color: Theme.of(context).primaryColor,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'Filters Active',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Theme.of(context).primaryColor,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const Spacer(),
-                          TextButton(
-                            onPressed: _clearAllFilters,
-                            child: Text(
-                              'Clear All',
-                              style: TextStyle(
-                                color: Theme.of(context).primaryColor,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                 ],
               ),
             ),
-
-            // Content Body
             Expanded(
               child: BlocBuilder<ExploreBloc, ExploreState>(
                 builder: (context, state) {
@@ -269,116 +226,101 @@ class _ExplorePageState extends State<ExplorePage> {
                     return const Center(child: CircularProgressIndicator());
                   } else if (state is ExploreError) {
                     return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            size: 48,
-                            color: Colors.grey[400],
-                          ),
-                          const SizedBox(height: 16),
-                          const Text(
-                            "Something went wrong while loading workers.",
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              context.read<ExploreBloc>().add(
-                                GetWorkersEvent(),
-                              );
-                            },
-                            child: const Text("Retry"),
-                          ),
-                        ],
-                      ),
+                      child: Text("Error loading workers: ${state.message}"),
                     );
                   } else if (state is ExploreLoaded) {
-                    // locally apply 'near me' proximity filter when enabled
-                    final locationService = serviceLocator<LocationService>();
-                    List<ExploreWorkerEntity> displayedWorkers =
+                    List<ExploreWorkerEntity> workersToDisplay =
                         state.filteredWorkers;
-                    if (_nearMeOnly && _currentPosition != null) {
-                      displayedWorkers =
-                          displayedWorkers.where((w) {
-                            final coords = w.coordinates;
-                            if (coords == null) return false;
-                            final meters = locationService.calculateDistance(
+                    if (_currentFilter == WorkerFilter.nearby &&
+                        _currentPosition != null) {
+                      workersToDisplay =
+                          workersToDisplay.where((worker) {
+                            if (worker.coordinates == null) return false;
+                            final distance = Geolocator.distanceBetween(
                               _currentPosition!.latitude,
                               _currentPosition!.longitude,
-                              coords.latitude,
-                              coords.longitude,
+                              worker.coordinates!.latitude,
+                              worker.coordinates!.longitude,
                             );
-                            return meters <= 10000; // within 10 km
+                            return distance <= 2000; // 2km
                           }).toList();
+                      // Sort by distance
+                      workersToDisplay.sort((a, b) {
+                        final distanceA = Geolocator.distanceBetween(
+                          _currentPosition!.latitude,
+                          _currentPosition!.longitude,
+                          a.coordinates!.latitude,
+                          a.coordinates!.longitude,
+                        );
+                        final distanceB = Geolocator.distanceBetween(
+                          _currentPosition!.latitude,
+                          _currentPosition!.longitude,
+                          b.coordinates!.latitude,
+                          b.coordinates!.longitude,
+                        );
+                        return distanceA.compareTo(distanceB);
+                      });
                     }
 
                     if (_isMapView) {
-                      final center =
-                          _currentPosition != null
-                              ? LatLng(
-                                _currentPosition!.latitude,
-                                _currentPosition!.longitude,
-                              )
-                              : const LatLng(27.7172, 85.3240);
-                      return OsmMapWidget(
-                        initialCenter: center,
-                        initialZoom: 14.0,
+                      return FlutterMap(
                         mapController: _mapController,
-                        markers: _buildMarkers(displayedWorkers),
+                        options: MapOptions(
+                          initialCenter:
+                              _currentPosition != null
+                                  ? LatLng(
+                                    _currentPosition!.latitude,
+                                    _currentPosition!.longitude,
+                                  )
+                                  : const LatLng(27.7172, 85.3240), // Fallback
+                          initialZoom: 15.0,
+                        ),
+                        children: [
+                          TileLayer(
+                            urlTemplate:
+                                'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                            userAgentPackageName: 'com.example.skill_link',
+                          ),
+                          MarkerLayer(markers: _buildMarkers(workersToDisplay)),
+                        ],
                       );
                     }
 
-                    if (displayedWorkers.isEmpty) {
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.search_off,
-                              size: 48,
-                              color: Colors.grey[400],
-                            ),
-                            const SizedBox(height: 16),
-                            const Text(
-                              "No workers found matching your criteria",
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                          ],
-                        ),
+                    if (workersToDisplay.isEmpty) {
+                      return const Center(
+                        child: Text("No workers found matching your criteria"),
                       );
                     }
 
                     return ListView(
                       padding: const EdgeInsets.all(16),
-                      children: [
-                        ...displayedWorkers.map((worker) {
-                          final apiModel = WorkerConverter.toApiModel(worker);
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            child: BlocProvider.value(
-                              value: _cartBloc,
-                              child: PropertyCardWidget(
-                                property: apiModel,
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder:
-                                          (_) =>
-                                              WorkerDetailPage(worker: worker),
-                                    ),
-                                  );
-                                },
-                                showFavoriteButton: true,
+                      children:
+                          workersToDisplay.map((worker) {
+                            final apiModel = WorkerConverter.toApiModel(worker);
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 16),
+                              child: BlocProvider.value(
+                                value: _cartBloc,
+                                child: PropertyCardWidget(
+                                  property: apiModel,
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder:
+                                            (_) => WorkerDetailPage(
+                                              worker: worker,
+                                            ),
+                                      ),
+                                    );
+                                  },
+                                  showFavoriteButton: true,
+                                ),
                               ),
-                            ),
-                          );
-                        }),
-                      ],
+                            );
+                          }).toList(),
                     );
                   }
-
                   return const Center(child: Text('No data available'));
                 },
               ),
@@ -429,6 +371,8 @@ class _ExplorePageState extends State<ExplorePage> {
       _selectedCategory = null;
       _minPrice = null;
       _maxPrice = null;
+      _searchText = '';
+      _currentFilter = WorkerFilter.all;
     });
     _filterWorkers();
   }

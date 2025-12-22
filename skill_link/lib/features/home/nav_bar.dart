@@ -1,8 +1,7 @@
 import 'package:skill_link/features/add_worker/presentation/view/add_worker_presentation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:skill_link'
-    '/features/dashbaord/presentation/view/dashboard.dart';
+import 'package:skill_link/features/dashbaord/presentation/view/dashboard.dart';
 import 'package:skill_link/features/explore/presentation/view/explore_page.dart';
 import 'package:skill_link/features/explore/presentation/bloc/explore_bloc.dart';
 import 'package:skill_link/features/favourite/presentation/pages/favourite_page.dart';
@@ -23,16 +22,52 @@ class NavBar extends StatefulWidget {
 class _NavBarState extends State<NavBar> {
   int _selectedIndex = 0;
 
-  void _onItemTapped(int index, bool isworker, List<Widget> pages) {
+  void _onItemTapped(int index, bool isWorker) {
     if (_selectedIndex == index) return;
 
     setState(() {
       _selectedIndex = index;
     });
 
-    if (index < 0 || index >= pages.length) return;
-
-    final nextPage = pages[index];
+    Widget nextPage;
+    switch (index) {
+      case 0:
+        nextPage = const DashboardPage();
+        break;
+      case 1:
+        nextPage = BlocProvider(create: (context) => serviceLocator<ExploreBloc>(), child: const ExplorePage());
+        break;
+      case 2:
+        final user = context.read<ProfileViewModel>().state.user;
+        nextPage = ChatPage(currentUserId: user?.userId ?? '');
+        break;
+      case 3:
+        if (isWorker) {
+          nextPage = const AddWorkerPresentation();
+        } else {
+          nextPage = const FavouritePage();
+        }
+        break;
+      case 4:
+        if (isWorker) {
+          nextPage = const FavouritePage();
+        } else {
+          nextPage = const BookingPage();
+        }
+        break;
+      case 5:
+        if (isWorker) {
+          nextPage = const BookingPage();
+        } else {
+          nextPage = const ProfilePage();
+        }
+        break;
+      case 6:
+        nextPage = const ProfilePage();
+        break;
+      default:
+        nextPage = const DashboardPage();
+    }
 
     Navigator.pushReplacement(
       context,
@@ -45,50 +80,17 @@ class _NavBarState extends State<NavBar> {
     return BlocBuilder<ProfileViewModel, ProfileState>(
       builder: (context, state) {
         final user = state.user;
-        final isworker = user?.stakeholder?.trim().toLowerCase() == 'worker';
+        final isWorker = user?.stakeholder?.trim().toLowerCase() == 'worker';
+
         final items = <BottomNavigationBarItem>[
           const BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.explore),
-            label: 'Explore',
-          ),
-          // Message/chat item
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.message_outlined),
-            label: 'Message',
-          ),
-          if (isworker)
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.add_box),
-              label: 'Add Worker',
-            ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.favorite_border),
-            label: 'Favourite',
-          ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.book_online),
-            label: 'Booking',
-          ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ];
-
-        // Build pages in the same order as items so the index maps directly
-        final pages = <Widget>[
-          const DashboardPage(),
-          BlocProvider(
-            create: (context) => serviceLocator<ExploreBloc>(),
-            child: const ExplorePage(),
-          ),
-          // Message page expects currentUserId; provide from profile state if available
-          ChatPage(currentUserId: user?.userId ?? ''),
-          if (isworker) const AddWorkerPresentation(),
-          const FavouritePage(),
-          const BookingPage(),
-          const ProfilePage(),
+          const BottomNavigationBarItem(icon: Icon(Icons.explore), label: 'Explore'),
+          const BottomNavigationBarItem(icon: Icon(Icons.message_outlined), label: 'Message'),
+          if (isWorker)
+            const BottomNavigationBarItem(icon: Icon(Icons.add_box), label: 'Add Worker'),
+          const BottomNavigationBarItem(icon: Icon(Icons.favorite_border), label: 'Favourite'),
+          const BottomNavigationBarItem(icon: Icon(Icons.book_online), label: 'Booking'),
+          const BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ];
 
         return BottomNavigationBar(
@@ -96,8 +98,9 @@ class _NavBarState extends State<NavBar> {
           currentIndex: _selectedIndex.clamp(0, items.length - 1),
           selectedItemColor: const Color(0xFF003366),
           unselectedItemColor: Colors.grey,
-          onTap: (index) => _onItemTapped(index, isworker, pages),
+          onTap: (index) => _onItemTapped(index, isWorker),
           items: items,
+          type: BottomNavigationBarType.fixed, // Use fixed type for more than 3 items
         );
       },
     );

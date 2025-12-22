@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:skill_link/features/explore/domain/entity/explore_worker_entity.dart';
 import 'package:skill_link/cores/utils/image_url_helper.dart';
@@ -23,20 +21,24 @@ class WorkerDetailPage extends StatefulWidget {
 }
 
 class _WorkerDetailPageState extends State<WorkerDetailPage> {
-  final int _currentImage = 0;
-
   Future<String?> _getUserIdFromPrefs() async {
+    try {
+      // Prefer in-memory profile if available (faster, more reliable)
+      final profileState = context.read<ProfileViewModel>().state;
+      final currentUser = profileState.user;
+      if (currentUser != null && (currentUser.userId?.isNotEmpty ?? false)) {
+        return currentUser.userId;
+      }
+    } catch (_) {
+      // ignore if ProfileViewModel is not available in this context
+    }
+
     final result = await serviceLocator<TokenSharedPrefs>().getUserId();
     return result.fold((failure) => null, (userId) => userId);
   }
 
   @override
   Widget build(BuildContext context) {
-    // Debug: show the worker fields we have when opening the page
-    // ignore: avoid_print
-    print(
-      'WorkerDetailPage - workerId: ${widget.worker.workerId}, workerPhone: ${widget.worker.workerPhone}, workerName: ${widget.worker.workerName}',
-    );
     final images = widget.worker.images ?? [];
     final allMedia = images; // Add videos if you want
     final firstImage =
@@ -48,7 +50,6 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
       backgroundColor: const Color(0xFFF4F8FB),
       body: CustomScrollView(
         slivers: [
-          // Hero Header with SliverAppBar
           SliverAppBar(
             expandedHeight: 280.0,
             floating: false,
@@ -67,7 +68,6 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
                     )
                   else
                     Container(color: Colors.blueGrey),
-                  // Gradient Overlay for text readability
                   Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
@@ -103,15 +103,12 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
               ),
             ],
           ),
-
-          // Content Body
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(20.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Rate and Location Row
                   Row(
                     children: [
                       Container(
@@ -153,8 +150,6 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
                     ],
                   ),
                   const SizedBox(height: 24),
-
-                  // Section: About
                   const Text(
                     "About",
                     style: TextStyle(
@@ -173,8 +168,6 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
                     ),
                   ),
                   const SizedBox(height: 24),
-
-                  // Section: Skills / Category
                   const Text(
                     "Primary Skill",
                     style: TextStyle(
@@ -193,8 +186,6 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
                     ),
                   ),
                   const SizedBox(height: 24),
-
-                  // Section: Skills
                   if (widget.worker.skills != null &&
                       widget.worker.skills!.isNotEmpty) ...[
                     const Text(
@@ -225,8 +216,6 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
                     ),
                     const SizedBox(height: 24),
                   ],
-
-                  // Section: Portfolio
                   if (widget.worker.images != null &&
                       widget.worker.images!.isNotEmpty) ...[
                     const Text(
@@ -274,8 +263,6 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
                     ),
                     const SizedBox(height: 24),
                   ],
-
-                  // Section: Contact Info (Mocked if missing)
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -332,18 +319,13 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
                       ],
                     ),
                   ),
-
                   const SizedBox(height: 32),
-
-                  // Action Buttons
-                  // Action Buttons
                   Row(
                     children: [
                       Expanded(
                         flex: 2,
                         child: ElevatedButton(
                           onPressed: () {
-                            // Book Visit Logic
                             final profileState =
                                 context.read<ProfileViewModel>().state;
                             final currentUser = profileState.user;
@@ -397,7 +379,6 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
                         flex: 1,
                         child: ElevatedButton(
                           onPressed: () {
-                            // Chat Logic
                             _handleChat(context);
                           },
                           style: ElevatedButton.styleFrom(
@@ -415,12 +396,10 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
                         flex: 1,
                         child: ElevatedButton(
                           onPressed: () {
-                            // Call Logic
                             _handleCall(context);
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                Colors.green, // Different color for call
+                            backgroundColor: Colors.green,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -443,93 +422,63 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
 
   void _handleChat(BuildContext context) async {
     final workerId = widget.worker.workerId;
-    final propertyId = widget.worker.id;
     final userId = await _getUserIdFromPrefs();
 
     if (!mounted) return;
 
-    if (userId == null || workerId == null) return;
+    if (userId == null || workerId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Could not initiate chat. User or worker ID is missing.',
+          ),
+        ),
+      );
+      return;
+    }
+
     if (userId == workerId) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Cannot chat with yourself")),
+        const SnackBar(content: Text("You cannot start a chat with yourself.")),
       );
       return;
     }
 
     final createOrGetChatUsecase = serviceLocator<CreateOrGetChatUsecase>();
+
     try {
-      final dynamic chat = await createOrGetChatUsecase(
-        otherUserId: workerId,
-        workerId: propertyId,
-      );
-      // Debug: log the raw response so we can adapt to backend shapes
-      // If chat still fails, paste this log into the issue
-      // ignore: avoid_print
-      print('CreateOrGetChat response: ${chat.runtimeType} => $chat');
+      final chat = await createOrGetChatUsecase.call(otherUserId: workerId);
+
       if (!mounted) return;
 
-      // Defensive handling of response shape
-      String chatId = '';
-      if (chat is Map<String, dynamic>) {
-        chatId =
-            (chat['_id'] ??
-                    chat['id'] ??
-                    chat['chatId'] ??
-                    chat['value']?['_id'] ??
-                    '')
-                ?.toString() ??
-            '';
-        if (chatId.isEmpty && chat.containsKey('data') && chat['data'] is Map) {
-          final inner = chat['data'] as Map<String, dynamic>;
-          chatId = (inner['_id'] ?? inner['id'] ?? '')?.toString() ?? '';
-        }
-      } else if (chat is List && chat.isNotEmpty) {
-        final first = chat.first;
-        if (first is Map<String, dynamic>) {
-          chatId = (first['_id'] ?? first['id'] ?? '')?.toString() ?? '';
-        }
-      } else if (chat is String) {
-        // try to parse JSON string
-        try {
-          final decoded = Map<String, dynamic>.from(jsonDecode(chat));
-          chatId = (decoded['_id'] ?? decoded['id'] ?? '')?.toString() ?? '';
-        } catch (_) {
-          // ignore
-        }
-      }
+      final dynamic chatData = chat['data'] ?? chat;
+      final String? chatId = chatData['_id'] as String?;
 
-      if (chatId.isEmpty) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to create or open chat')),
-          );
-        }
-        return;
-      }
-
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder:
-              (_) => ChatPage(preselectChatId: chatId, currentUserId: userId),
-        ),
-      );
-    } catch (e) {
-      // ignore: avoid_print
-      print('CreateOrGetChat error: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(
+      if (chatId != null) {
+        Navigator.push(
           context,
-        ).showSnackBar(SnackBar(content: Text('Chat error: $e')));
+          MaterialPageRoute(
+            builder:
+                (_) => ChatPage(preselectChatId: chatId, currentUserId: userId),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not get chat ID from response.')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('An error occurred: ${e.toString()}')),
+        );
       }
     }
   }
 
   void _handleCall(BuildContext context) async {
-    // Prefer using the worker data that the page already has (avoid failing backend calls)
     String? phone = widget.worker.workerPhone;
 
-    // If phone not present, first try the dedicated `workers` schema by workerId
     if ((phone == null || phone.isEmpty) && widget.worker.workerId != null) {
       try {
         final api = serviceLocator<ApiService>();
@@ -552,11 +501,10 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
         }
       } catch (e) {
         // ignore: avoid_print
-        print('Failed to fetch worker (workers schema) for phone: $e');
+        print('Failed to fetch worker for phone: $e');
       }
     }
 
-    // Fallback: if still missing, try fetching the property (older schema)
     if ((phone == null || phone.isEmpty) && widget.worker.id != null) {
       try {
         final api = serviceLocator<ApiService>();
@@ -590,7 +538,6 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
       return;
     }
 
-    // Sanitize number: Remove spaces, dashes, ensure single '+'
     phone = phone.replaceAll(RegExp(r'\s+'), '').replaceAll('-', '');
     if (phone.startsWith('++')) phone = phone.replaceFirst('++', '+');
 
@@ -606,8 +553,6 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
         }
       }
     } catch (e) {
-      // ignore: avoid_print
-      print('Call launch error: $e');
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,

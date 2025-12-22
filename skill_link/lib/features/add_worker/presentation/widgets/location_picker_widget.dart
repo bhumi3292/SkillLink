@@ -22,6 +22,7 @@ class _LocationPickerWidgetState extends State<LocationPickerWidget> {
   LatLng _center = const LatLng(27.7172, 85.3240); // Default: Kathmandu
   Timer? _debounce;
   bool _isLoading = false;
+  bool _hasUserLocation = false;
 
   @override
   void initState() {
@@ -39,7 +40,7 @@ class _LocationPickerWidgetState extends State<LocationPickerWidget> {
 
   /// 1. Get current user location
   Future<void> _determinePosition() async {
-    setState(() => _isLoading = true);
+    if (mounted) setState(() => _isLoading = true);
     bool serviceEnabled;
     LocationPermission permission;
 
@@ -70,15 +71,20 @@ class _LocationPickerWidgetState extends State<LocationPickerWidget> {
       Position position = await Geolocator.getCurrentPosition();
       LatLng newCenter = LatLng(position.latitude, position.longitude);
 
-      setState(() {
-        _center = newCenter;
-      });
-      _mapController.move(newCenter, 16.0);
-      _getAddress(newCenter);
+      if (mounted) {
+        setState(() {
+          _center = newCenter;
+          _hasUserLocation = true;
+        });
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _mapController.move(newCenter, 16.0);
+        });
+        _getAddress(newCenter);
+      }
     } catch (e) {
       debugPrint("Error getting location: $e");
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -130,12 +136,17 @@ class _LocationPickerWidgetState extends State<LocationPickerWidget> {
           final latLng = LatLng(lat, lon);
           final displayName = data[0]['display_name'];
 
-          setState(() {
-            _center = latLng;
-            _addressController.text = displayName; // Update to full name
-          });
-          _mapController.move(latLng, 16.0);
-          widget.onLocationPicked(latLng, displayName);
+          if (mounted) {
+            setState(() {
+              _center = latLng;
+              _hasUserLocation = true;
+              _addressController.text = displayName; // Update to full name
+            });
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) _mapController.move(latLng, 16.0);
+            });
+            widget.onLocationPicked(latLng, displayName);
+          }
         }
       }
     } catch (e) {
@@ -181,9 +192,7 @@ class _LocationPickerWidgetState extends State<LocationPickerWidget> {
                       // Debounce to prevent hitting API too many times while dragging
                       if (_debounce?.isActive ?? false) _debounce!.cancel();
                       _debounce = Timer(const Duration(milliseconds: 800), () {
-                        if (position.center != null) {
-                          _getAddress(position.center!);
-                        }
+                        _getAddress(position.center!);
                       });
                     }
                   },
@@ -194,17 +203,25 @@ class _LocationPickerWidgetState extends State<LocationPickerWidget> {
                         'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                     userAgentPackageName: 'com.example.skill_link',
                   ),
+                  // Marker layer to show the selected / current location as a pin
+                  MarkerLayer(
+                    markers:
+                        _hasUserLocation
+                            ? [
+                              Marker(
+                                width: 50,
+                                height: 50,
+                                point: _center,
+                                child: const Icon(
+                                  Icons.location_on,
+                                  color: Colors.red,
+                                  size: 48,
+                                ),
+                              ),
+                            ]
+                            : [],
+                  ),
                 ],
-              ),
-
-              // 2. The Static Center Pin
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.only(
-                    bottom: 35,
-                  ), // Adjust icon tip to center
-                  child: Icon(Icons.location_on, color: Colors.red, size: 50),
-                ),
               ),
 
               // 3. Current Location Button
@@ -214,12 +231,15 @@ class _LocationPickerWidgetState extends State<LocationPickerWidget> {
                 child: FloatingActionButton(
                   onPressed: _determinePosition,
                   backgroundColor: const Color(0xFF003366),
-                  child: _isLoading
-                      ? const Padding(
-                        padding: EdgeInsets.all(12.0),
-                        child: CircularProgressIndicator(color: Colors.white),
-                      )
-                      : const Icon(Icons.my_location, color: Colors.white),
+                  child:
+                      _isLoading
+                          ? const Padding(
+                            padding: EdgeInsets.all(12.0),
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                            ),
+                          )
+                          : const Icon(Icons.my_location, color: Colors.white),
                 ),
               ),
             ],
