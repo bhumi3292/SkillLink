@@ -163,16 +163,6 @@ class _ExplorePageState extends State<ExplorePage> {
     return SafeArea(
       child: Scaffold(
         backgroundColor: Colors.white,
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: () {
-            setState(() {
-              _isMapView = !_isMapView;
-            });
-          },
-          label: Text(_isMapView ? "List View" : "Map View"),
-          icon: Icon(_isMapView ? Icons.list : Icons.map),
-          backgroundColor: Theme.of(context).primaryColor,
-        ),
         body: Column(
           children: [
             Container(
@@ -189,32 +179,67 @@ class _ExplorePageState extends State<ExplorePage> {
               ),
               child: Column(
                 children: [
-                  ExploreSearchBar(
-                    onSearchChanged: (value) {
-                      _searchText = value;
-                      _filterWorkers();
-                    },
-                    onFilterPressed: () async {
-                      await _showFilterDialog();
-                    },
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ExploreSearchBar(
+                          onSearchChanged: (value) {
+                            _searchText = value;
+                            _filterWorkers();
+                          },
+                          onFilterPressed: () async {
+                            await _showFilterDialog();
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // Modern View Toggle Switch
+                      _buildViewToggleSwitch(),
+                    ],
                   ),
                   const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text('Nearby only'),
-                      const SizedBox(width: 8),
-                      Switch(
-                        value: _currentFilter == WorkerFilter.nearby,
-                        onChanged: (val) {
-                          setState(() {
-                            _currentFilter =
-                                val ? WorkerFilter.nearby : WorkerFilter.all;
-                          });
-                          _filterWorkers();
-                        },
-                      ),
-                    ],
+                  // Modern Segmented Control
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.all(4),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildFilterOption(
+                          label: 'All Workers',
+                          icon: Icons.people_outline,
+                          isSelected: _currentFilter == WorkerFilter.all,
+                          onTap: () {
+                            setState(() {
+                              _currentFilter = WorkerFilter.all;
+                            });
+                            _filterWorkers();
+                          },
+                        ),
+                        const SizedBox(width: 4),
+                        _buildFilterOption(
+                          label: 'Nearby Only',
+                          icon: Icons.location_on_outlined,
+                          isSelected: _currentFilter == WorkerFilter.nearby,
+                          onTap: () {
+                            setState(() {
+                              _currentFilter = WorkerFilter.nearby;
+                            });
+                            _filterWorkers();
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -376,4 +401,179 @@ class _ExplorePageState extends State<ExplorePage> {
     });
     _filterWorkers();
   }
+
+  Widget _buildFilterOption({
+    required String label,
+    required IconData icon,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? Theme.of(context).primaryColor
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: Theme.of(context).primaryColor.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : [],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 18,
+              color: isSelected ? Colors.white : Colors.grey[700],
+            ),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? Colors.white : Colors.grey[700],
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildViewToggleSwitch() {
+    return Container(
+      height: 48,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Colors.grey[100]!,
+            Colors.grey[50]!,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: Colors.grey[300]!,
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          // Animated background indicator
+          AnimatedPositioned(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOutCubic,
+            left: _isMapView ? 48 : 0,
+            top: 0,
+            bottom: 0,
+            child: Container(
+              width: 48,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Theme.of(context).primaryColor,
+                    Theme.of(context).primaryColor.withOpacity(0.8),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Theme.of(context).primaryColor.withOpacity(0.4),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // Toggle buttons
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildToggleButton(
+                icon: Icons.view_list_rounded,
+                isActive: !_isMapView,
+                onTap: () {
+                  if (_isMapView) {
+                    setState(() {
+                      _isMapView = false;
+                    });
+                  }
+                },
+                tooltip: 'List View',
+              ),
+              _buildToggleButton(
+                icon: Icons.map_rounded,
+                isActive: _isMapView,
+                onTap: () {
+                  if (!_isMapView) {
+                    setState(() {
+                      _isMapView = true;
+                    });
+                  }
+                },
+                tooltip: 'Map View',
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildToggleButton({
+    required IconData icon,
+    required bool isActive,
+    required VoidCallback onTap,
+    required String tooltip,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(24),
+          child: Container(
+            width: 48,
+            height: 48,
+            alignment: Alignment.center,
+            child: AnimatedScale(
+              scale: isActive ? 1.1 : 0.9,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOutCubic,
+              child: Icon(
+                icon,
+                size: 22,
+                color: isActive ? Colors.white : Colors.grey[600],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
+

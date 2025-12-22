@@ -161,7 +161,7 @@ class _workerManageAvailabilityState extends State<workerManageAvailability> {
       await Dio().post(
         '${ApiEndpoints.baseUrl}calendar/availabilities',
         data: {
-          'propertyId': widget.propertyId,
+          'workerListingId': widget.propertyId,
           'date': formattedDate,
           'timeSlots': newSlots,
         },
@@ -179,16 +179,26 @@ class _workerManageAvailabilityState extends State<workerManageAvailability> {
       );
     } catch (e) {
       debugPrint('Dio error in _addSlot: $e');
+      String errorMessage = 'Failed to add time slot.';
+      
       if (e is DioException) {
-        setState(() {
-          _error =
-              'Failed to add time slot: ${e.response?.data['message'] ?? e.message}';
-        });
-      } else {
-        setState(() {
-          _error = 'Failed to add time slot.';
-        });
+        if (e.response?.data != null && e.response?.data['message'] != null) {
+          errorMessage = e.response!.data['message'];
+        } else if (e.message != null) {
+          errorMessage = 'Failed to add time slot: ${e.message}';
+        }
       }
+      
+      setState(() {
+        _error = errorMessage;
+      });
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(errorMessage),
+          backgroundColor: Colors.red,
+        ),
+      );
     } finally {
       setState(() {
         _loading = false;
@@ -225,7 +235,7 @@ class _workerManageAvailabilityState extends State<workerManageAvailability> {
       await Dio().post(
         '${ApiEndpoints.baseUrl}calendar/availabilities',
         data: {
-          'propertyId': widget.propertyId,
+          'workerListingId': widget.propertyId,
           'date': formattedDate,
           'timeSlots': newSlots,
         },
@@ -242,16 +252,26 @@ class _workerManageAvailabilityState extends State<workerManageAvailability> {
       );
     } catch (e) {
       debugPrint('Dio error in _removeSlot: $e');
+      String errorMessage = 'Failed to remove time slot.';
+      
       if (e is DioException) {
-        setState(() {
-          _error =
-              'Failed to remove time slot: ${e.response?.data['message'] ?? e.message}';
-        });
-      } else {
-        setState(() {
-          _error = 'Failed to remove time slot.';
-        });
+        if (e.response?.data != null && e.response?.data['message'] != null) {
+          errorMessage = e.response!.data['message'];
+        } else if (e.message != null) {
+          errorMessage = 'Failed to remove time slot: ${e.message}';
+        }
       }
+      
+      setState(() {
+        _error = errorMessage;
+      });
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(errorMessage),
+          backgroundColor: Colors.red,
+        ),
+      );
     } finally {
       setState(() {
         _loading = false;
