@@ -374,18 +374,22 @@ class BookingPage extends StatelessWidget {
                                                             Colors.blue,
                                                       ),
                                                   onPressed: () async {
-                                                    final locService =
-                                                        serviceLocator<
-                                                          LocationService
-                                                        >();
-                                                    final pos =
-                                                        await locService
-                                                            .getCurrentPosition();
-                                                    LatLng workerLoc =
-                                                        const LatLng(
-                                                          27.7172,
-                                                          85.3240,
-                                                        ); // Default
+                                                    // Show loading dialog immediately
+                                                    showDialog(
+                                                      context: context,
+                                                      barrierDismissible: false,
+                                                      builder: (context) => const Center(
+                                                        child: CircularProgressIndicator(),
+                                                      ),
+                                                    );
+                                                    
+                                                    final locService = serviceLocator<LocationService>();
+                                                    final pos = await locService.getCurrentPosition();
+                                                    
+                                                    if (context.mounted) Navigator.pop(context); // Close loading dialog
+                                                    if (!context.mounted) return;
+                                                    
+                                                    LatLng workerLoc = const LatLng(27.7172, 85.3240); // Default
                                                     if (pos != null) {
                                                       workerLoc = LatLng(
                                                         pos.latitude,
@@ -539,18 +543,22 @@ class BookingPage extends StatelessWidget {
                                                             Colors.blue,
                                                       ),
                                                   onPressed: () async {
-                                                    final locService =
-                                                        serviceLocator<
-                                                          LocationService
-                                                        >();
-                                                    final pos =
-                                                        await locService
-                                                            .getCurrentPosition();
-                                                    LatLng hirerLoc =
-                                                        const LatLng(
-                                                          27.7172,
-                                                          85.3240,
-                                                        ); // Default
+                                                    // Show loading dialog immediately
+                                                    showDialog(
+                                                      context: context,
+                                                      barrierDismissible: false,
+                                                      builder: (context) => const Center(
+                                                        child: CircularProgressIndicator(),
+                                                      ),
+                                                    );
+
+                                                    final locService = serviceLocator<LocationService>();
+                                                    final pos = await locService.getCurrentPosition();
+                                                    
+                                                    if (context.mounted) Navigator.pop(context); // Close loading dialog
+                                                    if (!context.mounted) return;
+
+                                                    LatLng hirerLoc = const LatLng(27.7172, 85.3240); // Default
                                                     if (pos != null) {
                                                       hirerLoc = LatLng(
                                                         pos.latitude,
