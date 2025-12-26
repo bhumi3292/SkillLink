@@ -519,6 +519,7 @@ class _AddWorkerPresentationState extends State<AddWorkerPresentation> {
                       _pickedAddress = address;
                       _locationController.text = address;
                     });
+                    Navigator.of(context).pop();
                   },
                 ),
               ),

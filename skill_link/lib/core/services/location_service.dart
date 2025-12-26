@@ -8,32 +8,45 @@ class LocationService {
     return status.isGranted;
   }
 
-  /// Get Current Position (High Accuracy)
+  /// Get Current Position (High Accuracy) with Timeout
   Future<Position?> getCurrentPosition() async {
     bool serviceEnabled;
     LocationPermission permission;
 
-    // Test if location services are enabled.
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      return null;
-    }
-
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
+    try {
+      // Test if location services are enabled.
+      serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        print('LocationService: Service not enabled');
         return null;
       }
-    }
 
-    if (permission == LocationPermission.deniedForever) {
+      permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          print('LocationService: Permission denied');
+          return null;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        print('LocationService: Permission denied forever');
+        return null;
+      }
+
+      // Using faster accuracy if it takes too long
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.medium,
+          timeLimit: Duration(seconds: 15),
+        ),
+      );
+      return position;
+    } catch (e) {
+      print('LocationService Error: $e');
       return null;
     }
-
-    return await Geolocator.getCurrentPosition(
-      locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
-    );
   }
 
   /// Stream Position Updates

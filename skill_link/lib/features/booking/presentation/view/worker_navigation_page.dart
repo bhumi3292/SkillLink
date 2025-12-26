@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:skill_link/app/service_locator/service_locator.dart';
 import 'package:skill_link/core/services/location_service.dart';
+import 'package:latlong2/latlong.dart' as ll;
 import '../bloc/navigation_bloc.dart';
+import 'package:skill_link/features/explore/presentation/view/osm_map_widget.dart';
 
 class WorkerNavigationPage extends StatefulWidget {
-  final LatLng workerInitialLocation;
-  final LatLng hirerLocation;
+  final ll.LatLng workerInitialLocation;
+  final ll.LatLng hirerLocation;
 
   const WorkerNavigationPage({
     super.key,
@@ -22,7 +23,6 @@ class WorkerNavigationPage extends StatefulWidget {
 
 class _WorkerNavigationPageState extends State<WorkerNavigationPage> {
   late final NavigationBloc _navigationBloc;
-  final MapController _mapController = MapController();
 
   @override
   void initState() {
@@ -39,7 +39,6 @@ class _WorkerNavigationPageState extends State<WorkerNavigationPage> {
   @override
   void dispose() {
     _navigationBloc.close();
-    _mapController.dispose();
     super.dispose();
   }
 
@@ -47,109 +46,45 @@ class _WorkerNavigationPageState extends State<WorkerNavigationPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Navigate to Hirer'),
-        backgroundColor: Theme.of(context).primaryColor,
+        title: const Text('Navigation to Destination'),
+        backgroundColor: const Color(0xFF003366),
+        foregroundColor: Colors.white,
       ),
       body: BlocProvider.value(
         value: _navigationBloc,
-        child: BlocConsumer<NavigationBloc, NavigationState>(
-          listener: (context, state) {
-            if (state is NavigationLoaded && state.shouldAnimateCamera) {
-              // Ensure MapController is ready before moving
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                try {
-                  _mapController.move(state.workerLocation, 15.0);
-                } catch (e) {
-                  debugPrint('MapController not ready yet: $e');
-                }
-              });
-            }
-          },
+        child: BlocBuilder<NavigationBloc, NavigationState>(
           builder: (context, state) {
             if (state is NavigationLoading) {
               return const Center(child: CircularProgressIndicator());
             } else if (state is NavigationError) {
               return Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Text(
-                    'Error: ${state.message}',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.red),
-                  ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error_outline, color: Colors.red, size: 60),
+                    const SizedBox(height: 16),
+                    Text(state.message, textAlign: TextAlign.center),
+                  ],
                 ),
               );
             } else if (state is NavigationLoaded) {
-              return Stack(
-                children: [
-                  FlutterMap(
-                    mapController: _mapController,
-                    options: MapOptions(
-                      initialCenter: state.workerLocation,
-                      initialZoom: 15.0,
-                    ),
-                    children: [
-                      TileLayer(
-                        urlTemplate:
-                            'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                        subdomains: const ['a', 'b', 'c'],
-                        userAgentPackageName: 'com.example.skill_link',
-                      ),
-                      PolylineLayer(
-                        polylines: [
-                          Polyline(
-                            points: state.routePoints,
-                            strokeWidth: 4.0,
-                            color: Colors.blue,
-                          ),
-                        ],
-                      ),
-                      MarkerLayer(
-                        markers: [
-                          // Worker Marker
-                          Marker(
-                            width: 80.0,
-                            height: 80.0,
-                            point: state.workerLocation,
-                            child: const Icon(
-                              Icons.person_pin_circle,
-                              color: Colors.blue,
-                              size: 40.0,
-                            ),
-                          ),
-                          // Hirer Marker
-                          Marker(
-                            width: 80.0,
-                            height: 80.0,
-                            point: state.hirerLocation,
-                            child: const Icon(
-                              Icons.home,
-                              color: Colors.red,
-                              size: 40.0,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  Positioned(
-                    bottom: 20,
-                    right: 20,
-                    child: FloatingActionButton(
-                      onPressed: () {
-                        _navigationBloc.add(RecenterMap());
-                      },
-                      backgroundColor: Theme.of(context).primaryColor,
-                      child: const Icon(Icons.my_location),
-                    ),
-                  ),
-                ],
+              return OsmMapWidget(
+                initialLocation: GeoPoint(
+                  latitude: state.workerLocation.latitude,
+                  longitude: state.workerLocation.longitude,
+                ),
+                destinationLocation: GeoPoint(
+                  latitude: state.hirerLocation.latitude,
+                  longitude: state.hirerLocation.longitude,
+                ),
+                showRoute: true,
               );
             }
-            return const Center(child: Text("Starting Navigation..."));
+            return const Center(child: Text("Initializing Map..."));
           },
         ),
       ),
     );
   }
 }
+

@@ -86,6 +86,8 @@ dependencies:
   flutter_polyline_points: ^2.0.0
   # Firebase packages removed to disable Firebase initialization
   flutter_local_notifications: ^17.2.1
+  flutter_osm_plugin: ^1.4.2
+  flutter_osm_interface: ^1.4.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
