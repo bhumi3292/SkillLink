@@ -142,7 +142,7 @@ class BookingService {
             await notificationService.sendNotification(hirerId, 'Payment Successful', 'Your payment was successful. Thank you!', 'PAYMENT_SUCCESSFUL', booking._id);
         }
 
-        return booking;
+        return updatedBooking;
     }
 
     async getBookingsForUser(userId, role) {

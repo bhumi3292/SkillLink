@@ -16,7 +16,20 @@ const notificationSchema = new mongoose.Schema({
     },
     type: {
         type: String,
-        enum: ['BOOKING_REQUEST', 'BOOKING_ACCEPTED', 'BOOKING_REJECTED', 'WORKER_EN_ROUTE', 'WORK_COMPLETED', 'PAYMENT_SUCCESS'],
+        enum: [
+            'BOOKING_REQUEST',
+            'BOOKING_ACCEPTED',
+            'BOOKING_REJECTED',
+            'WORKER_EN_ROUTE',
+            'WORK_COMPLETED',
+            'PAYMENT_SUCCESS',
+            'SERVICE_STARTED',
+            'SERVICE_COMPLETED',
+            'BOOKING_CANCELLED',
+            'PAYMENT_RECEIVED',
+            'PAYMENT_SUCCESSFUL',
+            'BOOKING_SENT'
+        ],
         required: true
     },
     relatedId: {
