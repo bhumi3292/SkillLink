@@ -1,18 +1,23 @@
 const mongoose = require('mongoose');
 
-const paymentSchema = mongoose.Schema(
+const paymentSchema = new mongoose.Schema(
     {
-        user: {
+        hirer: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
             required: true,
         },
-        property: {
+        worker: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Property',
+            ref: 'User',
             required: true,
         },
-        source: {
+        booking: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Booking',
+            required: true,
+        },
+        method: {
             type: String,
             required: true,
             enum: ['khalti', 'esewa'],
@@ -20,14 +25,21 @@ const paymentSchema = mongoose.Schema(
         amount: {
             type: Number,
             required: true,
-            default: 0,
         },
         status: {
             type: String,
-            enum: ['pending', 'completed', 'failed'],
-            default: 'pending',
+            enum: ['Pending', 'Completed', 'Failed'],
+            default: 'Pending',
         },
-        verification_data: {
+        transactionId: {
+            type: String,
+            required: false, // Initially null for initiate, filled on verify
+        },
+        pidx: {
+            type: String, // Specifically for Khalti
+            required: false,
+        },
+        verificationData: {
             type: mongoose.Schema.Types.Mixed,
             required: false,
         }

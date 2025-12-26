@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'package:skill_link/features/explore/domain/entity/explore_worker_entity.dart';
 import 'package:skill_link/features/add_worker/data/model/worker_model/worker_api_model.dart';
 import 'package:skill_link/features/add_worker/domain/entity/worker/worker_entity.dart';
+import 'package:latlong2/latlong.dart';
 
 class WorkerConverter {
   /// Convert WorkerApiModel to ExploreWorkerEntity
@@ -20,6 +22,7 @@ class WorkerConverter {
           'worker ID: ${apiModel.workerId}', // Show worker ID as reference
       workerPhone: null,
       workerEmail: null,
+      coordinates: null, // ApiModel in current state doesn't hold coords directly
     );
   }
 
@@ -40,6 +43,14 @@ class WorkerConverter {
       workerName: workerEntity.name ?? 'worker ID: ${workerEntity.workerId}',
       workerPhone: null,
       workerEmail: null,
+      skills: (workerEntity.primarySkill != null) ? [workerEntity.primarySkill!] : [],
+      // Parse coordinates from string if needed
+      coordinates: (workerEntity.coordinates != null) ? (() {
+        try {
+          final decoded = jsonDecode(workerEntity.coordinates!);
+          return LatLng((decoded[1] as num).toDouble(), (decoded[0] as num).toDouble());
+        } catch (_) { return null; }
+      }()) : null,
     );
   }
 

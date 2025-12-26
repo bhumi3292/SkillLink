@@ -588,6 +588,70 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     ),
 
+                    // Worker Availability Toggle (Only if user is a worker)
+                    if (user.stakeholder?.toLowerCase() == 'worker') ...[
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              const Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Service Availability',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Control your presence for hirers',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const Spacer(),
+                              DropdownButton<String>(
+                                value: "Available", // Hardcoded for now, should come from state
+                                underline: const SizedBox(),
+                                items: ["Available", "Booked", "Not Available"]
+                                    .map((e) => DropdownMenuItem(
+                                          value: e,
+                                          child: Text(e),
+                                        ))
+                                    .toList(),
+                                onChanged: (value) {
+                                  // TODO: Add event to ProfileViewModel to update availability
+                                  showMySnackbar(
+                                    context: context,
+                                    content: "Status changed to $value",
+                                    isSuccess: true,
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+
                     // Menu Options Section
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),

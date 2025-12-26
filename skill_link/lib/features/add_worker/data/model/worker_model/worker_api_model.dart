@@ -76,7 +76,7 @@ class WorkerApiModel extends Equatable {
                 }
                 return e.toString();
               })
-              .where((s) => (s as String).isNotEmpty)
+              .where((s) => (s).isNotEmpty)
               .toList();
     } else if (normalized['images'] == null) {
       normalized['images'] = <String>[];
@@ -101,7 +101,7 @@ class WorkerApiModel extends Equatable {
                 }
                 return e.toString();
               })
-              .where((s) => (s as String).isNotEmpty)
+              .where((s) => (s).isNotEmpty)
               .toList();
     }
 

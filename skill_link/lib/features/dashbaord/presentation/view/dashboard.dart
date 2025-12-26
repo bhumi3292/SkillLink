@@ -12,6 +12,9 @@ import 'package:skill_link/features/dashbaord/presentation/widgets/horizontal_pr
 import 'package:skill_link/features/explore/presentation/view/worker_detail_page.dart';
 import 'package:skill_link/features/explore/presentation/utils/worker_converter.dart';
 import 'package:skill_link/cores/utils/image_url_helper.dart'; // Import ImageUrlHelper here
+import 'package:skill_link/core/services/socket_notification_service.dart';
+import 'package:skill_link/features/profile/presentation/view_model/profile_state.dart';
+import 'package:skill_link/features/notification/presentation/view/notification_page.dart';
 
 class DashboardPage extends StatelessWidget {
   final VoidCallback? onSeeAllTap;
@@ -37,41 +40,63 @@ class DashboardPage extends StatelessWidget {
   }
 }
 
-class DashboardView extends StatelessWidget {
+class DashboardView extends StatefulWidget {
   final VoidCallback? onSeeAllTap;
 
   const DashboardView({super.key, this.onSeeAllTap});
 
   @override
+  State<DashboardView> createState() => _DashboardViewState();
+}
+
+class _DashboardViewState extends State<DashboardView> {
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize notification service with user ID
+    // We might need to wait for profile to be loaded or just try to grab it if available.
+    // Ideally, we should listen to ProfileViewModel state changes.
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        backgroundColor: const Color(0xFFF6F8FA),
-        body: BlocBuilder<DashboardViewModel, DashboardState>(
-          builder: (context, state) {
-            if (state is DashboardLoading) {
+    // Add listener for profile to init socket
+    return BlocListener<ProfileViewModel, ProfileState>(
+      listener: (context, state) {
+        if (state.user != null) {
+           serviceLocator<SocketNotificationService>().init(state.user!.userId!);
+        }
+      },
+      child: SafeArea(
+        child: Scaffold(
+          backgroundColor: const Color(0xFFF6F8FA),
+          body: BlocBuilder<DashboardViewModel, DashboardState>(
+            builder: (context, state) {
+              if (state is DashboardLoading) {
+                return const Center(child: CircularProgressIndicator());
+              } else if (state is DashboardError) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('Error: ${state.message}'),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () {
+                          context.read<DashboardViewModel>().loadProperties();
+                        },
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                );
+              } else if (state is DashboardLoaded) {
+                return _buildDashboardContent(context, state.properties);
+              }
               return const Center(child: CircularProgressIndicator());
-            } else if (state is DashboardError) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text('Error: ${state.message}'),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () {
-                        context.read<DashboardViewModel>().loadProperties();
-                      },
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
-              );
-            } else if (state is DashboardLoaded) {
-              return _buildDashboardContent(context, state.properties);
-            }
-            return const Center(child: CircularProgressIndicator());
-          },
+            },
+          ),
         ),
       ),
     );
@@ -126,31 +151,44 @@ class DashboardView extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 16),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Welcome,',
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(color: Colors.white70),
-                        ),
-                        Text(
-                          user?.fullName ?? 'Guest',
-                          style: Theme.of(
-                            context,
-                          ).textTheme.titleLarge?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Welcome,',
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: Colors.white70),
                           ),
-                        ),
-                      ],
+                          Text(
+                            user?.fullName ?? 'Guest',
+                            style: Theme.of(
+                              context,
+                            ).textTheme.titleLarge?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.notifications_outlined, color: Colors.white, size: 28),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const NotificationPage()),
+                        );
+                      },
                     ),
                   ],
                 ),
                 const SizedBox(height: 24),
                 // Search Bar Placeholder
                 GestureDetector(
-                  onTap: onSeeAllTap, // Navigate to Explore
+                  onTap: widget.onSeeAllTap, // Navigate to Explore
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -192,7 +230,7 @@ class DashboardView extends StatelessWidget {
                   ),
                 ),
                 TextButton(
-                  onPressed: onSeeAllTap,
+                  onPressed: widget.onSeeAllTap,
                   child: Text(
                     "See All",
                     style: TextStyle(

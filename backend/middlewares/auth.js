@@ -12,7 +12,7 @@ const authenticateUser = async (req, res, next) => {
     const token = authHeader.split(" ")[1];
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || "default_dev_secret");
         const user = await User.findById(decoded._id || decoded.userId).select('-password');
         if (!user) {
             return res.status(401).json({ success: false, message: "Authentication failed: User not found in database." });

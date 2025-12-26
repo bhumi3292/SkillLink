@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:skill_link/features/auth/domain/entity/user_entity.dart'; // Import UserEntity
 import 'package:skill_link/features/add_worker/presentation/view/add_worker_presentation.dart';
+import 'package:skill_link/features/notification/presentation/view/notification_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HeaderNav extends StatefulWidget implements PreferredSizeWidget {
@@ -70,7 +71,9 @@ class _HeaderNavState extends State<HeaderNav> {
         IconButton(
           icon: const Icon(Icons.notifications_none, color: Colors.white),
           onPressed: () {
-            debugPrint("Notifications button pressed");
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => const NotificationPage()),
+            );
           },
         ),
       ],

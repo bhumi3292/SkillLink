@@ -58,7 +58,7 @@ exports.createAvailability = async (req, res) => {
             const existingBookedSlots = await Booking.find({
                 workerListing: workerListingId,
                 date: normalizedDate,
-                status: { $in: ['pending', 'confirmed'] }
+                status: { $in: ['pending', 'confirmed', 'Pending', 'Accepted', 'InProgress'] }
             }).select('timeSlot -_id');
             const bookedTimeSlotSet = new Set(existingBookedSlots.map(b => b.timeSlot));
 
@@ -272,12 +272,12 @@ exports.bookVisit = async (req, res) => {
         }
         const workerId = availability.worker; // Get worker from availability
 
-        // 2. Check if the slot is already booked (pending or confirmed)
+        // 2. Check if the slot is already booked (pending, confirmed, or accepted)
         const existingActiveBooking = await Booking.findOne({
             workerListing: workerListingId,
             date: normalizedDate,
             timeSlot: timeSlot,
-            status: { $in: ['pending', 'confirmed'] }
+            status: { $in: ['pending', 'confirmed', 'Pending', 'Accepted'] }
         });
 
         if (existingActiveBooking) {
@@ -290,7 +290,7 @@ exports.bookVisit = async (req, res) => {
             workerListing: workerListingId,
             date: normalizedDate,
             timeSlot: timeSlot,
-            status: { $in: ['pending', 'confirmed'] }
+            status: { $in: ['pending', 'confirmed', 'Pending', 'Accepted'] }
         });
         if (HirerExistingBooking) {
             return res.status(409).json({ success: false, message: 'You already have an active booking for this specific time slot.' });
@@ -303,7 +303,7 @@ exports.bookVisit = async (req, res) => {
             workerListing: workerListingId,
             date: normalizedDate, // Store as string
             timeSlot: timeSlot,
-            status: 'pending' // Initial status
+            status: 'Pending' // Standardized to capital P
         });
 
         await newBooking.save();
@@ -311,6 +311,23 @@ exports.bookVisit = async (req, res) => {
         // 5. ⭐ IMPORTANT: Remove the booked time slot from the availability ⭐
         availability.timeSlots = availability.timeSlots.filter(slot => slot !== timeSlot);
         await availability.save();
+
+        // 6. Notify Worker and Hirer
+        const notificationService = require('../services/notificationService');
+        await notificationService.sendNotification(
+            workerId,
+            'New Booking Request',
+            `You have a new booking request for ${timeSlot} on ${normalizedDate}.`,
+            'BOOKING_REQUEST',
+            newBooking._id
+        );
+        await notificationService.sendNotification(
+            HirerId,
+            'Booking Sent',
+            'Your booking request has been sent to the worker.',
+            'BOOKING_SENT',
+            newBooking._id
+        );
 
         res.status(201).json({ success: true, message: 'Visit booked successfully! Awaiting worker confirmation.', booking: newBooking.toObject() });
 
@@ -383,8 +400,8 @@ exports.updateBookingStatus = async (req, res) => {
     const { status } = req.body;
     const workerId = req.user._id;
 
-    // Frontend uses 'Confirmed', 'Rejected', 'Cancelled'.
-    const validStatuses = ['pending', 'confirmed', 'rejected', 'cancelled'];
+    // Frontend uses 'Confirmed', 'Rejected', 'Cancelled', 'InProgress', 'Completed'
+    const validStatuses = ['pending', 'confirmed', 'accepted', 'rejected', 'cancelled', 'inprogress', 'completed'];
     const newStatus = status.toLowerCase();
 
     if (!validStatuses.includes(newStatus)) {

@@ -65,7 +65,9 @@ class WorkerEntity extends Equatable {
       primarySkill: json['primarySkill'] as String?,
       experience: json['experience'] as String?,
       description: json['description'] as String?,
-      location: json['location'] as String?,
+      location: (json['location'] is Map) 
+          ? (json['location']['address'] ?? json['location']['formattedAddress'] ?? '') 
+          : (json['location'] as String?),
       categoryId: categoryId,
       rate: (json['rate'] as num?)?.toDouble(),
       portfolioUrl: json['portfolioUrl'] as String?,

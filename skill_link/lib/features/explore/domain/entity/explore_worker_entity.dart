@@ -13,6 +13,9 @@ class ExploreWorkerEntity {
   final String? categoryId;
   final String? categoryName;
   final double? price;
+  final double? minPrice;
+  final double? maxPrice;
+  final String? availabilityStatus;
   final String? description;
   final String? workerId;
   final String? workerName;
@@ -33,6 +36,9 @@ class ExploreWorkerEntity {
     this.categoryId,
     this.categoryName,
     this.price,
+    this.minPrice,
+    this.maxPrice,
+    this.availabilityStatus,
     this.description,
     this.workerId,
     this.workerName,
@@ -78,6 +84,9 @@ class ExploreWorkerEntity {
       categoryId: json['categoryId']?['_id'],
       categoryName: json['categoryId']?['category_name'],
       price: (json['price'] as num?)?.toDouble(),
+      minPrice: (json['minPrice'] as num?)?.toDouble(),
+      maxPrice: (json['maxPrice'] as num?)?.toDouble(),
+      availabilityStatus: json['availabilityStatus'] ?? 'Available',
       description: json['description'],
       workerId: json['worker']?['_id'],
       workerName: json['worker']?['fullName'],

@@ -27,8 +27,20 @@ const BookingSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['pending', 'confirmed', 'cancelled', 'rejected'],
-        default: 'pending'
+        enum: ['Pending', 'Accepted', 'InProgress', 'Completed', 'Paid', 'Cancelled', 'Rejected', 'confirmed', 'pending'],
+        default: 'Pending'
+    },
+    location: {
+        type: {
+            type: String,
+            enum: ['Point'],
+            default: 'Point'
+        },
+        coordinates: {
+            type: [Number],
+            index: '2dsphere'
+        },
+        address: String
     },
     createdAt: {
         type: Date,
@@ -39,6 +51,11 @@ const BookingSchema = new mongoose.Schema({
     toObject: { virtuals: true }
 });
 
-BookingSchema.index({ workerListing: 1, date: 1, timeSlot: 1, Hirer: 1 }, { unique: true, partialFilterExpression: { status: { $in: ['pending', 'confirmed'] } } });
+BookingSchema.index({ workerListing: 1, date: 1, timeSlot: 1, Hirer: 1 }, {
+    unique: true,
+    partialFilterExpression: {
+        status: { $in: ['pending', 'confirmed', 'Pending', 'Accepted', 'InProgress'] }
+    }
+});
 
 module.exports = mongoose.model('Booking', BookingSchema);

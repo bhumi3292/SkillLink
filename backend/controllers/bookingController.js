@@ -1,48 +1,48 @@
-// SkillLink_backend/models/Booking.js
-const mongoose = require('mongoose');
+const bookingService = require('../services/bookingService');
 
-const BookingSchema = new mongoose.Schema({
-    property: {
-        type: mongoose.Schema.ObjectId,
-        ref: 'Property',
-        required: true
-    },
-    Hirer: {
-        type: mongoose.Schema.ObjectId,
-        ref: 'User',
-        required: true
-    },
-    worker: {
-        type: mongoose.Schema.ObjectId,
-        ref: 'User',
-        required: true
-    },
-    date: {
-        type: String,
-        required: true
-    },
-    timeSlot: {
-        type: String,
-        required: true
-    },
-    status: {
-        type: String,
-        enum: ['pending', 'confirmed', 'cancelled', 'rejected'],
-        default: 'pending'
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now
+exports.createBooking = async (req, res) => {
+    try {
+        const { workerListingId, date, timeSlot, location } = req.body;
+        const hirerId = req.user._id;
+
+        if (!workerListingId || !date || !timeSlot) {
+            return res.status(400).json({ success: false, message: 'Missing required fields' });
+        }
+
+        const booking = await bookingService.createBooking(hirerId, workerListingId, date, timeSlot, location);
+        return res.status(201).json({ success: true, data: booking });
+    } catch (error) {
+        console.error("Create Booking Error:", error);
+        return res.status(400).json({ success: false, message: error.message });
     }
-}, {
-    toJSON: { virtuals: true }, // Allows virtuals to be included when converting to JSON
-    toObject: { virtuals: true } //toobjects
-});
+};
 
+exports.updateBookingStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+        const userId = req.user._id;
+        const userRole = req.user.role; // Assuming auth middleware populates this
 
-BookingSchema.index({ property: 1, date: 1, timeSlot: 1, Hirer: 1 }, {
-    unique: true,
-    partialFilterExpression: { status: { $in: ['pending', 'confirmed'] } }
-});
+        if (!status) {
+            return res.status(400).json({ success: false, message: 'Status is required' });
+        }
 
-module.exports = mongoose.model('Booking', BookingSchema);
+        const updatedBooking = await bookingService.updateBookingStatus(id, status, userId, userRole);
+        return res.status(200).json({ success: true, data: updatedBooking });
+    } catch (error) {
+        return res.status(400).json({ success: false, message: error.message });
+    }
+};
+
+exports.getUserBookings = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const role = req.user.role;
+
+        const bookings = await bookingService.getBookingsForUser(userId, role);
+        return res.status(200).json({ success: true, data: bookings });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};

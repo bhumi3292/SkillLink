@@ -7,7 +7,8 @@ const {
     getAllWorkers,
     getOneWorker,
     updateWorker,
-    deleteWorker
+    deleteWorker,
+    updateAvailability
 } = require('../controllers/worker/workerController');
 
 const {
@@ -15,6 +16,13 @@ const {
     isworker,
     isPropertyOwner // Rename this later if needed, but logic currently checks role ownership
 } = require('../middlewares/authorizedUser');
+
+router.put(
+    '/update-availability',
+    authenticateUser,
+    isworker,
+    updateAvailability
+);
 
 const uploadWorkerMedia = require('../middlewares/worker/workerMediaUpload');
 

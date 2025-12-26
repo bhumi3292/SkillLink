@@ -7,6 +7,7 @@ import 'package:skill_link/app/service_locator/service_locator.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:skill_link/features/profile/presentation/view_model/profile_view_model.dart';
+import 'package:skill_link/core/services/location_service.dart';
 
 // Import your ApiEndpoints file
 import '../../../../app/constant/api_endpoints.dart';
@@ -159,15 +160,37 @@ class _BookingModalState extends State<BookingModal> {
         return;
       }
 
+      // NEW: Get current location for the booking
+      final locService = serviceLocator<LocationService>();
+      final pos = await locService.getCurrentPosition();
+      Map<String, dynamic>? locationData;
+      if (pos != null) {
+        // Reverse geocode to get address for display
+        String address = "Picked Location";
+        try {
+           final url = Uri.parse('https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.latitude}&lon=${pos.longitude}');
+           final resp = await Dio().get(url.toString(), options: Options(headers: {'User-Agent': 'com.example.skill_link'}));
+           if (resp.statusCode == 200) {
+             address = resp.data['display_name'] ?? address;
+           }
+        } catch (_) {}
+
+        locationData = {
+          'type': 'Point',
+          'coordinates': [pos.longitude, pos.latitude],
+          'address': address,
+        };
+      }
+
       await Dio().post(
         ApiEndpoints.bookVisit,
         data: {
-          'workerListingId':
-              widget.propertyId, // Renamed propertyId to workerListingId
-          'workerId': widget.workerId, // NEW: Passing workerId
-          'hirerId': hirerId, // NEW: Passing hirerId
+          'workerListingId': widget.propertyId,
+          'workerId': widget.workerId,
+          'hirerId': hirerId,
           'date': formattedDate,
           'timeSlot': _selectedSlot,
+          'location': locationData,
         },
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );

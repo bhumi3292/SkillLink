@@ -71,7 +71,10 @@ exports.loginUser = async (req, res) => {
             role: user.role
         };
 
-        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "7d" });
+        const token = jwt.sign(payload, process.env.JWT_SECRET || "default_dev_secret", { expiresIn: "7d" });
+        if (!process.env.JWT_SECRET) {
+            console.warn("WARNING: JWT_SECRET is not defined in environment variables. Using default secret.");
+        }
 
         const { password: _, ...userWithoutPassword } = user.toObject();
 
@@ -83,7 +86,7 @@ exports.loginUser = async (req, res) => {
         });
     } catch (err) {
         console.error("Login Error:", err);
-        return res.status(500).json({ success: false, message: "Server error during login." });
+        return res.status(500).json({ success: false, message: "Server error during login: " + err.message });
     }
 };
 
@@ -309,5 +312,36 @@ exports.updateProfile = async (req, res) => {
             return res.status(400).json({ success: false, message: messages.join(', ') });
         }
         return res.status(500).json({ success: false, message: "Server error during profile update." });
+    }
+};
+
+// ⭐ NEW: Update User Location ⭐
+exports.updateLocation = async (req, res) => {
+    const userId = req.user._id;
+    const { coordinates } = req.body; // Expecting [lng, lat]
+
+    try {
+        if (!coordinates || !Array.isArray(coordinates) || coordinates.length !== 2) {
+            return res.status(400).json({ success: false, message: "Invalid coordinates format. Expected [lng, lat]" });
+        }
+
+        const user = await User.findByIdAndUpdate(
+            userId,
+            { location: { type: 'Point', coordinates } },
+            { new: true }
+        );
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found." });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Location updated successfully!",
+            data: user.location
+        });
+    } catch (error) {
+        console.error("Error in updateLocation:", error);
+        res.status(500).json({ success: false, message: "Server error during location update." });
     }
 };

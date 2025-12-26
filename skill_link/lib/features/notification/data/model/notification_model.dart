@@ -35,7 +35,7 @@ class NotificationModel {
       message: json['message'] ?? '',
       relatedId: json['relatedId'],
       relatedModel: json['relatedModel'],
-      isRead: json['isRead'] ?? false,
+      isRead: json['read'] ?? false,
       createdAt:
           json['createdAt'] != null
               ? DateTime.parse(json['createdAt'])

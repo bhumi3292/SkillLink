@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const workerSchema = new mongoose.Schema({
     images: {
         type: [String],
-        required: true, 
+        required: true,
     },
     videos: {
         type: [String],
@@ -33,14 +33,23 @@ const workerSchema = new mongoose.Schema({
         ref: "Category",
         required: true
     },
-    price: {
-        type: Number, 
+    minPrice: {
+        type: Number,
+        required: true,
+    },
+    maxPrice: {
+        type: Number,
         required: true,
     },
     worker: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
         required: true
+    },
+    availabilityStatus: {
+        type: String,
+        enum: ["Available", "Booked", "Not Available"],
+        default: "Available"
     }
 }, { timestamps: true });
 

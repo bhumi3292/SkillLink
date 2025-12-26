@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:skill_link/cores/network/api_service.dart';
 import 'package:skill_link/core/services/notification_service.dart';
 import 'package:skill_link/core/services/location_service.dart';
+import 'package:skill_link/core/services/socket_notification_service.dart';
 
 import 'package:skill_link/app/shared_pref/token_shared_prefs.dart';
 
@@ -73,6 +74,18 @@ import 'package:skill_link/features/chat/data/repository/chat_repository.dart'; 
 import 'package:skill_link/features/chat/domain/use_case/chat_usecases.dart'; // Assuming a barrel file or individual files
 import 'package:skill_link/features/chat/presentation/bloc/chat_bloc.dart';
 
+// Booking
+import 'package:skill_link/features/booking/data/data_sources/booking_remote_data_source.dart';
+import 'package:skill_link/features/booking/data/repositories/booking_repository_impl.dart';
+import 'package:skill_link/features/booking/domain/repositories/booking_repository.dart';
+import 'package:skill_link/features/booking/presentation/bloc/booking_bloc.dart';
+
+// Notification
+import 'package:skill_link/features/notification/data/datasource/notification_remote_datasource.dart';
+import 'package:skill_link/features/notification/data/repository/notification_repository_impl.dart';
+import 'package:skill_link/features/notification/domain/repository/notification_repository.dart';
+import 'package:skill_link/features/notification/presentation/bloc/notification_bloc.dart';
+
 final serviceLocator = GetIt.instance;
 
 Future<void> initDependencies() async {
@@ -96,6 +109,9 @@ Future<void> initDependencies() async {
   serviceLocator.registerLazySingleton<LocationService>(
     () => LocationService(),
   );
+  serviceLocator.registerLazySingleton<SocketNotificationService>(
+    () => SocketNotificationService(),
+  );
 
   // --- Modules ---
   _initAuthModules();
@@ -105,6 +121,8 @@ Future<void> initDependencies() async {
   _initDashboardModules();
   _initExploreModules();
   _initChatModules();
+  _initBookingModules();
+  _initNotificationModules();
 }
 
 void _initAuthModules() {
@@ -346,5 +364,34 @@ void _initChatModules() {
       disconnectSocketUsecase: serviceLocator<DisconnectSocketUsecase>(),
       joinChatUsecase: serviceLocator<JoinChatUsecase>(),
     ),
+  );
+}
+
+void _initBookingModules() {
+  // Data Source
+  serviceLocator.registerLazySingleton<BookingRemoteDataSource>(
+    () => BookingRemoteDataSourceImpl(dio: serviceLocator()),
+  );
+
+  // Repository
+  serviceLocator.registerLazySingleton<IBookingRepository>(
+    () => BookingRepositoryImpl(remoteDataSource: serviceLocator()),
+  );
+
+  // Bloc
+  serviceLocator.registerFactory<BookingBloc>(
+    () => BookingBloc(bookingRepository: serviceLocator()),
+  );
+}
+
+void _initNotificationModules() {
+  serviceLocator.registerLazySingleton<NotificationRemoteDataSource>(
+    () => NotificationRemoteDataSourceImpl(serviceLocator<ApiService>()),
+  );
+  serviceLocator.registerLazySingleton<NotificationRepository>(
+    () => NotificationRepositoryImpl(remoteDataSource: serviceLocator()),
+  );
+  serviceLocator.registerFactory<NotificationBloc>(
+    () => NotificationBloc(repository: serviceLocator()),
   );
 }

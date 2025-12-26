@@ -23,7 +23,7 @@ class _workerManageAvailabilityState extends State<workerManageAvailability> {
   List<String> _slots = [];
   bool _loading = false;
   String? _error;
-  Map<String, List<String>> _availabilitiesMap = {};
+  Map<String, Map<String, dynamic>> _availabilitiesMap = {};
   final TokenSharedPrefs _tokenSharedPrefs = TokenSharedPrefs(
     sharedPreferences: serviceLocator(),
   );
@@ -61,51 +61,44 @@ class _workerManageAvailabilityState extends State<workerManageAvailability> {
 
       // Using ApiEndpoints.baseUrl for fetching
       final response = await Dio().get(
-        '${ApiEndpoints.baseUrl}calendar/worker/availabilities',
+        ApiEndpoints.getworkerAvailabilities,
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
 
-      final availabilities =
-          response.data['availabilities'] as List? ??
-          []; // Safely cast to List and provide empty list if null
-      final map = <String, List<String>>{};
+      final availabilities = response.data['availabilities'] as List? ?? [];
+      final map = <String, Map<String, dynamic>>{};
 
       for (var avail in availabilities) {
-        // Safely access 'worker' and then '_id'
-        final propertyData = avail['worker'] as Map<String, dynamic>?;
-        if (propertyData != null && propertyData['_id'] == widget.propertyId) {
-          final date =
-              avail['date'] as String?; // date can be null from backend too
-          final timeSlots = List<String>.from(
-            avail['timeSlots'] ?? [],
-          ); // timeSlots can be null or empty
-          if (date != null) {
-            // Only add if date is not null
-            map[date] = timeSlots;
+        final listingData = avail['workerListing'] as Map<String, dynamic>?;
+        
+        if (listingData != null && listingData['_id'] == widget.propertyId) {
+          final date = avail['date'] as String?;
+          final timeSlots = List<String>.from(avail['timeSlots'] ?? []);
+          final id = avail['_id'] as String?;
+          
+          if (date != null && id != null) {
+            map[date] = {
+              'id': id,
+              'slots': timeSlots,
+            };
           }
         }
       }
 
       setState(() {
         _availabilitiesMap = map;
+        // Also update current selection slots if a date is already selected
+        if (_selectedDate != null) {
+          final formattedDate = _normalizeDate(_selectedDate!);
+          _slots = _availabilitiesMap[formattedDate]?['slots'] ?? [];
+        }
       });
     } catch (e) {
       debugPrint('Dio error in _fetchworkerAvailabilities: $e');
       if (e is DioException) {
-        if (e.response?.statusCode == 403) {
-          setState(() {
-            _error = 'Access denied. Please check your login status.';
-          });
-        } else if (e.response?.statusCode == 401) {
-          setState(() {
-            _error = 'Please log in to manage availability.';
-          });
-        } else {
-          setState(() {
-            _error =
-                'Failed to fetch availability data: ${e.response?.data['message'] ?? e.message}';
-          });
-        }
+        setState(() {
+           _error = 'Failed to fetch availability: ${e.response?.data['message'] ?? e.message}';
+        });
       } else {
         setState(() {
           _error = 'Failed to fetch availability data.';
@@ -122,9 +115,11 @@ class _workerManageAvailabilityState extends State<workerManageAvailability> {
     final formattedDate = _normalizeDate(selectedDay);
     setState(() {
       _selectedDate = selectedDay;
-      _slots = _availabilitiesMap[formattedDate] ?? [];
+      _slots = _availabilitiesMap[formattedDate]?['slots'] ?? [];
     });
   }
+
+  // ... (rest of the methods before _deleteAvailability)
 
   Future<void> _addSlot() async {
     if (_selectedDate == null || _slotController.text.isEmpty) return;
@@ -215,7 +210,13 @@ class _workerManageAvailabilityState extends State<workerManageAvailability> {
     });
     try {
       final formattedDate = _normalizeDate(_selectedDate!);
-      final newSlots = _slots.where((s) => s != slot).toList();
+      final availabilityData = _availabilitiesMap[formattedDate];
+      if (availabilityData == null) return;
+
+      final availabilityId = availabilityData['id'];
+      final originalSlots = List<String>.from(availabilityData['slots']);
+      final newSlots = originalSlots.where((s) => s != slot).toList();
+      
       final token = await _getToken();
       if (token == null || token.isEmpty) {
         setState(() {
@@ -231,12 +232,10 @@ class _workerManageAvailabilityState extends State<workerManageAvailability> {
         return;
       }
 
-      // Using ApiEndpoints.baseUrl for updating after removal
-      await Dio().post(
-        '${ApiEndpoints.baseUrl}calendar/availabilities',
+      // Update the slots for this availability ID
+      await Dio().put(
+        '${ApiEndpoints.baseUrl}calendar/availabilities/$availabilityId',
         data: {
-          'workerListingId': widget.propertyId,
-          'date': formattedDate,
           'timeSlots': newSlots,
         },
         options: Options(headers: {'Authorization': 'Bearer $token'}),
@@ -288,7 +287,12 @@ class _workerManageAvailabilityState extends State<workerManageAvailability> {
     });
     try {
       final formattedDate = _normalizeDate(_selectedDate!);
+      final availabilityData = _availabilitiesMap[formattedDate];
+      if (availabilityData == null) return;
+
+      final availabilityId = availabilityData['id'];
       final token = await _getToken();
+      
       if (token == null || token.isEmpty) {
         setState(() {
           _error = 'Please log in to delete availability.';
@@ -297,20 +301,9 @@ class _workerManageAvailabilityState extends State<workerManageAvailability> {
         return;
       }
 
-      // The backend should ideally have a DELETE endpoint for this.
-      // If your backend POSTs with empty array to delete, keep this:
-      // await Dio().post('${ApiEndpoints.baseUrl}calendar/availabilities',
-      //   data: {
-      //     'propertyId': widget.propertyId,
-      //     'date': formattedDate,
-      //     'timeSlots': [], // Sending empty array to signal deletion
-      //   },
-      //   options: Options(headers: {'Authorization': 'Bearer $token'}),
-      // );
-      // OR, if you implement a DELETE endpoint on your backend (recommended):
-
+      // Use the correct DELETE endpoint with the record ID
       await Dio().delete(
-        '${ApiEndpoints.baseUrl}calendar/availabilities/${widget.propertyId}/$formattedDate',
+        '${ApiEndpoints.baseUrl}calendar/availabilities/$availabilityId',
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
 
@@ -388,8 +381,8 @@ class _workerManageAvailabilityState extends State<workerManageAvailability> {
                 calendarBuilders: CalendarBuilders(
                   markerBuilder: (context, date, events) {
                     final formatted = _normalizeDate(date);
-                    if (_availabilitiesMap[formatted] != null &&
-                        _availabilitiesMap[formatted]!.isNotEmpty) {
+                    final data = _availabilitiesMap[formatted];
+                    if (data != null && (data['slots'] as List).isNotEmpty) {
                       return Positioned(
                         bottom: 1,
                         child: Container(

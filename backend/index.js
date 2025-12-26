@@ -39,6 +39,8 @@ const paymentRoutes = require('./routes/paymentRoute');
 const calendarRoutes = require('./routes/calendarRoutes');
 const chatbotRoutes = require('./routes/chatbotRoute');
 const chatRoutes = require('./routes/chatRoute');
+const bookingRoutes = require('./routes/bookingRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 
 app.use("/api/auth", authRoutes);
 app.use("/api/workers", workerRoutes);
@@ -52,6 +54,8 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/chats', chatRoutes);
+app.use('/api/bookings', bookingRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 app.get("/", (req, res) => {
     res.status(200).send("SkillLink backend running successfully!");
@@ -128,6 +132,8 @@ if (require.main === module) {
         },
     });
 
+    global.io = io;
+
     // ========== Connect DB (for actual server run) ==========
     connectDB()
         .then(() => console.log("MongoDB connected successfully!"))
@@ -139,6 +145,17 @@ if (require.main === module) {
     // ========== Socket.IO Connection Handling ==========
     io.on("connection", (socket) => {
         console.log("A user connected:", socket.id);
+
+        socket.on("joinRoom", (userId) => {
+            if (userId) {
+                socket.join(userId);
+                console.log(`User ${socket.id} joined personal room ${userId}`);
+            }
+        });
+
+        socket.on("leaveRoom", (userId) => {
+            if (userId) socket.leave(userId);
+        });
 
         socket.on("joinChat", (chatId) => {
             if (!chatId) {

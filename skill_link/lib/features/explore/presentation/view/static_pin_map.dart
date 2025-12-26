@@ -84,15 +84,12 @@ class _StaticPinMapState extends State<StaticPinMap> {
     return true;
   }
 
-  void _onPositionChanged(MapPosition pos, bool hasGesture) {
-    // pos.center may be null in some versions; guard
-    final center = pos.center;
-    if (center == null) return;
+  void _onPositionChanged(MapCamera camera, bool hasGesture) {
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 700), () {
       if (!mounted) return;
       setState(() {
-        _center = LatLng(center.latitude, center.longitude);
+        _center = LatLng(camera.center.latitude, camera.center.longitude);
       });
       _reverseGeocode(_center);
     });

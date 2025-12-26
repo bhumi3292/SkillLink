@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:skill_link/features/explore/domain/entity/explore_worker_entity.dart';
 import 'package:skill_link/cores/utils/image_url_helper.dart';
 import 'package:skill_link/features/favourite/presentation/bloc/cart_bloc.dart';
@@ -93,16 +94,18 @@ class _ExploreWorkerCardState extends State<ExploreWorkerCard> {
                                       child:
                                           isVideo
                                               ? _buildVideoThumbnail(mediaUrl)
-                                              : Image.network(
-                                                ImageUrlHelper.constructImageUrl(
+                                              : CachedNetworkImage(
+                                                imageUrl: ImageUrlHelper.constructImageUrl(
                                                   mediaUrl,
                                                 ),
                                                 fit: BoxFit.cover,
-                                                errorBuilder: (
-                                                  context,
-                                                  error,
-                                                  stackTrace,
-                                                ) {
+                                                placeholder: (context, url) => Container(
+                                                  color: Colors.grey[200],
+                                                  child: const Center(
+                                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                                  ),
+                                                ),
+                                                errorWidget: (context, url, error) {
                                                   return Container(
                                                     color: Colors.grey[300],
                                                     child: const Icon(
@@ -316,39 +319,29 @@ class _ExploreWorkerCardState extends State<ExploreWorkerCard> {
                                     ) ??
                                     false;
                               }
-                              return BlocListener<CartBloc, CartState>(
-                                listener: (context, state) {
-                                  if (state is CartLoaded) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('Added to favourites!'),
-                                      ),
-                                    );
-                                  } else if (state is CartError) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text(state.message)),
-                                    );
-                                  }
-                                },
-                                child: IconButton(
-                                  icon: Icon(
-                                    isFavorite
-                                        ? Icons.favorite
-                                        : Icons.favorite_border,
-                                    color:
-                                        isFavorite
-                                            ? Colors.red
-                                            : Colors.grey[600],
-                                  ),
-                                  onPressed: () {
-                                    if (widget.worker.id != null &&
-                                        !isFavorite) {
+                              return IconButton(
+                                icon: Icon(
+                                  isFavorite
+                                      ? Icons.favorite
+                                      : Icons.favorite_border,
+                                  color:
+                                      isFavorite
+                                          ? Colors.red
+                                          : Colors.grey[600],
+                                ),
+                                onPressed: () {
+                                  if (widget.worker.id != null) {
+                                    if (isFavorite) {
+                                      context.read<CartBloc>().add(
+                                        RemoveFromCartEvent(widget.worker.id!),
+                                      );
+                                    } else {
                                       context.read<CartBloc>().add(
                                         AddToCartEvent(widget.worker.id!),
                                       );
                                     }
-                                  },
-                                ),
+                                  }
+                                },
                               );
                             },
                           ),

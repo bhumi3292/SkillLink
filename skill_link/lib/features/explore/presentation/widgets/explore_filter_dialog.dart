@@ -104,7 +104,7 @@ class _ExploreFilterDialogState extends State<ExploreFilterDialog> {
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
               const SizedBox(height: 8),
-              DropdownButtonFormField<String>(
+              DropdownButtonFormField<String?>(
                 initialValue: _selectedCategory,
                 decoration: const InputDecoration(
                   labelText: 'Category',
@@ -112,35 +112,35 @@ class _ExploreFilterDialogState extends State<ExploreFilterDialog> {
                   border: OutlineInputBorder(),
                 ),
                 items: [
-                  const DropdownMenuItem<String>(
+                  const DropdownMenuItem<String?>(
                     value: null,
                     child: Text('All Skills'),
                   ),
-                  const DropdownMenuItem<String>(
+                  const DropdownMenuItem<String?>(
                     value: 'Plumbing',
                     child: Text('Plumbing'),
                   ),
-                  const DropdownMenuItem<String>(
+                  const DropdownMenuItem<String?>(
                     value: 'Electrical',
                     child: Text('Electrical'),
                   ),
-                  const DropdownMenuItem<String>(
+                  const DropdownMenuItem<String?>(
                     value: 'Cleaning',
                     child: Text('Cleaning'),
                   ),
-                  const DropdownMenuItem<String>(
+                  const DropdownMenuItem<String?>(
                     value: 'Painting',
                     child: Text('Painting'),
                   ),
-                  const DropdownMenuItem<String>(
+                  const DropdownMenuItem<String?>(
                     value: 'Carpentry',
                     child: Text('Carpentry'),
                   ),
-                  const DropdownMenuItem<String>(
+                  const DropdownMenuItem<String?>(
                     value: 'Moving',
                     child: Text('Moving'),
                   ),
-                  const DropdownMenuItem<String>(
+                  const DropdownMenuItem<String?>(
                     value: 'Other',
                     child: Text('Other'),
                   ),

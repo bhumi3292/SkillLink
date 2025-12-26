@@ -1,23 +1,13 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
+const bookingController = require('../controllers/bookingController');
+const { authenticateUser } = require('../middlewares/auth');
 
-const {
-    createBooking,
-    getMyBookings,
-    // getBookingsForProperty,
-    // cancelBooking,
-} = require("../controllers/bookingController");
+// Protected Routes
+router.use(authenticateUser);
 
-const { protect } = require("../middlewares/auth");
-const roleCheck = require("../middlewares/role");
-
-const requireHirer = roleCheck("Hirer");
-// const requireworker = roleCheck("worker"); // Uncomment when needed
-
-// Routes
-router.post("/create",requireHirer, createBooking);
-router.get("/Hirer",requireHirer, getMyBookings);
-
-
+router.post('/', bookingController.createBooking);
+router.get('/', bookingController.getUserBookings);
+router.patch('/:id/status', bookingController.updateBookingStatus);
 
 module.exports = router;

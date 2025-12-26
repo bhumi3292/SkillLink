@@ -68,7 +68,12 @@ class _LocationPickerWidgetState extends State<LocationPickerWidget> {
 
     // Get position
     try {
-      Position position = await Geolocator.getCurrentPosition();
+      Position position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 10),
+        ),
+      );
       LatLng newCenter = LatLng(position.latitude, position.longitude);
 
       if (mounted) {
@@ -83,6 +88,11 @@ class _LocationPickerWidgetState extends State<LocationPickerWidget> {
       }
     } catch (e) {
       debugPrint("Error getting location: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Could not get current location: $e")),
+        );
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -187,12 +197,12 @@ class _LocationPickerWidgetState extends State<LocationPickerWidget> {
                 options: MapOptions(
                   initialCenter: _center,
                   initialZoom: 16.0,
-                  onPositionChanged: (position, hasGesture) {
+                  onPositionChanged: (camera, hasGesture) {
                     if (hasGesture) {
                       // Debounce to prevent hitting API too many times while dragging
                       if (_debounce?.isActive ?? false) _debounce!.cancel();
                       _debounce = Timer(const Duration(milliseconds: 800), () {
-                        _getAddress(position.center!);
+                        _getAddress(camera.center);
                       });
                     }
                   },
@@ -212,10 +222,16 @@ class _LocationPickerWidgetState extends State<LocationPickerWidget> {
                                 width: 50,
                                 height: 50,
                                 point: _center,
-                                child: const Icon(
-                                  Icons.location_on,
-                                  color: Colors.red,
-                                  size: 48,
+                                child: Center(
+                                  child: SizedBox(
+                                    width: 48,
+                                    height: 48,
+                                    child: const Icon(
+                                      Icons.location_on,
+                                      color: Colors.red,
+                                      size: 48,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ]

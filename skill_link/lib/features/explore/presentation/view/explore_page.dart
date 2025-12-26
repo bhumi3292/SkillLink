@@ -7,11 +7,10 @@ import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:skill_link/app/service_locator/service_locator.dart';
 import 'package:skill_link/core/services/location_service.dart';
-import 'package:skill_link/features/dashbaord/presentation/widgets/property_card_widget.dart';
 import 'package:skill_link/features/explore/domain/entity/explore_worker_entity.dart';
 import 'package:skill_link/features/explore/presentation/bloc/explore_bloc.dart';
-import 'package:skill_link/features/explore/presentation/utils/worker_converter.dart';
 import 'package:skill_link/features/explore/presentation/view/worker_detail_page.dart';
+import 'package:skill_link/features/explore/presentation/widgets/explore_worker_card.dart';
 import 'package:skill_link/features/explore/presentation/widgets/explore_filter_dialog.dart';
 import 'package:skill_link/features/explore/presentation/widgets/explore_search_bar.dart';
 import 'package:skill_link/features/favourite/presentation/bloc/cart_bloc.dart';
@@ -62,7 +61,9 @@ class _ExplorePageState extends State<ExplorePage> {
     if (hasPermission && mounted) {
       try {
         final position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high,
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.high,
+          ),
         );
         if (mounted) {
           setState(() {
@@ -126,10 +127,16 @@ class _ExplorePageState extends State<ExplorePage> {
                   ),
                 );
               },
-              child: const Icon(
-                Icons.location_pin,
-                color: Colors.purple,
-                size: 35,
+              child: Center(
+                child: SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: const Icon(
+                    Icons.location_pin,
+                    color: Colors.purple,
+                    size: 35,
+                  ),
+                ),
               ),
             ),
           ),
@@ -146,10 +153,16 @@ class _ExplorePageState extends State<ExplorePage> {
             _currentPosition!.latitude,
             _currentPosition!.longitude,
           ),
-          child: const Icon(
-            Icons.person_pin_circle,
-            color: Colors.blue,
-            size: 40,
+          child: Center(
+            child: SizedBox(
+              width: 44,
+              height: 44,
+              child: const Icon(
+                Icons.person_pin_circle,
+                color: Colors.blue,
+                size: 40,
+              ),
+            ),
           ),
         ),
       );
@@ -254,23 +267,34 @@ class _ExplorePageState extends State<ExplorePage> {
                       child: Text("Error loading workers: ${state.message}"),
                     );
                   } else if (state is ExploreLoaded) {
-                    List<ExploreWorkerEntity> workersToDisplay =
-                        state.filteredWorkers;
-                    if (_currentFilter == WorkerFilter.nearby &&
-                        _currentPosition != null) {
-                      workersToDisplay =
-                          workersToDisplay.where((worker) {
-                            if (worker.coordinates == null) return false;
-                            final distance = Geolocator.distanceBetween(
-                              _currentPosition!.latitude,
-                              _currentPosition!.longitude,
-                              worker.coordinates!.latitude,
-                              worker.coordinates!.longitude,
-                            );
-                            return distance <= 2000; // 2km
-                          }).toList();
-                      // Sort by distance
+                    List<ExploreWorkerEntity> workersToDisplay = List.from(
+                      state.filteredWorkers,
+                    );
+
+                    // Always sort by distance if current position is available
+                    if (_currentPosition != null) {
+                      // First filter by 2km if "Nearby Only" is selected
+                      if (_currentFilter == WorkerFilter.nearby) {
+                        workersToDisplay =
+                            workersToDisplay.where((worker) {
+                              if (worker.coordinates == null) return false;
+                              final distance = Geolocator.distanceBetween(
+                                _currentPosition!.latitude,
+                                _currentPosition!.longitude,
+                                worker.coordinates!.latitude,
+                                worker.coordinates!.longitude,
+                              );
+                              return distance <= 2000; // 2km
+                            }).toList();
+                      }
+
+                      // Then sort by distance (Nearest first)
                       workersToDisplay.sort((a, b) {
+                        if (a.coordinates == null && b.coordinates == null)
+                          return 0;
+                        if (a.coordinates == null) return 1;
+                        if (b.coordinates == null) return -1;
+
                         final distanceA = Geolocator.distanceBetween(
                           _currentPosition!.latitude,
                           _currentPosition!.longitude,
@@ -317,33 +341,30 @@ class _ExplorePageState extends State<ExplorePage> {
                       );
                     }
 
-                    return ListView(
+                    return ListView.builder(
                       padding: const EdgeInsets.all(16),
-                      children:
-                          workersToDisplay.map((worker) {
-                            final apiModel = WorkerConverter.toApiModel(worker);
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 16),
-                              child: BlocProvider.value(
-                                value: _cartBloc,
-                                child: PropertyCardWidget(
-                                  property: apiModel,
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder:
-                                            (_) => WorkerDetailPage(
-                                              worker: worker,
-                                            ),
-                                      ),
-                                    );
-                                  },
-                                  showFavoriteButton: true,
-                                ),
-                              ),
-                            );
-                          }).toList(),
+                      itemCount: workersToDisplay.length,
+                      itemBuilder: (context, index) {
+                        final worker = workersToDisplay[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: BlocProvider.value(
+                            value: _cartBloc,
+                            child: ExploreWorkerCard(
+                              worker: worker,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:
+                                        (_) => WorkerDetailPage(worker: worker),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        );
+                      },
                     );
                   }
                   return const Center(child: Text('No data available'));
@@ -415,19 +436,19 @@ class _ExplorePageState extends State<ExplorePage> {
         curve: Curves.easeInOut,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected
-              ? Theme.of(context).primaryColor
-              : Colors.transparent,
+          color:
+              isSelected ? Theme.of(context).primaryColor : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: Theme.of(context).primaryColor.withOpacity(0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : [],
+          boxShadow:
+              isSelected
+                  ? [
+                    BoxShadow(
+                      color: Theme.of(context).primaryColor.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                  : [],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -457,18 +478,12 @@ class _ExplorePageState extends State<ExplorePage> {
       height: 48,
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            Colors.grey[100]!,
-            Colors.grey[50]!,
-          ],
+          colors: [Colors.grey[100]!, Colors.grey[50]!],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: Colors.grey[300]!,
-          width: 1,
-        ),
+        border: Border.all(color: Colors.grey[300]!, width: 1),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.08),
@@ -576,4 +591,3 @@ class _ExplorePageState extends State<ExplorePage> {
     );
   }
 }
-

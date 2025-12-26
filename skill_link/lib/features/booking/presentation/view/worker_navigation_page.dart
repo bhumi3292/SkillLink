@@ -55,7 +55,14 @@ class _WorkerNavigationPageState extends State<WorkerNavigationPage> {
         child: BlocConsumer<NavigationBloc, NavigationState>(
           listener: (context, state) {
             if (state is NavigationLoaded && state.shouldAnimateCamera) {
-              _mapController.move(state.workerLocation, 15.0);
+              // Ensure MapController is ready before moving
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                try {
+                  _mapController.move(state.workerLocation, 15.0);
+                } catch (e) {
+                  debugPrint('MapController not ready yet: $e');
+                }
+              });
             }
           },
           builder: (context, state) {

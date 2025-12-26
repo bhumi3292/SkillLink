@@ -3,6 +3,7 @@ const path = require('path');
 const Worker = require("../../models/Worker");
 const Category = require("../../models/Category");
 const User = require('../../models/User');
+const workerService = require('../../services/workerService');
 
 // Helper to extract and normalize file paths from Multer's `req.files`
 const extractFilePaths = (files) => {
@@ -28,35 +29,19 @@ const deleteFiles = async (filePaths) => {
 };
 
 // --- CREATE WORKER ---
+// --- CREATE WORKER ---
 exports.createWorker = async (req, res) => {
     const uploadedFilePaths = [];
     try {
-        const { title, description, price, categoryId, coordinates } = req.body;
-
         if (req.files?.images) uploadedFilePaths.push(...extractFilePaths(req.files.images));
         if (req.files?.videos) uploadedFilePaths.push(...extractFilePaths(req.files.videos));
 
-        if (!title || !description || !price || !categoryId || !coordinates) {
-            throw new Error("Missing required fields.");
-        }
-
-        const category = await Category.findById(categoryId);
-        if (!category) {
-            throw new Error("Invalid category ID.");
-        }
-
-        const worker = new Worker({
-            title, description, price, categoryId,
-            location: {
-                type: 'Point',
-                coordinates: JSON.parse(coordinates),
-            },
+        const filePaths = {
             images: extractFilePaths(req.files?.images),
-            videos: extractFilePaths(req.files?.videos),
-            worker: req.user._id,
-        });
+            videos: extractFilePaths(req.files?.videos)
+        };
 
-        await worker.save();
+        const worker = await workerService.createWorker(req.body, req.user._id, filePaths);
 
         res.status(201).json({ success: true, message: "Worker created successfully!", data: worker });
     } catch (err) {
@@ -69,59 +54,16 @@ exports.createWorker = async (req, res) => {
 };
 
 // --- GET ALL WORKERS (with Geospatial Search) ---
+// --- GET ALL WORKERS (with Geospatial Search) ---
 exports.getAllWorkers = async (req, res) => {
     try {
         const { lat, long } = req.query;
-
         let workers;
 
         if (lat && long) {
-            const latitude = parseFloat(lat);
-            const longitude = parseFloat(long);
-
-            if (isNaN(latitude) || isNaN(longitude)) {
-                return res.status(400).json({ success: false, message: "Invalid latitude or longitude." });
-            }
-
-            workers = await Worker.aggregate([
-                {
-                    $geoNear: {
-                        near: {
-                            type: "Point",
-                            coordinates: [longitude, latitude]
-                        },
-                        distanceField: "dist.calculated",
-                        spherical: true
-                    }
-                },
-                {
-                    $lookup: {
-                        from: "categories",
-                        localField: "categoryId",
-                        foreignField: "_id",
-                        as: "categoryId"
-                    }
-                },
-                {
-                    $unwind: "$categoryId"
-                },
-                {
-                    $lookup: {
-                        from: "users",
-                        localField: "worker",
-                        foreignField: "_id",
-                        as: "worker"
-                    }
-                },
-                {
-                    $unwind: "$worker"
-                }
-            ]);
-
+            workers = await workerService.getNearestWorkers(lat, long);
         } else {
-            workers = await Worker.find({})
-                .populate("categoryId", "category_name")
-                .populate("worker", "fullName email phoneNumber profilePicture");
+            workers = await workerService.getAllWorkers({});
         }
 
         res.status(200).json({
@@ -131,124 +73,100 @@ exports.getAllWorkers = async (req, res) => {
         });
     } catch (err) {
         console.error("Get workers error:", err.message);
-        res.status(500).json({ success: false, message: "Server error" });
+        res.status(500).json({ success: false, message: err.message || "Server error" });
     }
 };
 
 // --- GET SINGLE WORKER ---
+// --- GET SINGLE WORKER ---
 exports.getOneWorker = async (req, res) => {
     try {
-        const worker = await Worker.findById(req.params.id)
-            .populate("categoryId", "category_name")
-            .populate("worker", "fullName email phoneNumber profilePicture");
-
-        if (!worker) {
-            return res.status(404).json({ success: false, message: "Worker not found" });
-        }
-
+        const worker = await workerService.getWorkerById(req.params.id);
         res.status(200).json({ success: true, data: worker });
     } catch (err) {
         console.error("Get worker error:", err.message);
-        res.status(500).json({ success: false, message: "Server error" });
+        if (err.message === "Worker not found") {
+            return res.status(404).json({ success: false, message: "Worker not found" });
+        }
+        res.status(500).json({ success: false, message: err.message || "Server error" });
     }
 };
 
 // --- UPDATE WORKER ---
+// --- UPDATE WORKER ---
 exports.updateWorker = async (req, res) => {
     const newlyUploadedFilePaths = [];
     try {
-        const worker = await Worker.findById(req.params.id);
-        if (!worker) {
-            return res.status(404).json({ success: false, message: "Worker not found." });
-        }
-
-        if (worker.worker.toString() !== req.user._id.toString()) {
-            if (req.files?.images) newlyUploadedFilePaths.push(...extractFilePaths(req.files.images));
-            if (req.files?.videos) newlyUploadedFilePaths.push(...extractFilePaths(req.files.videos));
-            await deleteFiles(newlyUploadedFilePaths);
-            return res.status(403).json({ success: false, message: "Unauthorized access." });
-        }
-
-        const {
-            title, description, price, categoryId, coordinates,
-            existingImages, existingVideos,
-        } = req.body;
-
         if (req.files?.images) newlyUploadedFilePaths.push(...extractFilePaths(req.files.images));
         if (req.files?.videos) newlyUploadedFilePaths.push(...extractFilePaths(req.files.videos));
 
-        let existingImagesToKeep = existingImages ? JSON.parse(existingImages) : [];
-        let existingVideosToKeep = existingVideos ? JSON.parse(existingVideos) : [];
-
-        const filesToDelete = [];
-        worker.images.forEach(oldPath => {
-            if (!existingImagesToKeep.includes(oldPath)) filesToDelete.push(oldPath);
-        });
-        worker.videos.forEach(oldPath => {
-            if (!existingVideosToKeep.includes(oldPath)) filesToDelete.push(oldPath);
-        });
-        await deleteFiles(filesToDelete);
-
-        const newImages = extractFilePaths(req.files?.images);
-        const newVideos = extractFilePaths(req.files?.videos);
-
-        const updatedImages = [...existingImagesToKeep, ...newImages];
-        const updatedVideos = [...existingVideosToKeep, ...newVideos];
-
-        const updateData = {
-            title, description, price,
-            images: updatedImages,
-            videos: updatedVideos,
+        const newFiles = {
+            images: extractFilePaths(req.files?.images),
+            videos: extractFilePaths(req.files?.videos)
         };
 
-        if (coordinates) {
-            updateData.location = {
-                type: 'Point',
-                coordinates: JSON.parse(coordinates),
-            };
+        const result = await workerService.updateWorker(req.params.id, req.user._id, req.body, newFiles);
+
+        // Delete old files returned by service
+        if (result.filesToDelete && result.filesToDelete.length > 0) {
+            await deleteFiles(result.filesToDelete);
         }
 
-        if (categoryId) {
-            const category = await Category.findById(categoryId);
-            if (!category) {
-                await deleteFiles(newlyUploadedFilePaths);
-                return res.status(400).json({ success: false, message: "Invalid category ID." });
-            }
-            updateData.categoryId = categoryId;
-        }
-
-        const updatedWorker = await Worker.findByIdAndUpdate(req.params.id, updateData, { new: true, runValidators: true });
-
-        res.status(200).json({ success: true, message: "Worker updated successfully!", data: updatedWorker });
+        res.status(200).json({ success: true, message: "Worker updated successfully!", data: result.worker });
     } catch (err) {
         console.error("Update worker error:", err.message);
         if (newlyUploadedFilePaths.length > 0) {
             await deleteFiles(newlyUploadedFilePaths);
         }
-        res.status(500).json({ success: false, message: "Server error." });
+        res.status(500).json({ success: false, message: err.message || "Server error." });
     }
 };
 
 // --- DELETE WORKER ---
+// --- DELETE WORKER ---
 exports.deleteWorker = async (req, res) => {
     try {
-        const worker = await Worker.findById(req.params.id);
-        if (!worker) {
-            return res.status(404).json({ success: false, message: "Worker not found." });
+        const result = await workerService.deleteWorker(req.params.id, req.user._id);
+
+        if (result.success && result.filesToDelete.length > 0) {
+            await deleteFiles(result.filesToDelete);
         }
-
-        if (worker.worker.toString() !== req.user._id.toString()) {
-            return res.status(403).json({ success: false, message: "Unauthorized access." });
-        }
-
-        const allFilesToDelete = [...worker.images, ...worker.videos];
-
-        await worker.deleteOne();
-        await deleteFiles(allFilesToDelete);
 
         res.status(200).json({ success: true, message: "Worker deleted successfully!" });
     } catch (err) {
         console.error("Delete worker error:", err.message);
-        res.status(500).json({ success: false, message: "Server error." });
+        res.status(500).json({ success: false, message: err.message || "Server error." });
     }
 };
+
+// ⭐ NEW: Update Worker Availability ⭐
+exports.updateAvailability = async (req, res) => {
+    const userId = req.user._id;
+    const { availabilityStatus } = req.body;
+
+    try {
+        if (!["Available", "Booked", "Not Available"].includes(availabilityStatus)) {
+            return res.status(400).json({ success: false, message: "Invalid availability status." });
+        }
+
+        const worker = await Worker.findOneAndUpdate(
+            { worker: userId },
+            { availabilityStatus },
+            { new: true }
+        );
+
+        if (!worker) {
+            return res.status(404).json({ success: false, message: "Worker profile not found." });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Availability switched to " + availabilityStatus,
+            data: worker
+        });
+    } catch (error) {
+        console.error("Error in updateAvailability:", error);
+        res.status(500).json({ success: false, message: "Server error during availability update." });
+    }
+};
+

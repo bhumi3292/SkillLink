@@ -5,7 +5,54 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="38a0e715-1e02-4e76-a058-0611c87ad390" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/skilllink.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/skilllink.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/controllers/authController.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/controllers/authController.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/controllers/bookingController.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/controllers/bookingController.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/controllers/calendarController.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/controllers/calendarController.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/controllers/payment/paymentController.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/controllers/payment/paymentController.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/controllers/worker/workerController.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/controllers/worker/workerController.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/index.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/middlewares/auth.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/middlewares/auth.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/middlewares/authorizedUser.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/middlewares/authorizedUser.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/models/Booking.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/models/Booking.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/models/User.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/models/User.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/models/Worker.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/models/Worker.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/models/payment.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/models/payment.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/routes/authRoutes.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/routes/authRoutes.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/routes/bookingRoutes.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/routes/bookingRoutes.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/routes/paymentRoute.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/routes/paymentRoute.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/routes/workerRoutes.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/routes/workerRoutes.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/app/constant/api_endpoints.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/app/constant/api_endpoints.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/app/service_locator/service_locator.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/app/service_locator/service_locator.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/core/services/location_service.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/core/services/location_service.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/add_worker/data/model/worker_model/worker_api_model.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/add_worker/data/model/worker_model/worker_api_model.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/add_worker/domain/entity/worker/worker_entity.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/add_worker/domain/entity/worker/worker_entity.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/add_worker/presentation/widgets/location_picker_widget.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/add_worker/presentation/widgets/location_picker_widget.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/auth/domain/entity/user_entity.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/auth/domain/entity/user_entity.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/booking/presentation/view/booking_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/booking/presentation/view/booking_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/booking/presentation/view/worker_navigation_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/booking/presentation/view/worker_navigation_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/booking/presentation/widgets/booking_modal.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/booking/presentation/widgets/booking_modal.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/booking/presentation/widgets/worker_manage_availability.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/booking/presentation/widgets/worker_manage_availability.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/dashbaord/presentation/view/dashboard.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/dashbaord/presentation/view/dashboard.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/debug/network_debug_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/debug/network_debug_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/explore/domain/entity/explore_worker_entity.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/explore/domain/entity/explore_worker_entity.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/explore/presentation/utils/worker_converter.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/explore/presentation/utils/worker_converter.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/explore/presentation/view/explore_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/explore/presentation/view/explore_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/explore/presentation/view/osm_map_widget.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/explore/presentation/view/osm_map_widget.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/explore/presentation/view/static_pin_map.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/explore/presentation/view/static_pin_map.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/explore/presentation/widgets/explore_filter_dialog.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/explore/presentation/widgets/explore_filter_dialog.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/explore/presentation/widgets/explore_worker_card.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/explore/presentation/widgets/explore_worker_card.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/home/header_nav.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/home/header_nav.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/notification/data/model/notification_model.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/notification/data/model/notification_model.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/profile/presentation/view/profile.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/profile/presentation/view/profile.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/linux/flutter/generated_plugin_registrant.cc" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/linux/flutter/generated_plugin_registrant.cc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/linux/flutter/generated_plugin_registrant.h" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/linux/flutter/generated_plugin_registrant.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/linux/flutter/generated_plugins.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/linux/flutter/generated_plugins.cmake" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/macos/Flutter/GeneratedPluginRegistrant.swift" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/macos/Flutter/GeneratedPluginRegistrant.swift" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -41,7 +88,7 @@
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;E:/SkillLink/skill_link&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;project.propVCSSupport.DirectoryMappings&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;AndroidSdkUpdater&quot;,
     &quot;show.migrate.to.gradle.popup&quot;: &quot;false&quot;
   }
 }</component>

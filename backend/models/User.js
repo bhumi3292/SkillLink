@@ -30,11 +30,24 @@ const userSchema = new mongoose.Schema({
     profilePicture: {
         type: String,
         default: null
+    },
+    location: {
+        type: {
+            type: String,
+            enum: ['Point'],
+            default: 'Point'
+        },
+        coordinates: {
+            type: [Number], // [longitude, latitude]
+            default: [85.3240, 27.7172] // Default Kathmandu
+        }
     }
 }, { timestamps: true });
 
+userSchema.index({ location: '2dsphere' });
+
 // --- Mongoose Middleware to Hash Password Before Saving ---
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function (next) {
     if (this.isModified('password') && this.password) {
         const salt = await bcrypt.genSalt(10);
         this.password = await bcrypt.hash(this.password, salt);
@@ -43,7 +56,7 @@ userSchema.pre('save', async function(next) {
 });
 
 
-userSchema.methods.comparePassword = async function(candidatePassword) {
+userSchema.methods.comparePassword = async function (candidatePassword) {
     if (!this.password) {
         return false;
     }

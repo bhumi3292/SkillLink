@@ -173,7 +173,7 @@ class _NetworkDebugScreenState extends State<NetworkDebugScreen> {
                     ),
                     SelectableText('Base URL: ${ApiEndpoints.baseUrl}'),
                     SelectableText(
-                      'Real Device Address: ${ApiEndpoints.realDeviceAddress}',
+                      'Real Device Address: ${ApiEndpoints.activeServerAddress}',
                     ),
                   ],
                 ),

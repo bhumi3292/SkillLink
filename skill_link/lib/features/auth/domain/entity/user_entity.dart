@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:latlong2/latlong.dart';
 
 class UserEntity extends Equatable {
   final String? userId;
@@ -9,7 +10,7 @@ class UserEntity extends Equatable {
   final String? password; // ⭐ Made nullable ⭐
   final String? confirmPassword; // ⭐ Made nullable ⭐
   final String? profilePicture;
-
+  final LatLng? location;
 
   const UserEntity({
     this.userId,
@@ -20,6 +21,7 @@ class UserEntity extends Equatable {
     this.password,
     this.confirmPassword,
     this.profilePicture,
+    this.location,
   });
 
   UserEntity copyWith({

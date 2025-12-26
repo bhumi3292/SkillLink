@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 
 class ApiEndpoints {
   ApiEndpoints._();
@@ -6,25 +5,15 @@ class ApiEndpoints {
   static const Duration connectionTimeout = Duration(seconds: 30);
   static const Duration receiveTimeout = Duration(seconds: 30);
 
-  static const String androidEmulatorAddress = "http://10.0.2.2:3001";
-  static const String iosSimulatorAddress = "http://localhost:3001";
-  static const String realDeviceAddress = "http://192.168.1.6:3001";
+  // ---------------------------------------------------------
+  // CHANGE THIS IP TO YOUR BACKEND SERVER ADDRESS
+  // For Android Emulator, use: http://10.0.2.2:3001
+  // For iOS Simulator / Web, use: http://localhost:3001
+  // For Real Devices, use your PC's IP (e.g., http://192.168.x.y:3001)
+  // ---------------------------------------------------------
+  static const String activeServerAddress = "http://192.168.1.6:3001";
 
-  static String get serverAddress {
-    if (kIsWeb) {
-      return iosSimulatorAddress;
-    } else if (kDebugMode && !kIsWeb) {
-      // When debugging on a physical device, use the real device address
-      return realDeviceAddress;
-    } else if (defaultTargetPlatform == TargetPlatform.android) {
-      return androidEmulatorAddress;
-    } else if (defaultTargetPlatform == TargetPlatform.iOS) {
-      return iosSimulatorAddress;
-    } else {
-      // Default for release builds or other platforms
-      return realDeviceAddress;
-    }
-  }
+  static String get serverAddress => activeServerAddress;
 
   static String get localNetworkAddress => serverAddress;
 
@@ -69,7 +58,8 @@ class ApiEndpoints {
   // ---------- Cart/Favorites ----------
   static String get getCart => "${baseUrl}cart"; // GET
   static String get addToCart => "${baseUrl}cart/add"; // POST
-  static String get removeFromCart => "${baseUrl}cart/remove/"; // DELETE (append propertyId)
+  static String get removeFromCart =>
+      "${baseUrl}cart/remove/"; // DELETE (append propertyId)
   static String get clearCart => "${baseUrl}cart/clear"; // DELETE
 
   // ---------- Chatbot ----------

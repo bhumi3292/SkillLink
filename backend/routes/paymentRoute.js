@@ -1,4 +1,5 @@
 const express = require('express');
+const { authenticateUser } = require('../middlewares/auth');
 const router = express.Router();
 const {
     initiatePayment,
@@ -6,7 +7,7 @@ const {
     verifyEsewaPayment
 } = require('../controllers/payment/paymentController');
 
-router.post('/initiate', initiatePayment);
+router.post('/initiate', authenticateUser, initiatePayment);
 
 
 router.post('/verify/khalti', verifyKhaltiPayment);
