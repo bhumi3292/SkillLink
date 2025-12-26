@@ -30,12 +30,12 @@ class UpdateBookingStatusEvent extends BookingEvent {
   List<Object> get props => [bookingId, status];
 }
 
-class InitiatePaymentEvent extends BookingEvent {
+class BookingInitiatePaymentEvent extends BookingEvent {
   final String bookingId;
   final double amount;
   final String method;
 
-  const InitiatePaymentEvent({required this.bookingId, required this.amount, required this.method});
+  const BookingInitiatePaymentEvent({required this.bookingId, required this.amount, required this.method});
 
   @override
   List<Object> get props => [bookingId, amount, method];

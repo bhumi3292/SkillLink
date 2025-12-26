@@ -38,10 +38,10 @@ class BookingError extends BookingState {
   List<Object> get props => [message];
 }
 
-class PaymentInitiated extends BookingState {
+class BookingPaymentInitiated extends BookingState {
   final dynamic paymentData; // Contains url, pidx, etc.
   
-  const PaymentInitiated({required this.paymentData});
+  const BookingPaymentInitiated({required this.paymentData});
 
   @override
   List<Object> get props => [paymentData];

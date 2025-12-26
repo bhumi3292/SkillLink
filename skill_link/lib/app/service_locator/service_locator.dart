@@ -86,6 +86,13 @@ import 'package:skill_link/features/notification/data/repository/notification_re
 import 'package:skill_link/features/notification/domain/repository/notification_repository.dart';
 import 'package:skill_link/features/notification/presentation/bloc/notification_bloc.dart';
 
+// Payment
+import 'package:skill_link/features/payment/data/data_source/payment_remote_data_source.dart';
+import 'package:skill_link/features/payment/data/repository/payment_repository_impl.dart';
+import 'package:skill_link/features/payment/domain/repository/payment_repository.dart';
+import 'package:skill_link/features/payment/domain/use_case/payment_usecases.dart';
+import 'package:skill_link/features/payment/presentation/bloc/payment_bloc.dart';
+
 final serviceLocator = GetIt.instance;
 
 Future<void> initDependencies() async {
@@ -123,6 +130,7 @@ Future<void> initDependencies() async {
   _initChatModules();
   _initBookingModules();
   _initNotificationModules();
+  _initPaymentModules();
 }
 
 void _initAuthModules() {
@@ -393,5 +401,37 @@ void _initNotificationModules() {
   );
   serviceLocator.registerFactory<NotificationBloc>(
     () => NotificationBloc(repository: serviceLocator()),
+  );
+}
+
+void _initPaymentModules() {
+  // Data Source
+  serviceLocator.registerLazySingleton<PaymentRemoteDataSource>(
+    () => PaymentRemoteDataSourceImpl(serviceLocator<ApiService>()),
+  );
+
+  // Repository
+  serviceLocator.registerLazySingleton<IPaymentRepository>(
+    () => PaymentRepositoryImpl(serviceLocator<PaymentRemoteDataSource>()),
+  );
+
+  // UseCases
+  serviceLocator.registerLazySingleton<InitiatePaymentUseCase>(
+    () => InitiatePaymentUseCase(serviceLocator<IPaymentRepository>()),
+  );
+  serviceLocator.registerLazySingleton<VerifyPaymentUseCase>(
+    () => VerifyPaymentUseCase(serviceLocator<IPaymentRepository>()),
+  );
+  serviceLocator.registerLazySingleton<GetPaymentHistoryUseCase>(
+    () => GetPaymentHistoryUseCase(serviceLocator<IPaymentRepository>()),
+  );
+
+  // Bloc
+  serviceLocator.registerFactory<PaymentBloc>(
+    () => PaymentBloc(
+      initiatePaymentUseCase: serviceLocator(),
+      verifyPaymentUseCase: serviceLocator(),
+      getPaymentHistoryUseCase: serviceLocator(),
+    ),
   );
 }

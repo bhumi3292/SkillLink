@@ -369,6 +369,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.7"
+  esewa_flutter_sdk:
+    dependency: "direct main"
+    description:
+      name: esewa_flutter_sdk
+      sha256: a71bf7b8095c0d013ef447d90c1a00747722da679dce786690721c94c7367b82
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.1"
   fake_async:
     dependency: transitive
     description:
@@ -965,6 +973,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.11.3"
+  khalti:
+    dependency: "direct main"
+    description:
+      name: khalti
+      sha256: "89e4735e2fe32c657e97140f34bd01b4cba614882c44f01c7381d6b8642fa43d"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.1"
   latlong2:
     dependency: "direct main"
     description:

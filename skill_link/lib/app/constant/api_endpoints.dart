@@ -91,4 +91,10 @@ class ApiEndpoints {
       "${baseUrl}notifications/read-all";
   static String deleteNotification(String notificationId) =>
       "${baseUrl}notifications/$notificationId";
+
+  // ---------- Payments ----------
+  static String get initiatePayment => "${baseUrl}payments/initiate";
+  static String get verifyPayment => "${baseUrl}payments/verify";
+  static String getPaymentHistory(String userId) =>
+      "${baseUrl}payments/history/$userId";
 }

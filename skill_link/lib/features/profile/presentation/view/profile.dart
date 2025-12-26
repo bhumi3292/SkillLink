@@ -26,6 +26,9 @@ import 'edit_profile_page.dart';
 import 'package:skill_link/features/profile/presentation/view/help_support_page.dart';
 // Add import for SettingPage
 import 'package:skill_link/features/profile/presentation/view/setting_page.dart';
+import 'package:skill_link/features/payment/presentation/view/payment_history_page.dart';
+import 'package:skill_link/features/payment/presentation/bloc/payment_event.dart';
+import 'package:skill_link/features/payment/presentation/bloc/payment_bloc.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -722,7 +725,16 @@ class _ProfilePageState extends State<ProfilePage> {
                                   title: 'Payments',
                                   subtitle: 'Manage payment methods',
                                   onTap: () {
-                                    showMySnackbar(context: context, content: "Payments tapped!", isSuccess: true);
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => BlocProvider(
+                                          create: (context) => serviceLocator<PaymentBloc>()
+                                            ..add(GetPaymentHistoryEvent(user.userId!)),
+                                          child: const PaymentHistoryPage(),
+                                        ),
+                                      ),
+                                    );
                                   },
                                 ),
                                 _buildDivider(),

@@ -1,18 +1,10 @@
 const express = require('express');
-const { authenticateUser } = require('../middlewares/auth');
 const router = express.Router();
-const {
-    initiatePayment,
-    verifyKhaltiPayment,
-    verifyEsewaPayment
-} = require('../controllers/payment/paymentController');
+const paymentController = require('../controllers/paymentController');
+const { authenticateUser } = require('../middlewares/authorizedUser'); // Use the correct middleware
 
-router.post('/initiate', authenticateUser, initiatePayment);
-
-
-router.post('/verify/khalti', verifyKhaltiPayment);
-
-
-router.post('/verify/esewa', verifyEsewaPayment);
+router.post('/initiate', authenticateUser, paymentController.initiate);
+router.post('/verify', authenticateUser, paymentController.verify);
+router.get('/history/:userId', authenticateUser, paymentController.history);
 
 module.exports = router;

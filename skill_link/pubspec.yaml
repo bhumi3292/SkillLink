@@ -88,6 +88,8 @@ dependencies:
   flutter_local_notifications: ^17.2.1
   flutter_osm_plugin: ^1.4.2
   flutter_osm_interface: ^1.4.0
+  esewa_flutter_sdk: ^2.0.1
+  khalti: ^0.0.1
 dev_dependencies:
   flutter_test:
     sdk: flutter

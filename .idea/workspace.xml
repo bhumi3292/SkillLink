@@ -4,7 +4,23 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="38a0e715-1e02-4e76-a058-0611c87ad390" name="Changes" comment="" />
+    <list default="true" id="38a0e715-1e02-4e76-a058-0611c87ad390" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Dart_Packages.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Dart_Packages.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/models/payment.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/models/payment.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/routes/paymentRoute.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/routes/paymentRoute.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/services/paymentService.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/services/paymentService.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/android/app/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/android/app/src/main/AndroidManifest.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/app/constant/api_endpoints.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/app/constant/api_endpoints.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/app/service_locator/service_locator.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/app/service_locator/service_locator.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/booking/presentation/bloc/booking_bloc.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/booking/presentation/bloc/booking_bloc.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/booking/presentation/bloc/booking_event.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/booking/presentation/bloc/booking_event.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/booking/presentation/bloc/booking_state.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/booking/presentation/bloc/booking_state.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/booking/presentation/view/booking_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/booking/presentation/view/booking_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/lib/features/profile/presentation/view/profile.dart" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/lib/features/profile/presentation/view/profile.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/pubspec.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/skill_link/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/skill_link/pubspec.yaml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />

@@ -13,7 +13,7 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
     on<CreateBookingEvent>(_onCreateBooking);
     on<LoadUserBookingsEvent>(_onLoadUserBookings);
     on<UpdateBookingStatusEvent>(_onUpdateBookingStatus);
-    on<InitiatePaymentEvent>(_onInitiatePayment);
+    on<BookingInitiatePaymentEvent>(_onInitiatePayment);
   }
 
   Future<void> _onCreateBooking(CreateBookingEvent event, Emitter<BookingState> emit) async {
@@ -47,13 +47,13 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
     );
   }
 
-  Future<void> _onInitiatePayment(InitiatePaymentEvent event, Emitter<BookingState> emit) async {
+  Future<void> _onInitiatePayment(BookingInitiatePaymentEvent event, Emitter<BookingState> emit) async {
     emit(BookingLoading());
     final result = await bookingRepository.initiatePayment(event.bookingId, event.amount, event.method);
     result.fold(
       (failure) => emit(BookingError(message: failure.message)),
       (paymentData) {
-        emit(PaymentInitiated(paymentData: paymentData));
+        emit(BookingPaymentInitiated(paymentData: paymentData));
         // Note: The UI should listener for this state and open the payment URL or handle data
         // After that, we might want to reload bookings if payment affects it immediately (it won't until callback)
       }
