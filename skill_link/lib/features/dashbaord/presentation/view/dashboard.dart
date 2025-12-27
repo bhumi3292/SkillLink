@@ -2,13 +2,14 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:skill_link/features/favourite/presentation/bloc/cart_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get/get.dart';
 import 'package:skill_link/features/profile/presentation/view_model/profile_view_model.dart';
 import 'package:skill_link/features/auth/domain/entity/user_entity.dart';
 import 'package:skill_link/app/service_locator/service_locator.dart';
 import 'package:skill_link/features/dashbaord/presentation/view_model/dashboard_view_model.dart';
 import 'package:skill_link/features/add_worker/data/model/worker_model/worker_api_model.dart';
-import 'package:skill_link/features/dashbaord/presentation/widgets/property_card_widget.dart';
-import 'package:skill_link/features/dashbaord/presentation/widgets/horizontal_property_card.dart';
+import 'package:skill_link/features/dashbaord/presentation/widgets/worker_card_widget.dart';
+import 'package:skill_link/features/dashbaord/presentation/widgets/horizontal_worker_card.dart';
 import 'package:skill_link/features/explore/presentation/view/worker_detail_page.dart';
 import 'package:skill_link/features/explore/presentation/utils/worker_converter.dart';
 import 'package:skill_link/cores/utils/image_url_helper.dart'; // Import ImageUrlHelper here
@@ -86,7 +87,7 @@ class _DashboardViewState extends State<DashboardView> {
                         onPressed: () {
                           context.read<DashboardViewModel>().loadProperties();
                         },
-                        child: const Text('Retry'),
+                        child: Text('retry'.tr),
                       ),
                     ],
                   ),
@@ -156,12 +157,12 @@ class _DashboardViewState extends State<DashboardView> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Welcome,',
+                            'welcome'.tr,
                             style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(color: Colors.white70),
                           ),
                           Text(
-                            user?.fullName ?? 'Guest',
+                            user?.fullName ?? 'guest'.tr,
                             style: Theme.of(
                               context,
                             ).textTheme.titleLarge?.copyWith(
@@ -174,15 +175,8 @@ class _DashboardViewState extends State<DashboardView> {
                         ],
                       ),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.notifications_outlined, color: Colors.white, size: 28),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const NotificationPage()),
-                        );
-                      },
-                    ),
+                    // Notification button removed as per user request
+
                   ],
                 ),
                 const SizedBox(height: 24),
@@ -202,9 +196,9 @@ class _DashboardViewState extends State<DashboardView> {
                       children: [
                         const Icon(Icons.search, color: Colors.grey),
                         const SizedBox(width: 12),
-                        const Text(
-                          'Find Electrician, Plumber...',
-                          style: TextStyle(color: Colors.grey),
+                        Text(
+                          'find_worker'.tr,
+                          style: const TextStyle(color: Colors.grey),
                         ),
                       ],
                     ),
@@ -221,9 +215,9 @@ class _DashboardViewState extends State<DashboardView> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  "Recommended Workers",
-                  style: TextStyle(
+                Text(
+                  "recommended_workers".tr,
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF003366),
@@ -232,7 +226,7 @@ class _DashboardViewState extends State<DashboardView> {
                 TextButton(
                   onPressed: widget.onSeeAllTap,
                   child: Text(
-                    "See All",
+                    "see_all".tr,
                     style: TextStyle(
                       color: Theme.of(context).primaryColor,
                       fontWeight: FontWeight.w600,
@@ -250,19 +244,19 @@ class _DashboardViewState extends State<DashboardView> {
                 itemCount: properties.length > 5 ? 5 : properties.length,
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 itemBuilder: (context, index) {
-                  final property = properties[index];
+                  final worker = properties[index];
                   return Padding(
                     padding: const EdgeInsets.only(right: 12),
-                    child: HorizontalPropertyCard(
-                      property: property,
+                    child: HorizontalWorkerCard(
+                      worker: worker,
                       onTap: () {
                         // If you have a corresponding ExploreWorkerEntity available,
                         // prefer passing that. Otherwise fallback to converting.
                         final exploreWorker =
-                        // property may be a WorkerApiModel; try to avoid losing
+                        // worker may be a WorkerApiModel; try to avoid losing
                         // phone by checking for an existing ExploreWorkerEntity
                         // in scope — fallback to conversion.
-                        WorkerConverter.fromApiModel(property);
+                        WorkerConverter.fromApiModel(worker);
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -272,7 +266,7 @@ class _DashboardViewState extends State<DashboardView> {
                         );
                       },
                       // REMOVED baseUrl: ApiEndpoints.imageUrl
-                      // HorizontalPropertyCard no longer needs baseUrl in its constructor
+                      // HorizontalWorkerCard no longer needs baseUrl in its constructor
                       // and ImageUrlHelper already uses ApiEndpoints internally.
                     ),
                   );
@@ -308,9 +302,9 @@ class _DashboardViewState extends State<DashboardView> {
           // --- Vertical List: All Properties ---
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: const Text(
-              "All Workers",
-              style: TextStyle(
+            child: Text(
+              "all_workers".tr,
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF003366),
@@ -321,16 +315,16 @@ class _DashboardViewState extends State<DashboardView> {
             children:
                 properties
                     .map(
-                      (property) => Padding(
+                      (worker) => Padding(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 16.0,
                           vertical: 8.0,
                         ),
-                        child: PropertyCardWidget(
-                          property: property,
+                        child: WorkerCardWidget(
+                          worker: worker,
                           onTap: () {
                             final exploreWorker = WorkerConverter.fromApiModel(
-                              property,
+                              worker,
                             );
                             Navigator.push(
                               context,
@@ -343,7 +337,7 @@ class _DashboardViewState extends State<DashboardView> {
                           },
                           showFavoriteButton: true,
                           // REMOVED baseUrl: ApiEndpoints.imageUrl
-                          // PropertyCardWidget no longer needs baseUrl in its constructor
+                          // WorkerCardWidget no longer needs baseUrl in its constructor
                           // and ImageUrlHelper already uses ApiEndpoints internally.
                         ),
                       ),

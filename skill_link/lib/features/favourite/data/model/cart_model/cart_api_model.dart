@@ -62,27 +62,27 @@ class CartApiModel extends Equatable {
 class CartItemApiModel extends Equatable {
   @JsonKey(name: '_id')
   final String? id;
-  final WorkerApiModel property;
+  final WorkerApiModel worker;
 
-  const CartItemApiModel({this.id, required this.property});
+  const CartItemApiModel({this.id, required this.worker});
 
   factory CartItemApiModel.fromJson(Map<String, dynamic> json) =>
       _$CartItemApiModelFromJson(json);
   Map<String, dynamic> toJson() => _$CartItemApiModelToJson(this);
 
   CartItemEntity toEntity() {
-    return CartItemEntity(id: id, property: property.toEntity());
+    return CartItemEntity(id: id, worker: worker.toEntity());
   }
 
   factory CartItemApiModel.fromEntity(CartItemEntity entity) {
     return CartItemApiModel(
       id: entity.id,
-      property: WorkerApiModel.fromEntity(entity.property),
+      worker: WorkerApiModel.fromEntity(entity.worker),
     );
   }
 
   @override
-  List<Object?> get props => [id, property];
+  List<Object?> get props => [id, worker];
 
   @override
   bool get stringify => true;

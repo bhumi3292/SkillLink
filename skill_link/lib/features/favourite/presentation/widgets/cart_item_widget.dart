@@ -16,7 +16,7 @@ class CartItemWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final property = cartItem.property;
+    final worker = cartItem.worker;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -25,7 +25,7 @@ class CartItemWidget extends StatelessWidget {
       child: InkWell(
         onTap: () {
           final exploreWorker = WorkerConverter.fromWorkerEntity(
-            property,
+            worker,
           );
           Navigator.push(
             context,
@@ -46,10 +46,10 @@ class CartItemWidget extends StatelessWidget {
                   width: 80,
                   height: 80,
                   child:
-                      property.images?.isNotEmpty == true
+                      worker.images?.isNotEmpty == true
                           ? Image.network(
                             ImageUrlHelper.constructImageUrl(
-                              property.images!.first,
+                              worker.images!.first,
                             ),
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
@@ -81,7 +81,7 @@ class CartItemWidget extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      property.title ?? 'No Title',
+                      worker.title ?? 'No Title',
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -101,7 +101,7 @@ class CartItemWidget extends StatelessWidget {
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
-                            property.location ?? 'No Location',
+                            worker.location ?? 'No Location',
                             style: const TextStyle(
                               fontSize: 14,
                               color: Colors.grey,
@@ -115,7 +115,7 @@ class CartItemWidget extends StatelessWidget {
                     const SizedBox(height: 4),
                     const SizedBox(height: 4),
                     Text(
-                      'Rs. ${property.price?.toStringAsFixed(0) ?? '0'} / month',
+                      'Rs. ${worker.price?.toStringAsFixed(0) ?? '0'} / month',
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,

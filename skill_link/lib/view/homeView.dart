@@ -1,6 +1,7 @@
-import 'package:skill_link/features/chat/presentation/page/chat_page.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart'; // Import flutter_bloc
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get/get.dart';
+import 'package:skill_link/features/chat/presentation/page/chat_page.dart'; // Import flutter_bloc
 
 // Import your HeaderNav widget
 import 'package:skill_link/features/home/header_nav.dart'; // Ensure this path is correct
@@ -94,24 +95,27 @@ class _HomeViewState extends State<HomeView> {
           backgroundColor: Colors.white,
           onTap: _onItemTapped,
           type: BottomNavigationBarType.fixed,
-          items: const [
+          items: [
             BottomNavigationBarItem(
-              icon: Icon(Icons.home_filled),
-              label: 'Home',
+              icon: const Icon(Icons.home_filled),
+              label: 'home'.tr,
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.explore),
-              label: 'Explore',
+              icon: const Icon(Icons.explore),
+              label: 'explore'.tr,
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.message_outlined),
-              label: 'Message',
+              icon: const Icon(Icons.message_outlined),
+              label: 'chat'.tr,
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.book_online),
-              label: 'Booking',
+              icon: const Icon(Icons.book_online),
+              label: 'booking'.tr,
             ),
-            BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+            BottomNavigationBarItem(
+              icon: const Icon(Icons.person),
+              label: 'profile'.tr,
+            ),
           ],
         ),
       ),

@@ -13,16 +13,16 @@ import 'package:skill_link/core/services/location_service.dart';
 import '../../../../app/constant/api_endpoints.dart';
 
 class BookingModal extends StatefulWidget {
-  final String propertyId;
-  final String propertyTitle;
-  final String workerId; // NEW
+  final String workerListingId;
+  final String workerTitle;
+  final String workerId; // The worker's user ID
   final VoidCallback? onBookingSuccess;
 
   const BookingModal({
     super.key,
-    required this.propertyId,
-    required this.propertyTitle,
-    required this.workerId, // NEW
+    required this.workerListingId,
+    required this.workerTitle,
+    required this.workerId,
     this.onBookingSuccess,
   });
 
@@ -71,7 +71,7 @@ class _BookingModalState extends State<BookingModal> {
 
       // Using ApiEndpoints.baseUrl here
       final response = await Dio().get(
-        ApiEndpoints.getAvailableSlots(widget.propertyId),
+        ApiEndpoints.getAvailableSlots(widget.workerListingId),
         queryParameters: {'date': formattedDate},
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
@@ -185,7 +185,7 @@ class _BookingModalState extends State<BookingModal> {
       await Dio().post(
         ApiEndpoints.bookVisit,
         data: {
-          'workerListingId': widget.propertyId,
+          'workerListingId': widget.workerListingId,
           'workerId': widget.workerId,
           'hirerId': hirerId,
           'date': formattedDate,
@@ -255,7 +255,7 @@ class _BookingModalState extends State<BookingModal> {
                 ),
               ),
               Text(
-                widget.propertyTitle,
+                widget.workerTitle,
                 style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                 textAlign: TextAlign.center,
               ),

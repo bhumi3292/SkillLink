@@ -2,6 +2,8 @@ import 'package:skill_link/features/profile/presentation/view/profile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get/get.dart';
+import 'package:skill_link/cores/localization/app_translations.dart';
+import 'package:skill_link/cores/localization/localization_service.dart';
 import 'dart:async';
 
 import 'package:skill_link/app/service_locator/service_locator.dart';
@@ -62,6 +64,9 @@ class _MyAppState extends State<MyApp> {
           BlocProvider(create: (_) => serviceLocator<ProfileViewModel>()),
         ],
         child: GetMaterialApp(
+          translations: AppTranslations(),
+          locale: LocalizationService.to.currentLocale,
+          fallbackLocale: LocalizationService.defaultLocale,
           navigatorKey: NotificationHandler.navigatorKey,
           title: 'SkillLink',
           debugShowCheckedModeBanner: false,

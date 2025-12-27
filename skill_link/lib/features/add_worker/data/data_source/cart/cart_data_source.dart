@@ -2,7 +2,7 @@ import 'package:skill_link/features/add_worker/domain/entity/cart/cart_entity.da
 
 abstract class ICartDataSource {
   Future<CartEntity> getCart();
-  Future<CartEntity> addToCart(String propertyId);
-  Future<CartEntity> removeFromCart(String propertyId);
+  Future<CartEntity> addToCart(String workerId);
+  Future<CartEntity> removeFromCart(String workerId);
   Future<void> clearCart();
 }

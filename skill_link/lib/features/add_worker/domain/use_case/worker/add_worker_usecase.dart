@@ -3,7 +3,7 @@ import 'package:equatable/equatable.dart';
 import 'package:skill_link/app/use_case/usecase.dart';
 import 'package:skill_link/cores/error/failure.dart';
 import 'package:skill_link/features/add_worker/domain/entity/worker/worker_entity.dart';
-import 'package:skill_link/features/add_worker/domain/repository/property_repository.dart';
+import 'package:skill_link/features/add_worker/domain/repository/worker_repository.dart';
 
 class AddWorkerParams extends Equatable {
   final WorkerEntity worker;

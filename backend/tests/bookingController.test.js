@@ -6,11 +6,11 @@ const request = require('supertest');
 const mongoose = require('mongoose');
 const app = require('../index');
 const User = require('../models/User');
-const Property = require('../models/Property');
+const Worker = require('../models/Worker');
 const Category = require('../models/Category');
 const Booking = require('../models/Booking');
 
-let HirerToken, workerToken, propertyId, categoryId;
+let HirerToken, workerToken, workerId, categoryId;
 
 describe('Booking API', () => {
   beforeAll(async () => {
@@ -21,9 +21,9 @@ describe('Booking API', () => {
       });
     }
     await User.deleteMany({ email: { $in: ['Hirer@booking.com', 'worker@booking.com'] } });
-    await Property.deleteMany({ title: 'Test Property for Booking' });
+    await Worker.deleteMany({ title: 'Test Worker for Booking' });
     await Category.deleteMany({ category_name: 'Test Category for Booking' });
-    await Booking.deleteMany({ propertyId: { $exists: true } });
+    await Booking.deleteMany({ workerId: { $exists: true } });
     const category = await Category.create({ category_name: 'Test Category for Booking' });
     categoryId = category._id;
     const worker = await User.create({
@@ -35,9 +35,9 @@ describe('Booking API', () => {
     });
     const jwt = require('jsonwebtoken');
     workerToken = jwt.sign({ _id: worker._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    const property = await Property.create({
-      title: 'Test Property for Booking',
-      description: 'A test property for booking testing',
+    const worker = await Worker.create({
+      title: 'Test Worker for Booking',
+      description: 'A test worker for booking testing',
       location: 'Test Location',
       price: 50000,
       bedrooms: 2,
@@ -46,7 +46,7 @@ describe('Booking API', () => {
       images: ['test-image.jpg'],
       worker: worker._id,
     });
-    propertyId = property._id;
+    workerId = worker._id;
     const Hirer = await User.create({
       fullName: 'Test Hirer',
       email: 'Hirer@booking.com',
@@ -59,9 +59,9 @@ describe('Booking API', () => {
 
   afterAll(async () => {
     await User.deleteMany({ email: { $in: ['Hirer@booking.com', 'worker@booking.com'] } });
-    await Property.deleteMany({ title: 'Test Property for Booking' });
+    await Worker.deleteMany({ title: 'Test Worker for Booking' });
     await Category.deleteMany({ category_name: 'Test Category for Booking' });
-    await Booking.deleteMany({ propertyId: { $exists: true } });
+    await Booking.deleteMany({ workerId: { $exists: true } });
     await mongoose.connection.close();
   });
 

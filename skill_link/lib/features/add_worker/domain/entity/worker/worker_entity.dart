@@ -19,6 +19,9 @@ class WorkerEntity extends Equatable {
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final String? coordinates;
+  final double? averageRating;
+  final int? numReviews;
+  final int? viewCount;
 
   const WorkerEntity({
     this.id,
@@ -36,6 +39,9 @@ class WorkerEntity extends Equatable {
     this.createdAt,
     this.updatedAt,
     this.coordinates,
+    this.averageRating,
+    this.numReviews,
+    this.viewCount,
   });
 
   factory WorkerEntity.fromJson(Map<String, dynamic> json) {
@@ -77,6 +83,9 @@ class WorkerEntity extends Equatable {
       updatedAt:
           json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
       coordinates: json['coordinates'] as String?,
+      averageRating: (json['averageRating'] as num?)?.toDouble(),
+      numReviews: json['numReviews'] as int?,
+      viewCount: json['viewCount'] as int?,
     );
   }
 
@@ -96,6 +105,9 @@ class WorkerEntity extends Equatable {
       'createdAt': createdAt?.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
       'coordinates': coordinates,
+      'averageRating': averageRating,
+      'numReviews': numReviews,
+      'viewCount': viewCount,
     };
 
     if (addedByAdminId != null) {
@@ -138,6 +150,9 @@ class WorkerEntity extends Equatable {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       coordinates: coordinates ?? this.coordinates,
+      averageRating: averageRating ?? this.averageRating,
+      numReviews: numReviews ?? this.numReviews,
+      viewCount: viewCount ?? this.viewCount,
     );
   }
 
@@ -158,5 +173,8 @@ class WorkerEntity extends Equatable {
         createdAt,
         updatedAt,
         coordinates,
+        averageRating,
+        numReviews,
+        viewCount,
       ];
 }

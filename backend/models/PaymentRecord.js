@@ -45,11 +45,11 @@
 //             type: Date,
 //             required: false,
 //         },
-//         referenceId: { // To link payment to a specific entity like a property, ad, etc.
+//         referenceId: { // To link payment to a specific entity like a worker, ad, etc.
 //             type: mongoose.Schema.Types.ObjectId,
 //             required: false,
 //             // You might want to add `ref` here depending on what `referenceId` refers to
-//             // e.g., ref: 'Property' if it's for property listings
+//             // e.g., ref: 'Worker' if it's for worker listings
 //         },
 //         context: { // To categorize the payment type (e.g., 'listing_fee', 'premium_ad', 'utility_bill')
 //             type: String,

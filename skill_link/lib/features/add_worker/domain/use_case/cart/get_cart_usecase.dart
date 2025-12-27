@@ -16,7 +16,7 @@ class GetCartUsecase implements UsecaseWithoutParams<CartEntity> {
       final result = await _cartRepository.getCart();
       return result.fold(
         (failure) => Left(failure),
-        (propertyIds) =>
+        (workerIds) =>
             Right(CartEntity(items: [])), // Return empty cart for now
       );
     } catch (e) {

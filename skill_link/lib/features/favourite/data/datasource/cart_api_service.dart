@@ -4,8 +4,8 @@ import 'package:skill_link/features/favourite/data/model/cart_model/cart_api_mod
 
 abstract class CartApiService {
   Future<CartApiModel> getCart();
-  Future<CartApiModel> addToCart(String propertyId);
-  Future<CartApiModel> removeFromCart(String propertyId);
+  Future<CartApiModel> addToCart(String workerId);
+  Future<CartApiModel> removeFromCart(String workerId);
   Future<void> clearCart();
 }
 
@@ -34,11 +34,11 @@ class CartApiServiceImpl implements CartApiService {
   }
 
   @override
-  Future<CartApiModel> addToCart(String propertyId) async {
+  Future<CartApiModel> addToCart(String workerId) async {
     try {
       final response = await _apiService.dio.post(
         '/cart/add',
-        data: {'propertyId': propertyId},
+        data: {'workerId': workerId},
       );
 
       return CartApiModel.fromJson(response.data['data']);
@@ -48,9 +48,9 @@ class CartApiServiceImpl implements CartApiService {
   }
 
   @override
-  Future<CartApiModel> removeFromCart(String propertyId) async {
+  Future<CartApiModel> removeFromCart(String workerId) async {
     try {
-      final response = await _apiService.dio.delete('/cart/remove/$propertyId');
+      final response = await _apiService.dio.delete('/cart/remove/$workerId');
       // If backend returns a string (e.g. 'Removed successfully'), re-fetch the cart
       if (response.data is String || response.data == null) {
         return await getCart();

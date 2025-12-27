@@ -26,7 +26,7 @@ const isOwnerOrRelatedResource = (Model, resourceIdParam) => async (req, res, ne
         }
 
         // 2. Indirect ownership via Worker Listing (e.g. Availability.workerListing -> Worker.worker)
-        // Check if resource has 'workerListing' field (renamed from property)
+        // Check if resource has 'workerListing' field (renamed from worker)
         if (resource.workerListing) {
             const listing = await Worker.findById(resource.workerListing);
             if (listing && listing.worker.toString() === userId.toString()) {
@@ -35,8 +35,8 @@ const isOwnerOrRelatedResource = (Model, resourceIdParam) => async (req, res, ne
         }
 
         // 3. Fallback for potential legacy field name if not migrated everywhere yet, or if I missed one
-        if (resource.property) {
-            const listing = await Worker.findById(resource.property);
+        if (resource.worker) {
+            const listing = await Worker.findById(resource.worker);
             if (listing && listing.worker.toString() === userId.toString()) {
                 return next();
             }

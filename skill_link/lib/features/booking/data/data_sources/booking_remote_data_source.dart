@@ -1,3 +1,4 @@
+import 'package:skill_link/app/constant/api_endpoints.dart';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../cores/error/failure.dart';
@@ -8,6 +9,7 @@ abstract class BookingRemoteDataSource {
   Future<List<BookingModel>> getUserBookings();
   Future<BookingModel> updateBookingStatus(String bookingId, String status);
   Future<dynamic> initiatePayment(String bookingId, double amount, String method);
+  Future<BookingModel> getBookingById(String bookingId);
 }
 
 class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
@@ -15,7 +17,7 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
 
   BookingRemoteDataSourceImpl({required this.dio});
 
-  String get baseUrl => "http://192.168.1.6:3001/api/bookings"; 
+  String get baseUrl => "${ApiEndpoints.baseUrl}bookings"; 
 
   // Helper to get token (if Dio interceptor isn't already handling it)
   Future<String?> _getToken() async {
@@ -129,6 +131,29 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
       }
     } on DioException catch (e) {
       throw ServerFailure(message: e.response?.data['message'] ?? 'Payment Initiation Failed');
+    }
+  }
+
+  @override
+  Future<BookingModel> getBookingById(String bookingId) async {
+    try {
+      final token = await _getToken();
+      final response = await dio.get(
+        '$baseUrl/$bookingId',
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+          },
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        return BookingModel.fromJson(response.data['data']);
+      } else {
+        throw ServerFailure(message: response.data['message']);
+      }
+    } on DioException catch (e) {
+      throw ServerFailure(message: e.response?.data['message'] ?? 'API Error');
     }
   }
 }

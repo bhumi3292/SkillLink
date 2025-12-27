@@ -36,11 +36,11 @@ class CartRemoteDatasource implements ICartDataSource {
   }
 
   @override
-  Future<CartEntity> addToCart(String propertyId) async {
+  Future<CartEntity> addToCart(String workerId) async {
     try {
       final response = await _dio.post(
         '/cart/add',
-        data: {'propertyId': propertyId},
+        data: {'workerId': workerId},
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -67,9 +67,9 @@ class CartRemoteDatasource implements ICartDataSource {
   }
 
   @override
-  Future<CartEntity> removeFromCart(String propertyId) async {
+  Future<CartEntity> removeFromCart(String workerId) async {
     try {
-      final response = await _dio.delete('/cart/remove/$propertyId');
+      final response = await _dio.delete('/cart/remove/$workerId');
 
       if (response.statusCode == 200) {
         final responseData = response.data;

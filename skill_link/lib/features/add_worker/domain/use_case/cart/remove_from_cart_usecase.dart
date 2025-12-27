@@ -6,12 +6,12 @@ import 'package:skill_link/features/add_worker/domain/entity/cart/cart_entity.da
 import 'package:skill_link/features/add_worker/domain/repository/cart/cart_repository.dart';
 
 class RemoveFromCartParams extends Equatable {
-  final String propertyId;
+  final String workerId;
 
-  const RemoveFromCartParams({required this.propertyId});
+  const RemoveFromCartParams({required this.workerId});
 
   @override
-  List<Object?> get props => [propertyId];
+  List<Object?> get props => [workerId];
 }
 
 class RemoveFromCartUsecase
@@ -24,7 +24,7 @@ class RemoveFromCartUsecase
   @override
   Future<Either<Failure, CartEntity>> call(RemoveFromCartParams params) async {
     try {
-      final result = await _cartRepository.removeFromCart(params.propertyId);
+      final result = await _cartRepository.removeFromCart(params.workerId);
       return result;
     } catch (e) {
       return Left(UnknownFailure(message: e.toString()));

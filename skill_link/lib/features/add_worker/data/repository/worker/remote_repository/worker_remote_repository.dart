@@ -5,7 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:skill_link/cores/error/failure.dart';
 import 'package:skill_link/features/add_worker/data/data_source/worker/remote_datasource/worker_remote_datasource.dart';
 import 'package:skill_link/features/add_worker/domain/entity/worker/worker_entity.dart';
-import 'package:skill_link/features/add_worker/domain/repository/property_repository.dart';
+import 'package:skill_link/features/add_worker/domain/repository/worker_repository.dart';
 
 class WorkerRemoteRepository implements IWorkerRepository {
   final WorkerRemoteDatasource _remoteDataSource;

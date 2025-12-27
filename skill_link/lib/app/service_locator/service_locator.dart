@@ -29,10 +29,10 @@ import 'package:skill_link/features/profile/domain/use_case/update_profile_useca
 import 'package:skill_link/features/profile/presentation/view_model/profile_view_model.dart';
 import 'package:skill_link/features/profile/domain/use_case/upload_profile_picture_usecase.dart';
 
-// Add Worker (Property)
+// Add Worker (Worker)
 import 'package:skill_link/features/add_worker/data/data_source/worker/remote_datasource/worker_remote_datasource.dart';
 import 'package:skill_link/features/add_worker/data/repository/worker/remote_repository/worker_remote_repository.dart';
-import 'package:skill_link/features/add_worker/domain/repository/property_repository.dart';
+import 'package:skill_link/features/add_worker/domain/repository/worker_repository.dart';
 import 'package:skill_link/features/add_worker/domain/use_case/worker/add_worker_usecase.dart';
 import 'package:skill_link/features/add_worker/domain/use_case/category/get_all_categories_usecase.dart';
 import 'package:skill_link/features/add_worker/domain/use_case/category/add_category_usecase.dart';

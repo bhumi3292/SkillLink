@@ -91,7 +91,7 @@ class _FavouritePageState extends State<FavouritePage> {
             if (state is CartLoaded) {
               final items =
                   (state.cart.items ?? [])
-                      .where((item) => item.property != null)
+                      .where((item) => item.worker != null)
                       .toList();
 
               if (items.isEmpty) {
@@ -136,7 +136,7 @@ class _FavouritePageState extends State<FavouritePage> {
                     return CartItemWidget(
                       cartItem: item,
                       onRemove: () {
-                        _cartBloc.add(RemoveFromCartEvent(item.property.id!));
+                        _cartBloc.add(RemoveFromCartEvent(item.worker.id!));
                       },
                     );
                   },

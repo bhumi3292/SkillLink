@@ -7,6 +7,12 @@ import 'package:skill_link/app/constant/api_endpoints.dart';
 
 abstract class ExploreRemoteDataSource {
   Future<Either<Failure, List<ExploreWorkerModel>>> getAllWorkers();
+  Future<Either<Failure, List<dynamic>>> getWorkerReviews(String workerListingId);
+  Future<Either<Failure, bool>> submitReview({
+    required String bookingId,
+    required double rating,
+    String? comment,
+  });
 }
 
 class ExploreRemoteDataSourceImpl implements ExploreRemoteDataSource {
@@ -17,101 +23,70 @@ class ExploreRemoteDataSourceImpl implements ExploreRemoteDataSource {
   @override
   Future<Either<Failure, List<ExploreWorkerModel>>> getAllWorkers() async {
     try {
-      // Fetch workers (previously properties). Backend exposes worker routes
-      // at /api/properties (aliased to workers in frontend constants).
       final response = await apiService.dio.get(ApiEndpoints.getAllWorkers.replaceFirst(ApiEndpoints.baseUrl, ''));
 
       if (response.statusCode == 200) {
         final responseData = response.data;
-        print(
-          'ExploreRemoteDataSource - Response data type: ${responseData.runtimeType}',
-        );
-        print('ExploreRemoteDataSource - Response data: $responseData');
-
-        // Normalize the response to extract a List<dynamic> of workers
         List<dynamic> workerData = [];
 
-        try {
-          if (responseData is Map<String, dynamic>) {
-            dynamic maybe = responseData;
-            if (responseData.containsKey('data')) {
-              maybe = responseData['data'];
-            } else if (responseData.containsKey('properties'))
-              maybe = responseData['properties'];
-            else if (responseData.containsKey('results'))
-              maybe = responseData['results'];
-
-            if (maybe is List) {
-              workerData = maybe;
-            } else if (maybe is Map<String, dynamic>) {
-              // Look for common container keys
-              if (maybe.containsKey('workers') && maybe['workers'] is List) {
-                workerData = maybe['workers'];
-              } else if (maybe.containsKey('items') && maybe['items'] is List) {
-                workerData = maybe['items'];
-              } else if (maybe.containsKey('docs') && maybe['docs'] is List) {
-                workerData = maybe['docs'];
-              } else {
-                // Not a list container — try treating the map itself as a single item
-                workerData = [maybe];
-              }
-            } else {
-              // unexpected shape, leave workerData empty
-              workerData = [];
-            }
-          } else if (responseData is List) {
-            workerData = responseData;
-          }
-        } catch (e) {
-          print('ExploreRemoteDataSource - normalization error: $e');
-          workerData = [];
+        if (responseData is Map<String, dynamic>) {
+          dynamic maybe = responseData.containsKey('data') ? responseData['data'] : responseData;
+          if (maybe is List) workerData = maybe;
+          else if (maybe is Map && maybe.containsKey('workers')) workerData = maybe['workers'];
+        } else if (responseData is List) {
+          workerData = responseData;
         }
 
         final properties = <ExploreWorkerModel>[];
         for (var item in workerData) {
-          try {
-            if (item is Map<String, dynamic>) {
-              properties.add(ExploreWorkerModel.fromJson(item));
-            } else if (item is String) {
-              // If the backend returns a JSON string, try to parse it defensively
-              print(
-                'ExploreRemoteDataSource - unexpected string item, skipping: $item',
-              );
-            } else {
-              print(
-                'ExploreRemoteDataSource - skipped unsupported item type: ${item.runtimeType}',
-              );
-            }
-          } catch (e) {
-            print('ExploreRemoteDataSource - failed to parse worker item: $e');
+          if (item is Map<String, dynamic>) {
+            properties.add(ExploreWorkerModel.fromJson(item));
           }
         }
-
         return Right(properties);
       } else {
-        return Left(
-          ServerFailure(
-            message: 'Failed to fetch properties: ${response.statusCode}',
-          ),
-        );
+        return Left(ServerFailure(message: 'Failed to fetch workers'));
       }
     } catch (e) {
-      print('ExploreRemoteDataSource Error: $e');
-      // Provide more details for Dio errors
-      try {
-        if (e is DioException) {
-          print('DioException type: ${e.type}');
-          print(
-            'Request Options: ${e.requestOptions.method} ${e.requestOptions.path}',
-          );
-          print('DioException message: ${e.message}');
-          print(
-            'DioException response: ${e.response?.statusCode} ${e.response?.data}',
-          );
-        }
-      } catch (logErr) {
-        print('Error logging DioException details: $logErr');
+      return Left(NetworkFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<dynamic>>> getWorkerReviews(String workerListingId) async {
+    try {
+      final response = await apiService.dio.get(
+        ApiEndpoints.getWorkerReviews(workerListingId).replaceFirst(ApiEndpoints.baseUrl, ''),
+      );
+      if (response.statusCode == 200) {
+        return Right(response.data['data'] as List<dynamic>);
       }
+      return Left(ServerFailure(message: 'Failed to fetch reviews'));
+    } catch (e) {
+      return Left(NetworkFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> submitReview({
+    required String bookingId,
+    required double rating,
+    String? comment,
+  }) async {
+    try {
+      final response = await apiService.dio.post(
+        ApiEndpoints.submitReview.replaceFirst(ApiEndpoints.baseUrl, ''),
+        data: {
+          'bookingId': bookingId,
+          'rating': rating,
+          'comment': comment,
+        },
+      );
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return const Right(true);
+      }
+      return Left(ServerFailure(message: response.data['message'] ?? 'Failed to submit review'));
+    } catch (e) {
       return Left(NetworkFailure(message: e.toString()));
     }
   }

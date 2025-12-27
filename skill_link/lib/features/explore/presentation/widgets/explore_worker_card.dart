@@ -314,7 +314,7 @@ class _ExploreWorkerCardState extends State<ExploreWorkerCard> {
                                 isFavorite =
                                     cartState.cart.items?.any(
                                       (item) =>
-                                          item.property.id ==
+                                          item.worker.id ==
                                           widget.worker.id,
                                     ) ??
                                     false;

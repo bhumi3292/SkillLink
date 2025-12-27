@@ -6,11 +6,11 @@ const request = require('supertest');
 const mongoose = require('mongoose');
 const app = require('../index');
 const User = require('../models/User');
-const Property = require('../models/Property');
+const Worker = require('../models/Worker');
 const Category = require('../models/Category');
 const Cart = require('../models/cart');
 
-let userToken, propertyId, categoryId;
+let userToken, workerId, categoryId;
 
 describe('Cart API', () => {
   beforeAll(async () => {
@@ -21,7 +21,7 @@ describe('Cart API', () => {
       });
     }
     await User.deleteMany({ email: 'user@cart.com' });
-    await Property.deleteMany({ title: 'Test Property for Cart' });
+    await Worker.deleteMany({ title: 'Test Worker for Cart' });
     await Category.deleteMany({ category_name: 'Test Category for Cart' });
     await Cart.deleteMany({ userId: { $exists: true } });
     const category = await Category.create({ category_name: 'Test Category for Cart' });
@@ -35,9 +35,9 @@ describe('Cart API', () => {
     });
     const jwt = require('jsonwebtoken');
     userToken = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    const property = await Property.create({
-      title: 'Test Property for Cart',
-      description: 'A test property for cart testing',
+    const worker = await Worker.create({
+      title: 'Test Worker for Cart',
+      description: 'A test worker for cart testing',
       location: 'Test Location',
       price: 50000,
       bedrooms: 2,
@@ -46,12 +46,12 @@ describe('Cart API', () => {
       images: ['test-image.jpg'],
       worker: user._id,
     });
-    propertyId = property._id;
+    workerId = worker._id;
   });
 
   afterAll(async () => {
     await User.deleteMany({ email: 'user@cart.com' });
-    await Property.deleteMany({ title: 'Test Property for Cart' });
+    await Worker.deleteMany({ title: 'Test Worker for Cart' });
     await Category.deleteMany({ category_name: 'Test Category for Cart' });
     await Cart.deleteMany({ userId: { $exists: true } });
     await mongoose.connection.close();

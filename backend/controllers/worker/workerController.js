@@ -81,13 +81,23 @@ exports.getAllWorkers = async (req, res) => {
 // --- GET SINGLE WORKER ---
 exports.getOneWorker = async (req, res) => {
     try {
-        const worker = await workerService.getWorkerById(req.params.id);
+        const workerId = req.params.id;
+
+        // Find worker and increment view count
+        const worker = await Worker.findByIdAndUpdate(
+            workerId,
+            { $inc: { viewCount: 1 } },
+            { new: true }
+        ).populate('worker', 'fullName profilePicture phoneNumber')
+            .populate('categoryId', 'categoryName');
+
+        if (!worker) {
+            return res.status(404).json({ success: false, message: "Worker not found" });
+        }
+
         res.status(200).json({ success: true, data: worker });
     } catch (err) {
         console.error("Get worker error:", err.message);
-        if (err.message === "Worker not found") {
-            return res.status(404).json({ success: false, message: "Worker not found" });
-        }
         res.status(500).json({ success: false, message: err.message || "Server error" });
     }
 };

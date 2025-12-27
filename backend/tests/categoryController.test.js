@@ -44,7 +44,7 @@ describe('Category API', () => {
       .send({ name: 'Test Category' });
     expect(res.statusCode).toBe(201);
     expect(res.body.success).toBe(true);
-    expect(res.body.data).toHaveProperty('_id');
+    expect(res.body.data).toHaveWorker('_id');
     expect(res.body.data.category_name).toBe('Test Category');
     categoryId = res.body.data._id;
   });
@@ -70,7 +70,7 @@ describe('Category API', () => {
     const res = await request(app).get(`/api/category/${categoryId}`);
     expect(res.statusCode).toBe(200);
     expect(res.body.success).toBe(true);
-    expect(res.body.data).toHaveProperty('_id', categoryId);
+    expect(res.body.data).toHaveWorker('_id', categoryId);
     expect(res.body.data.category_name).toBe('Test Category');
   });
 

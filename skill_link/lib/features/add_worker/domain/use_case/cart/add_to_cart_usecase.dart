@@ -6,12 +6,12 @@ import 'package:skill_link/features/add_worker/domain/entity/cart/cart_entity.da
 import 'package:skill_link/features/add_worker/domain/repository/cart/cart_repository.dart';
 
 class AddToCartParams extends Equatable {
-  final String propertyId;
+  final String workerId;
 
-  const AddToCartParams({required this.propertyId});
+  const AddToCartParams({required this.workerId});
 
   @override
-  List<Object?> get props => [propertyId];
+  List<Object?> get props => [workerId];
 }
 
 class AddToCartUsecase
@@ -24,7 +24,7 @@ class AddToCartUsecase
   @override
   Future<Either<Failure, CartEntity>> call(AddToCartParams params) async {
     try {
-      final result = await _cartRepository.addToCart(params.propertyId);
+      final result = await _cartRepository.addToCart(params.workerId);
       return result;
     } catch (e) {
       return Left(UnknownFailure(message: e.toString()));

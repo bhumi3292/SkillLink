@@ -7,5 +7,6 @@ abstract class IBookingRepository {
   Future<Either<Failure, List<BookingEntity>>> getUserBookings();
   Future<Either<Failure, BookingEntity>> updateBookingStatus(String bookingId, String status);
   Future<Either<Failure, dynamic>> initiatePayment(String bookingId, double amount, String method);
+  Future<Either<Failure, BookingEntity>> getBookingById(String bookingId);
 }
 

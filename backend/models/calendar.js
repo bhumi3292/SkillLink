@@ -32,7 +32,7 @@ const AvailabilitySchema = new mongoose.Schema({ // <-- First argument: Schema f
     timestamps: true,
 });
 
-// Add a compound unique index to ensure only one availability entry per property per date
+// Add a compound unique index to ensure only one availability entry per worker per date
 AvailabilitySchema.index({ worker: 1, workerListing: 1, date: 1 }, { unique: true });
 
 module.exports = mongoose.model('Availability', AvailabilitySchema);

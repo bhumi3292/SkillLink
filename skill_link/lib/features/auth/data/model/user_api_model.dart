@@ -18,6 +18,9 @@ class UserApiModel extends Equatable {
   final String? confirmPassword;
   final String? profilePicture;
 
+  final double? averageRating;
+  final int? numReviews;
+
   const UserApiModel({
     this.userId,
     required this.fullName,
@@ -27,6 +30,8 @@ class UserApiModel extends Equatable {
     this.password,
     this.confirmPassword,
     this.profilePicture,
+    this.averageRating,
+    this.numReviews,
   });
 
   factory UserApiModel.fromJson(Map<String, dynamic> json) => UserApiModel(
@@ -38,6 +43,8 @@ class UserApiModel extends Equatable {
     password: json['password'] as String?,
     confirmPassword: json['confirmPassword'] as String?,
     profilePicture: json['profilePicture'] as String?,
+    averageRating: (json['averageRating'] as num?)?.toDouble(),
+    numReviews: json['numReviews'] as int?,
   );
 
   Map<String, dynamic> toJson() => _$UserApiModelToJson(this);
@@ -53,6 +60,8 @@ class UserApiModel extends Equatable {
       password: null,
       confirmPassword: null,
       profilePicture: profilePicture,
+      averageRating: averageRating,
+      numReviews: numReviews,
     );
   }
 
@@ -66,6 +75,8 @@ class UserApiModel extends Equatable {
       password: entity.password,
       confirmPassword: entity.confirmPassword,
       profilePicture: entity.profilePicture,
+      averageRating: entity.averageRating,
+      numReviews: entity.numReviews,
     );
   }
 
@@ -79,5 +90,7 @@ class UserApiModel extends Equatable {
     password,
     confirmPassword,
     profilePicture,
+    averageRating,
+    numReviews,
   ];
 }

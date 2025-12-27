@@ -3,6 +3,7 @@ import 'package:skill_link/features/auth/presentation/view_model/login_view_mode
 import 'package:skill_link/features/auth/presentation/view_model/login_view_model/login_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get/get.dart';
 import 'package:skill_link/view/homeView.dart';
 import 'package:skill_link/cores/common/snackbar/snackbar.dart';
 import 'package:skill_link/features/profile/presentation/view_model/profile_view_model.dart';
@@ -67,7 +68,7 @@ class _LoginState extends State<Login> {
       } else {
         showMySnackbar(
           context: context,
-          content: 'Please select a stakeholder',
+          content: 'select_stakeholder'.tr,
           isSuccess: false,
         );
       }
@@ -89,7 +90,7 @@ class _LoginState extends State<Login> {
           if (state.isSuccess) {
             showMySnackbar(
               context: context,
-              content: 'Login successful!',
+              content: 'login_success'.tr,
               isSuccess: true,
             );
             // fetch profile then navigate
@@ -135,9 +136,9 @@ class _LoginState extends State<Login> {
                       ),
                     ),
                     const SizedBox(height: 5),
-                    const Text(
-                      "Welcome back!",
-                      style: TextStyle(
+                    Text(
+                      "welcome_back".tr,
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
                       ),
@@ -148,11 +149,11 @@ class _LoginState extends State<Login> {
                     TextFormField(
                       controller: _emailController,
                       decoration: _inputDecoration(
-                        "E-mail",
+                        "email".tr,
                         Icons.email_outlined,
                       ),
                       validator:
-                          (value) => value!.isEmpty ? 'Enter your email' : null,
+                          (value) => value!.isEmpty ? 'email_error'.tr : null,
                     ),
                     const SizedBox(height: 15),
 
@@ -161,7 +162,7 @@ class _LoginState extends State<Login> {
                       controller: _passwordController,
                       obscureText: !_passwordVisible,
                       decoration: InputDecoration(
-                        labelText: "Password",
+                        labelText: "password".tr,
                         prefixIcon: const Icon(Icons.lock_outline),
                         filled: true,
                         fillColor: Colors.grey.shade100,
@@ -184,14 +185,14 @@ class _LoginState extends State<Login> {
                       ),
                       validator:
                           (value) =>
-                              value!.isEmpty ? 'Enter your password' : null,
+                              value!.isEmpty ? 'password_error'.tr : null,
                     ),
                     const SizedBox(height: 15),
 
                     // Stakeholder Dropdown
                     DropdownButtonFormField<String>(
                       decoration: _inputDecoration(
-                        "Stake Holder",
+                        "stakeholder".tr,
                         Icons.person_outline,
                       ),
                       initialValue: selectedStakeholder,
@@ -199,7 +200,7 @@ class _LoginState extends State<Login> {
                           stakeholders.map((stakeholder) {
                             return DropdownMenuItem(
                               value: stakeholder,
-                              child: Text(stakeholder),
+                              child: Text(stakeholder.tr),
                             );
                           }).toList(),
                       onChanged: (value) {
@@ -208,7 +209,7 @@ class _LoginState extends State<Login> {
                         });
                       },
                       validator:
-                          (value) => value == null ? 'Select a role' : null,
+                          (value) => value == null ? 'role_error'.tr : null,
                     ),
                     const SizedBox(height: 25),
 
@@ -223,9 +224,9 @@ class _LoginState extends State<Login> {
                                 ? const CircularProgressIndicator(
                                   color: Colors.white,
                                 )
-                                : const Text(
-                                  "Login",
-                                  style: TextStyle(
+                                : Text(
+                                  "login".tr,
+                                  style: const TextStyle(
                                     fontSize: 18,
                                     color: Colors.white,
                                   ),
@@ -242,7 +243,7 @@ class _LoginState extends State<Login> {
                           Navigator.pushNamed(context, '/forgot-password');
                         },
                         child: Text(
-                          "Forgot Password?",
+                          "forgot_password".tr,
                           style: TextStyle(
                             color: primaryColor,
                             fontWeight: FontWeight.w600,
@@ -256,13 +257,13 @@ class _LoginState extends State<Login> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text("Don't have an account?"),
+                        Text("no_account".tr),
                         TextButton(
                           onPressed: () {
                             Navigator.pushNamed(context, '/signup');
                           },
                           child: Text(
-                            "Signup",
+                            "signup".tr,
                             style: TextStyle(
                               color: primaryColor,
                               fontWeight: FontWeight.bold,
@@ -276,7 +277,7 @@ class _LoginState extends State<Login> {
                     Align(
                       alignment: Alignment.center,
                       child: Text(
-                        "Connect with us",
+                        "connect_with_us".tr,
                         style: TextStyle(
                           color: primaryColor,
                           fontWeight: FontWeight.w600,

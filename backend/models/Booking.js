@@ -45,6 +45,10 @@ const BookingSchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now
+    },
+    isRated: {
+        type: Boolean,
+        default: false
     }
 }, {
     toJSON: { virtuals: true },

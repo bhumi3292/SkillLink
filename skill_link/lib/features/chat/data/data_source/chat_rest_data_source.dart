@@ -24,7 +24,7 @@ class ChatRestDataSource {
       '${ApiEndpoints.baseUrl}chats/create-or-get',
       data: {
         'otherUserId': otherUserId,
-        if (workerId != null) 'propertyId': workerId,
+        if (workerId != null) 'workerId': workerId,
       },
       options: Options(headers: {'Authorization': 'Bearer $token'}),
     );

@@ -6,11 +6,11 @@ const request = require('supertest');
 const mongoose = require('mongoose');
 const app = require('../index');
 const User = require('../models/User');
-const Property = require('../models/Property');
+const Worker = require('../models/Worker');
 const Category = require('../models/Category');
 const Calendar = require('../models/calendar');
 
-let workerToken, propertyId, categoryId;
+let workerToken, workerId, categoryId;
 
 describe('Calendar API', () => {
   beforeAll(async () => {
@@ -21,9 +21,9 @@ describe('Calendar API', () => {
       });
     }
     await User.deleteMany({ email: 'worker@calendar.com' });
-    await Property.deleteMany({ title: 'Test Property for Calendar' });
+    await Worker.deleteMany({ title: 'Test Worker for Calendar' });
     await Category.deleteMany({ category_name: 'Test Category for Calendar' });
-    await Calendar.deleteMany({ propertyId: { $exists: true } });
+    await Calendar.deleteMany({ workerId: { $exists: true } });
     const category = await Category.create({ category_name: 'Test Category for Calendar' });
     categoryId = category._id;
     const worker = await User.create({
@@ -35,9 +35,9 @@ describe('Calendar API', () => {
     });
     const jwt = require('jsonwebtoken');
     workerToken = jwt.sign({ _id: worker._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    const property = await Property.create({
-      title: 'Test Property for Calendar',
-      description: 'A test property for calendar testing',
+    const worker = await Worker.create({
+      title: 'Test Worker for Calendar',
+      description: 'A test worker for calendar testing',
       location: 'Test Location',
       price: 50000,
       bedrooms: 2,
@@ -46,14 +46,14 @@ describe('Calendar API', () => {
       images: ['test-image.jpg'],
       worker: worker._id,
     });
-    propertyId = property._id;
+    workerId = worker._id;
   });
 
   afterAll(async () => {
     await User.deleteMany({ email: 'worker@calendar.com' });
-    await Property.deleteMany({ title: 'Test Property for Calendar' });
+    await Worker.deleteMany({ title: 'Test Worker for Calendar' });
     await Category.deleteMany({ category_name: 'Test Category for Calendar' });
-    await Calendar.deleteMany({ propertyId: { $exists: true } });
+    await Calendar.deleteMany({ workerId: { $exists: true } });
     await mongoose.connection.close();
   });
 

@@ -176,7 +176,7 @@ class _SplashScreenState extends State<SplashScreen>
                                       // Tagline
                                       Flexible(
                                         child: Text(
-                                          "Find Your Perfect Home",
+                                          "Connecting Skills with Opportunities",
                                           style: TextStyle(
                                             fontSize: subtitleFontSize.clamp(
                                               14.0,

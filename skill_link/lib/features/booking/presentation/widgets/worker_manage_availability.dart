@@ -8,16 +8,16 @@ import 'package:skill_link/app/service_locator/service_locator.dart';
 // Import your ApiEndpoints file
 import '../../../../app/constant/api_endpoints.dart';
 
-class workerManageAvailability extends StatefulWidget {
-  final String propertyId;
-  const workerManageAvailability({super.key, required this.propertyId});
+class WorkerManageAvailability extends StatefulWidget {
+  final String workerId;
+  const WorkerManageAvailability({super.key, required this.workerId});
 
   @override
-  State<workerManageAvailability> createState() =>
-      _workerManageAvailabilityState();
+  State<WorkerManageAvailability> createState() =>
+      _WorkerManageAvailabilityState();
 }
 
-class _workerManageAvailabilityState extends State<workerManageAvailability> {
+class _WorkerManageAvailabilityState extends State<WorkerManageAvailability> {
   DateTime? _selectedDate;
   final TextEditingController _slotController = TextEditingController();
   List<String> _slots = [];
@@ -41,10 +41,10 @@ class _workerManageAvailabilityState extends State<workerManageAvailability> {
   @override
   void initState() {
     super.initState();
-    _fetchworkerAvailabilities();
+    _fetchWorkerAvailabilities();
   }
 
-  Future<void> _fetchworkerAvailabilities() async {
+  Future<void> _fetchWorkerAvailabilities() async {
     setState(() {
       _loading = true;
       _error = null;
@@ -61,7 +61,7 @@ class _workerManageAvailabilityState extends State<workerManageAvailability> {
 
       // Using ApiEndpoints.baseUrl for fetching
       final response = await Dio().get(
-        ApiEndpoints.getworkerAvailabilities,
+        ApiEndpoints.getWorkerAvailabilities,
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
 
@@ -71,7 +71,7 @@ class _workerManageAvailabilityState extends State<workerManageAvailability> {
       for (var avail in availabilities) {
         final listingData = avail['workerListing'] as Map<String, dynamic>?;
         
-        if (listingData != null && listingData['_id'] == widget.propertyId) {
+        if (listingData != null && listingData['_id'] == widget.workerId) {
           final date = avail['date'] as String?;
           final timeSlots = List<String>.from(avail['timeSlots'] ?? []);
           final id = avail['_id'] as String?;
@@ -156,7 +156,7 @@ class _workerManageAvailabilityState extends State<workerManageAvailability> {
       await Dio().post(
         '${ApiEndpoints.baseUrl}calendar/availabilities',
         data: {
-          'workerListingId': widget.propertyId,
+          'workerListingId': widget.workerId,
           'date': formattedDate,
           'timeSlots': newSlots,
         },
@@ -164,14 +164,16 @@ class _workerManageAvailabilityState extends State<workerManageAvailability> {
       );
 
       _slotController.clear();
-      await _fetchworkerAvailabilities(); // Refresh the data
+      await _fetchWorkerAvailabilities(); // Refresh the data
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Time slot added successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Time slot added successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
     } catch (e) {
       debugPrint('Dio error in _addSlot: $e');
       String errorMessage = 'Failed to add time slot.';
@@ -241,14 +243,16 @@ class _workerManageAvailabilityState extends State<workerManageAvailability> {
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
 
-      await _fetchworkerAvailabilities(); // Refresh the data
+      await _fetchWorkerAvailabilities(); // Refresh the data
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Time slot removed successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Time slot removed successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
     } catch (e) {
       debugPrint('Dio error in _removeSlot: $e');
       String errorMessage = 'Failed to remove time slot.';
@@ -307,14 +311,16 @@ class _workerManageAvailabilityState extends State<workerManageAvailability> {
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
 
-      await _fetchworkerAvailabilities(); // Refresh the data
+      await _fetchWorkerAvailabilities(); // Refresh the data
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Availability deleted successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Availability deleted successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
     } catch (e) {
       debugPrint('Dio error in _deleteAvailability: $e');
       if (e is DioException) {
@@ -340,151 +346,157 @@ class _workerManageAvailabilityState extends State<workerManageAvailability> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Manage Availability',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF003366),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            if (_loading)
-              const Center(child: CircularProgressIndicator())
-            else
-              TableCalendar(
-                firstDay: DateTime.now(),
-                lastDay: DateTime.now().add(const Duration(days: 60)),
-                focusedDay: _selectedDate ?? DateTime.now(),
-                selectedDayPredicate:
-                    (day) =>
-                        _selectedDate != null && isSameDay(day, _selectedDate),
-                onDaySelected: _onDateSelected,
-                calendarStyle: CalendarStyle(
-                  todayDecoration: BoxDecoration(
-                    color: Colors.blue[100],
-                    shape: BoxShape.circle,
-                  ),
-                  selectedDecoration: const BoxDecoration(
-                    color: Color(0xFF003366),
-                    shape: BoxShape.circle,
-                  ),
-                  markerDecoration: const BoxDecoration(
-                    color: Colors.green,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                calendarBuilders: CalendarBuilders(
-                  markerBuilder: (context, date, events) {
-                    final formatted = _normalizeDate(date);
-                    final data = _availabilitiesMap[formatted];
-                    if (data != null && (data['slots'] as List).isNotEmpty) {
-                      return Positioned(
-                        bottom: 1,
-                        child: Container(
-                          width: 6,
-                          height: 6,
-                          decoration: const BoxDecoration(
-                            color: Colors.green,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      );
-                    }
-                    return null;
-                  },
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Manage Availability',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF003366),
                 ),
               ),
-
-            if (_selectedDate != null && !_loading)
-              Column(
-                children: [
-                  const SizedBox(height: 16),
-                  Text(
-                    'Availability for: ${DateFormat('MMM dd, yyyy').format(_selectedDate!)}',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+              const SizedBox(height: 16),
+  
+              if (_loading)
+                const Center(child: CircularProgressIndicator())
+              else
+                TableCalendar(
+                  firstDay: DateTime.now(),
+                  lastDay: DateTime.now().add(const Duration(days: 60)),
+                  focusedDay: _selectedDate ?? DateTime.now(),
+                  selectedDayPredicate:
+                      (day) =>
+                          _selectedDate != null && isSameDay(day, _selectedDate),
+                  onDaySelected: _onDateSelected,
+                  calendarStyle: CalendarStyle(
+                    todayDecoration: BoxDecoration(
+                      color: Colors.blue[100],
+                      shape: BoxShape.circle,
+                    ),
+                    selectedDecoration: const BoxDecoration(
+                      color: Color(0xFF003366),
+                      shape: BoxShape.circle,
+                    ),
+                    markerDecoration: const BoxDecoration(
+                      color: Colors.green,
+                      shape: BoxShape.circle,
+                    ),
                   ),
-                  const SizedBox(height: 8),
-
-                  if (_slots.isEmpty)
-                    const Text(
-                      'No time slots set for this date.',
-                      style: TextStyle(color: Colors.grey),
-                    )
-                  else
-                    // Wrap potentially long list of slots in a SizedBox with ListView.builder
-                    SizedBox(
-                      // Estimate height based on number of slots; adjust 50.0 if needed
-                      height:
-                          _slots.length * 50.0 > 200
-                              ? 200
-                              : _slots.length * 50.0,
-                      child: ListView.builder(
-                        physics:
-                            const NeverScrollableScrollPhysics(), // Prevent inner scrolling if outer scroll exists
-                        itemCount: _slots.length,
-                        itemBuilder: (context, index) {
-                          final slot = _slots[index];
-                          return ListTile(
-                            title: Text(slot),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.red),
-                              onPressed: () => _removeSlot(slot),
+                  calendarBuilders: CalendarBuilders(
+                    markerBuilder: (context, date, events) {
+                      final formatted = _normalizeDate(date);
+                      final data = _availabilitiesMap[formatted];
+                      if (data != null && (data['slots'] as List).isNotEmpty) {
+                        return Positioned(
+                          bottom: 1,
+                          child: Container(
+                            width: 6,
+                            height: 6,
+                            decoration: const BoxDecoration(
+                              color: Colors.green,
+                              shape: BoxShape.circle,
                             ),
-                          );
-                        },
-                      ),
+                          ),
+                        );
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+  
+              if (_selectedDate != null && !_loading)
+                Column(
+                  children: [
+                    const SizedBox(height: 16),
+                    Text(
+                      'Availability for: ${DateFormat('MMM dd, yyyy').format(_selectedDate!)}',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
-
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _slotController,
-                          decoration: const InputDecoration(
-                            hintText: 'Add time slot (e.g. 10:00 AM)',
-                            border: OutlineInputBorder(),
+                    const SizedBox(height: 8),
+  
+                    if (_slots.isEmpty)
+                      const Text(
+                        'No time slots set for this date.',
+                        style: TextStyle(color: Colors.grey),
+                      )
+                    else
+                      // Wrap potentially long list of slots in a SizedBox with ListView.builder
+                      SizedBox(
+                        // Estimate height based on number of slots; adjust 50.0 if needed
+                        height:
+                            _slots.length * 50.0 > 200
+                                ? 200
+                                : _slots.length * 50.0,
+                        child: ListView.builder(
+                          physics:
+                              const NeverScrollableScrollPhysics(), // Prevent inner scrolling if outer scroll exists
+                          itemCount: _slots.length,
+                          itemBuilder: (context, index) {
+                            final slot = _slots[index];
+                            return ListTile(
+                              title: Text(slot),
+                              trailing: IconButton(
+                                icon: const Icon(Icons.delete, color: Colors.red),
+                                onPressed: () => _removeSlot(slot),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+  
+                    const SizedBox(height: 16),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        SizedBox(
+                          width: 180, // Giving it a fixed reasonable width to avoid stretching too much in Wrap
+                          child: TextField(
+                            controller: _slotController,
+                            decoration: const InputDecoration(
+                              hintText: 'e.g. 10:00 AM',
+                              border: OutlineInputBorder(),
+                              contentPadding: EdgeInsets.symmetric(horizontal: 10),
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      ElevatedButton(
-                        onPressed: _addSlot,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF003366),
-                          foregroundColor: Colors.white,
+                        ElevatedButton(
+                          onPressed: _addSlot,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF003366),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                          ),
+                          child: const Text('Add'),
                         ),
-                        child: const Text('Add'),
-                      ),
-                    ],
-                  ),
-
-                  if (_slots.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 16.0),
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                          foregroundColor: Colors.white,
-                        ),
-                        onPressed: _deleteAvailability,
-                        child: const Text('Delete All Slots for This Date'),
-                      ),
+                      ],
                     ),
-                ],
-              ),
-
-            if (_error != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 8.0),
-                child: Text(_error!, style: const TextStyle(color: Colors.red)),
-              ),
-          ],
+  
+                    if (_slots.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 16.0),
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            foregroundColor: Colors.white,
+                          ),
+                          onPressed: _deleteAvailability,
+                          child: const Text('Delete All Slots for This Date'),
+                        ),
+                      ),
+                  ],
+                ),
+  
+              if (_error != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Text(_error!, style: const TextStyle(color: Colors.red)),
+                ),
+            ],
+          ),
         ),
       ),
     );

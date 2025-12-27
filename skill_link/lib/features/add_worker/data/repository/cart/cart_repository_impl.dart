@@ -10,9 +10,9 @@ class CartRepositoryImpl implements ICartRepository {
   CartRepositoryImpl({required this.cartDataSource});
 
   @override
-  Future<Either<Failure, CartEntity>> addToCart(String propertyId) async {
+  Future<Either<Failure, CartEntity>> addToCart(String workerId) async {
     try {
-      final result = await cartDataSource.addToCart(propertyId);
+      final result = await cartDataSource.addToCart(workerId);
       return Right(result);
     } catch (e) {
       return Left(UnknownFailure(message: e.toString()));
@@ -30,9 +30,9 @@ class CartRepositoryImpl implements ICartRepository {
   }
 
   @override
-  Future<Either<Failure, CartEntity>> removeFromCart(String propertyId) async {
+  Future<Either<Failure, CartEntity>> removeFromCart(String workerId) async {
     try {
-      final result = await cartDataSource.removeFromCart(propertyId);
+      final result = await cartDataSource.removeFromCart(workerId);
       return Right(result);
     } catch (e) {
       return Left(UnknownFailure(message: e.toString()));

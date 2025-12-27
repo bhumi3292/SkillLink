@@ -12,6 +12,7 @@ class BookingEntity extends Equatable {
 
   final dynamic hirer;
   final dynamic worker;
+  final bool isRated;
 
   const BookingEntity({
     required this.id,
@@ -24,8 +25,9 @@ class BookingEntity extends Equatable {
     this.location,
     this.hirer,
     this.worker,
+    this.isRated = false,
   });
 
   @override
-  List<Object?> get props => [id, workerListingId, hirerId, workerId, date, timeSlot, status, location, hirer, worker];
+  List<Object?> get props => [id, workerListingId, hirerId, workerId, date, timeSlot, status, location, hirer, worker, isRated];
 }

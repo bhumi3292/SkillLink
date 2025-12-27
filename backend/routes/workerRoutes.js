@@ -14,7 +14,7 @@ const {
 const {
     authenticateUser,
     isworker,
-    isPropertyOwner // Rename this later if needed, but logic currently checks role ownership
+    isWorkerOwner // Logic currently checks role ownership
 } = require('../middlewares/authorizedUser');
 
 router.put(

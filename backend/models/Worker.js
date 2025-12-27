@@ -50,6 +50,18 @@ const workerSchema = new mongoose.Schema({
         type: String,
         enum: ["Available", "Booked", "Not Available"],
         default: "Available"
+    },
+    averageRating: {
+        type: Number,
+        default: 0
+    },
+    numReviews: {
+        type: Number,
+        default: 0
+    },
+    viewCount: {
+        type: Number,
+        default: 0
     }
 }, { timestamps: true });
 

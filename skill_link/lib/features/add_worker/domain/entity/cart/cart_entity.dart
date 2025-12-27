@@ -3,15 +3,15 @@ import 'package:skill_link/features/add_worker/domain/entity/worker/worker_entit
 
 class CartItemEntity extends Equatable {
   final String? id;
-  final WorkerEntity? property;
+  final WorkerEntity? worker;
   final DateTime? createdAt;
 
-  const CartItemEntity({this.id, this.property, this.createdAt});
+  const CartItemEntity({this.id, this.worker, this.createdAt});
 
   factory CartItemEntity.fromJson(Map<String, dynamic> json) {
     return CartItemEntity(
       id: json['_id'] as String?,
-      property:
+      worker:
           json['worker'] != null ? WorkerEntity.fromJson(json['worker']) : null,
       createdAt:
           json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
@@ -21,13 +21,13 @@ class CartItemEntity extends Equatable {
   Map<String, dynamic> toJson() {
     return {
       '_id': id,
-      'worker': property?.toJson(),
+      'worker': worker?.toJson(),
       'createdAt': createdAt?.toIso8601String(),
     };
   }
 
   @override
-  List<Object?> get props => [id, property, createdAt];
+  List<Object?> get props => [id, worker, createdAt];
 }
 
 class CartEntity extends Equatable {

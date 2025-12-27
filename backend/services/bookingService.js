@@ -132,7 +132,11 @@ class BookingService {
             await notificationService.sendNotification(hirerId, 'Service Started', 'The worker has started the service. Live tracking initiated.', 'SERVICE_STARTED', booking._id);
             await notificationService.sendNotification(workerId, 'Job Started', 'You have started the work. Please navigate to the location.', 'SERVICE_STARTED', booking._id);
         } else if (normalizedNewStatus === 'completed') {
-            await notificationService.sendNotification(hirerId, 'Service Completed', 'The worker has completed the service. Please proceed to payment.', 'SERVICE_COMPLETED', booking._id);
+            const CompletionMsgEn = "Your service is completed. Please pay and rate the worker.";
+            const CompletionMsgNp = "तपाईंको सेवा सम्पन्न भएको छ। कृपया भुक्तानी गर्नुहोस् र कामदारलाई मूल्याङ्कन गर्नुहोस्।";
+            const combinedHirerMsg = `${CompletionMsgEn} / ${CompletionMsgNp}`;
+
+            await notificationService.sendNotification(hirerId, 'Service Completed', combinedHirerMsg, 'SERVICE_COMPLETED', booking._id);
             await notificationService.sendNotification(workerId, 'Job Completed', 'You have completed the work. Waiting for payment from hirer.', 'SERVICE_COMPLETED', booking._id);
         } else if (normalizedNewStatus === 'cancelled') {
             await notificationService.sendNotification(workerId, 'Booking Cancelled', 'The hirer has cancelled the booking.', 'BOOKING_CANCELLED', booking._id);

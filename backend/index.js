@@ -41,6 +41,7 @@ const chatbotRoutes = require('./routes/chatbotRoute');
 const chatRoutes = require('./routes/chatRoute');
 const bookingRoutes = require('./routes/bookingRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const reviewRoutes = require('./routes/reviewRoutes');
 
 app.use("/api/auth", authRoutes);
 app.use("/api/workers", workerRoutes);
@@ -56,6 +57,7 @@ app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/chats', chatRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 app.get("/", (req, res) => {
     res.status(200).send("SkillLink backend running successfully!");

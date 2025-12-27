@@ -40,3 +40,11 @@ class BookingInitiatePaymentEvent extends BookingEvent {
   @override
   List<Object> get props => [bookingId, amount, method];
 }
+
+class GetBookingByIdEvent extends BookingEvent {
+  final String bookingId;
+  const GetBookingByIdEvent(this.bookingId);
+
+  @override
+  List<Object> get props => [bookingId];
+}

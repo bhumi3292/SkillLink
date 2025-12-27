@@ -5,14 +5,14 @@ plugins {
 }
 
 android {
-    namespace = "com.example.skill_link"
+    namespace = "com.skilllink.app"
     compileSdk = flutter.compileSdkVersion
 
     // You already set this; keep it
     ndkVersion = "27.0.12077973"
 
     defaultConfig {
-        applicationId = "com.example.skill_link"
+        applicationId = "com.skilllink.app"
         minSdk = flutter.minSdkVersion  // must be >= 21
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

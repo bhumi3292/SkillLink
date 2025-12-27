@@ -47,5 +47,15 @@ class BookingRepositoryImpl implements IBookingRepository {
       return Left(ServerFailure(message: e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, BookingEntity>> getBookingById(String bookingId) async {
+    try {
+      final booking = await remoteDataSource.getBookingById(bookingId);
+      return Right(booking.toEntity());
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
 }
 

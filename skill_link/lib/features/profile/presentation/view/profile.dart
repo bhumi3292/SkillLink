@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get/get.dart';
 import 'package:skill_link/features/auth/domain/entity/user_entity.dart';
 import 'package:skill_link/cores/common/snackbar/snackbar.dart';
 import 'package:image_picker/image_picker.dart'; // For image picking
@@ -17,8 +18,7 @@ import 'package:skill_link/features/profile/presentation/view_model/profile_even
 import 'package:skill_link/features/profile/presentation/view_model/profile_state.dart';
 import 'package:skill_link/features/profile/presentation/view_model/profile_view_model.dart';
 
-// Import CartBloc for favourites count
-import 'package:skill_link/features/favourite/presentation/bloc/cart_bloc.dart';
+// Import necessary repositories or blocs if needed
 import 'package:skill_link/app/service_locator/service_locator.dart';
 import '../../../../app/constant/api_endpoints.dart';
 import 'edit_profile_page.dart';
@@ -39,7 +39,6 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   final ImagePicker _picker = ImagePicker(); // Initialize ImagePicker
-  late CartBloc _cartBloc;
 
   // Accelerometer variables for global logout
   StreamSubscription<AccelerometerEvent>? _accelerometerSubscription;
@@ -52,8 +51,6 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
-    _cartBloc = serviceLocator<CartBloc>();
-    _cartBloc.add(GetCartEvent());
     
     // Fetch user profile on page load
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -337,9 +334,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider.value(
-      value: _cartBloc,
-      child: BlocListener<ProfileViewModel, ProfileState>(
+    return BlocListener<ProfileViewModel, ProfileState>(
         listenWhen: (previous, current) => previous.isLogoutSuccess != current.isLogoutSuccess,
         listener: (context, state) {
           if (state.isLogoutSuccess) {
@@ -349,7 +344,7 @@ class _ProfilePageState extends State<ProfilePage> {
         child: Scaffold(
           backgroundColor: Colors.grey[50],
           appBar: AppBar(
-            title: const Text('Profile'),
+            title: Text('profile'.tr),
             centerTitle: true,
             backgroundColor: Theme.of(context).primaryColor,
             foregroundColor: Colors.white,
@@ -411,8 +406,8 @@ class _ProfilePageState extends State<ProfilePage> {
               print("Profile page - Current user: ${user?.fullName}, email: ${user?.email}"); // Debug print
 
               if (user == null) {
-                return const Center(
-                  child: Text("No profile data available. Please log in."),
+                return Center(
+                  child: Text('no_data'.tr),
                 );
               }
 
@@ -554,27 +549,10 @@ class _ProfilePageState extends State<ProfilePage> {
                       child: Row(
                         children: [
                           Expanded(
-                            child: BlocBuilder<CartBloc, CartState>(
-                              builder: (context, cartState) {
-                                int favouritesCount = 0;
-                                if (cartState is CartLoaded) {
-                                  favouritesCount = cartState.cart.items?.length ?? 0;
-                                }
-                                return _buildStatCard(
-                                  icon: Icons.favorite,
-                                  title: 'Favourites',
-                                  value: favouritesCount.toString(),
-                                  color: Colors.red,
-                                );
-                              },
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
                             child: _buildStatCard(
                               icon: Icons.visibility,
-                              title: 'Profile Views',
-                              value: '156',
+                              title: 'profile_views'.tr,
+                              value: '156', // Placeholder, should be dynamic
                               color: Colors.blue,
                             ),
                           ),
@@ -582,8 +560,8 @@ class _ProfilePageState extends State<ProfilePage> {
                           Expanded(
                             child: _buildStatCard(
                               icon: Icons.star,
-                              title: 'Rating',
-                              value: '4.8',
+                              title: 'rating'.tr,
+                              value: '4.8', // Placeholder, should be dynamic
                               color: Colors.amber,
                             ),
                           ),
@@ -610,19 +588,19 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                           child: Row(
                             children: [
-                              const Column(
+                              Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Service Availability',
-                                    style: TextStyle(
+                                    'service_availability'.tr,
+                                    style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                   Text(
-                                    'Control your presence for hirers',
-                                    style: TextStyle(
+                                    'control_presence'.tr,
+                                    style: const TextStyle(
                                       fontSize: 12,
                                       color: Colors.grey,
                                     ),
@@ -636,14 +614,14 @@ class _ProfilePageState extends State<ProfilePage> {
                                 items: ["Available", "Booked", "Not Available"]
                                     .map((e) => DropdownMenuItem(
                                           value: e,
-                                          child: Text(e),
+                                          child: Text(e.toLowerCase().replaceAll(' ', '_').tr),
                                         ))
                                     .toList(),
                                 onChanged: (value) {
                                   // TODO: Add event to ProfileViewModel to update availability
                                   showMySnackbar(
                                     context: context,
-                                    content: "Status changed to $value",
+                                    content: "${'status_changed'.tr} $value",
                                     isSuccess: true,
                                   );
                                 },
@@ -661,9 +639,9 @@ class _ProfilePageState extends State<ProfilePage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Account Settings',
-                            style: TextStyle(
+                          Text(
+                            'account_settings'.tr,
+                            style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
@@ -685,8 +663,8 @@ class _ProfilePageState extends State<ProfilePage> {
                               children: [
                                 _buildMenuItem(
                                   icon: Icons.person_outline,
-                                  title: 'Edit Profile',
-                                  subtitle: 'Update your personal information',
+                                  title: 'edit_profile'.tr,
+                                  subtitle: 'update_info_subtitle'.tr,
                                   onTap: () {
                                     Navigator.push(
                                       context,
@@ -708,8 +686,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                 _buildDivider(),
                                 _buildMenuItem(
                                   icon: Icons.settings,
-                                  title: 'Settings',
-                                  subtitle: 'App preferences and notifications',
+                                  title: 'settings'.tr,
+                                  subtitle: 'pref_subtitle'.tr,
                                   onTap: () {
                                     Navigator.push(
                                       context,
@@ -722,8 +700,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                 _buildDivider(),
                                 _buildMenuItem(
                                   icon: Icons.payment,
-                                  title: 'Payments',
-                                  subtitle: 'Manage payment methods',
+                                  title: 'payments'.tr,
+                                  subtitle: 'manage_payments'.tr,
                                   onTap: () {
                                     Navigator.push(
                                       context,
@@ -740,17 +718,17 @@ class _ProfilePageState extends State<ProfilePage> {
                                 _buildDivider(),
                                 _buildMenuItem(
                                   icon: Icons.receipt_long,
-                                  title: 'Billing Details',
-                                  subtitle: 'View billing history',
+                                  title: 'billing_details'.tr,
+                                  subtitle: 'view_billing'.tr,
                                   onTap: () {
-                                    showMySnackbar(context: context, content: "Billing Details tapped!", isSuccess: true);
+                                    showMySnackbar(context: context, content: "billing_details_tapped".tr, isSuccess: true);
                                   },
                                 ),
                                 _buildDivider(),
                                 _buildMenuItem(
                                   icon: Icons.help_outline,
-                                  title: 'Help & Support',
-                                  subtitle: 'Get help and contact support',
+                                  title: 'help_support'.tr,
+                                  subtitle: 'get_help'.tr,
                                   onTap: () {
                                     Navigator.push(
                                       context,
@@ -767,23 +745,23 @@ class _ProfilePageState extends State<ProfilePage> {
                           
                           // REMOVE AccelerometerLogoutWidget and replace with a standard logout ListTile
                           ListTile(
-                            leading: Icon(Icons.logout, color: Colors.red),
-                            title: Text('Logout', style: TextStyle(color: Colors.red)),
-                            subtitle: Text('Logout from your account'),
+                             leading: Icon(Icons.logout, color: Colors.red),
+                            title: Text('logout'.tr, style: TextStyle(color: Colors.red)),
+                            subtitle: Text('logout_subtitle'.tr),
                             onTap: () async {
                               final shouldLogout = await showDialog<bool>(
                                 context: context,
                                 builder: (context) => AlertDialog(
-                                  title: const Text('Confirm Logout'),
-                                  content: const Text('Are you sure you want to logout?'),
+                                  title: Text('confirm_logout'.tr),
+                                  content: Text('logout_confirm_msg'.tr),
                                   actions: [
                                     TextButton(
                                       onPressed: () => Navigator.of(context).pop(false),
-                                      child: const Text('Cancel'),
+                                      child: Text('cancel'.tr),
                                     ),
                                     TextButton(
                                       onPressed: () => Navigator.of(context).pop(true),
-                                      child: const Text('Logout'),
+                                      child: Text('logout'.tr),
                                     ),
                                   ],
                                 ),
@@ -804,7 +782,6 @@ class _ProfilePageState extends State<ProfilePage> {
             },
           ),
         ),
-      ),
     );
   }
 
@@ -911,7 +888,6 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   void dispose() {
-    _cartBloc.close();
     _accelerometerSubscription?.cancel();
     _resetTimer?.cancel();
     super.dispose();

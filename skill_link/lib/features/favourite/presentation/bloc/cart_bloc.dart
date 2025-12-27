@@ -17,21 +17,21 @@ abstract class CartEvent extends Equatable {
 class GetCartEvent extends CartEvent {}
 
 class AddToCartEvent extends CartEvent {
-  final String propertyId;
+  final String workerId;
 
-  const AddToCartEvent(this.propertyId);
+  const AddToCartEvent(this.workerId);
 
   @override
-  List<Object?> get props => [propertyId];
+  List<Object?> get props => [workerId];
 }
 
 class RemoveFromCartEvent extends CartEvent {
-  final String propertyId;
+  final String workerId;
 
-  const RemoveFromCartEvent(this.propertyId);
+  const RemoveFromCartEvent(this.workerId);
 
   @override
-  List<Object?> get props => [propertyId];
+  List<Object?> get props => [workerId];
 }
 
 class ClearCartEvent extends CartEvent {}
@@ -104,7 +104,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     Emitter<CartState> emit,
   ) async {
     try {
-      final cart = await _addToCartUseCase(event.propertyId);
+      final cart = await _addToCartUseCase(event.workerId);
       emit(CartLoaded(cart));
     } catch (e) {
       emit(CartError(e.toString()));
@@ -116,7 +116,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     Emitter<CartState> emit,
   ) async {
     try {
-      final cart = await _removeFromCartUseCase(event.propertyId);
+      final cart = await _removeFromCartUseCase(event.workerId);
       emit(CartLoaded(cart));
     } catch (e) {
       emit(CartError(e.toString()));

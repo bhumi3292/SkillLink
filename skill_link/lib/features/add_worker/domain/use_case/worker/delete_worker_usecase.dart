@@ -2,7 +2,7 @@
 
 import 'package:dartz/dartz.dart';
 import 'package:skill_link/cores/error/failure.dart';
-import 'package:skill_link/features/add_worker/domain/repository/property_repository.dart';
+import 'package:skill_link/features/add_worker/domain/repository/worker_repository.dart';
 
 class DeleteWorkerUsecase {
   final IWorkerRepository repository;

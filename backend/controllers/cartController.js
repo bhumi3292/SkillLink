@@ -20,8 +20,8 @@ exports.addToCart = asyncHandler(async (req, res) => {
     const userId = req.user._id;
     const { workerId } = req.body;
 
-    // Use propertyId from body if workerId is missing, for backward compatibility
-    const targetWorkerId = workerId || req.body.propertyId;
+    // Use workerId from body if workerId is missing, for backward compatibility
+    const targetWorkerId = workerId || req.body.workerId;
 
 
     if (!targetWorkerId) {
@@ -59,11 +59,11 @@ exports.addToCart = asyncHandler(async (req, res) => {
 });
 exports.removeFromCart = asyncHandler(async (req, res) => {
     const userId = req.user._id;
-    // Allow removing by propertyId in params for now, but treat it as workerId
-    const { propertyId } = req.params;
+    // Allow removing by workerId in params for now, but treat it as workerId
+    const { workerId } = req.params;
 
-    // Ideally we should use workerId, but let's stick to what routes provide if they use :propertyId
-    const targetId = propertyId;
+    // Ideally we should use workerId, but let's stick to what routes provide if they use :workerId
+    const targetId = workerId;
 
     let cart = await Cart.findOne({ user: userId });
 

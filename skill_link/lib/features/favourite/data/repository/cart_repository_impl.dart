@@ -18,9 +18,9 @@ class CartRepositoryImpl implements CartRepository {
   }
 
   @override
-  Future<CartEntity> addToCart(String propertyId) async {
+  Future<CartEntity> addToCart(String workerId) async {
     try {
-      final cartApiModel = await _cartApiService.addToCart(propertyId);
+      final cartApiModel = await _cartApiService.addToCart(workerId);
       return cartApiModel.toEntity();
     } catch (e) {
       throw Exception('Failed to add to cart: $e');
@@ -28,9 +28,9 @@ class CartRepositoryImpl implements CartRepository {
   }
 
   @override
-  Future<CartEntity> removeFromCart(String propertyId) async {
+  Future<CartEntity> removeFromCart(String workerId) async {
     try {
-      final cartApiModel = await _cartApiService.removeFromCart(propertyId);
+      final cartApiModel = await _cartApiService.removeFromCart(workerId);
       return cartApiModel.toEntity();
     } catch (e) {
       throw Exception('Failed to remove from cart: $e');

@@ -6,7 +6,7 @@ class AddToCartUseCase {
 
   AddToCartUseCase(this._cartRepository);
 
-  Future<CartEntity> call(String propertyId) async {
-    return await _cartRepository.addToCart(propertyId);
+  Future<CartEntity> call(String workerId) async {
+    return await _cartRepository.addToCart(workerId);
   }
 }

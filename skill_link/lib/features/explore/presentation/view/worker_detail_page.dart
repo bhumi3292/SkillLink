@@ -12,6 +12,12 @@ import 'package:skill_link/app/service_locator/service_locator.dart';
 import 'package:skill_link/features/chat/domain/use_case/chat_usecases.dart';
 import 'package:skill_link/app/shared_pref/token_shared_prefs.dart';
 
+import 'package:skill_link/features/explore/presentation/bloc/review_bloc.dart';
+import 'package:skill_link/features/explore/data/model/review_model.dart';
+import 'package:skill_link/features/explore/domain/repository/explore_repository.dart';
+import 'package:get/get.dart';
+import 'package:intl/intl.dart';
+
 class WorkerDetailPage extends StatefulWidget {
   final ExploreWorkerEntity worker;
   const WorkerDetailPage({super.key, required this.worker});
@@ -97,10 +103,6 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
                 icon: const Icon(Icons.share, color: Colors.white),
                 onPressed: () {},
               ),
-              IconButton(
-                onPressed: () {},
-                icon: const Icon(Icons.favorite_border, color: Colors.white),
-              ),
             ],
           ),
           SliverToBoxAdapter(
@@ -145,6 +147,38 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      const Icon(Icons.star, color: Colors.amber, size: 20),
+                      const SizedBox(width: 4),
+                      Text(
+                        (widget.worker.averageRating ?? 0.0).toStringAsFixed(1),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '(${widget.worker.numReviews ?? 0} ${'reviews'.tr})',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      const Spacer(),
+                      const Icon(Icons.remove_red_eye, color: Colors.grey, size: 16),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${widget.worker.viewCount ?? 0} ${'profile_visits'.tr}',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey[600],
                         ),
                       ),
                     ],
@@ -345,12 +379,12 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
                               builder:
                                   (context) =>
                                       isworker
-                                          ? workerManageAvailability(
-                                            propertyId: widget.worker.id ?? '',
+                                          ? WorkerManageAvailability(
+                                            workerId: widget.worker.id ?? '',
                                           )
                                           : BookingModal(
-                                            propertyId: widget.worker.id ?? '',
-                                            propertyTitle:
+                                            workerListingId: widget.worker.id ?? '',
+                                            workerTitle:
                                                 widget.worker.title ?? '',
                                             workerId:
                                                 widget.worker.workerId ?? '',
@@ -409,6 +443,93 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
                         ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 32),
+                  const Divider(),
+                  const SizedBox(height: 24),
+                  Text(
+                    'reviews'.tr,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF003366),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  BlocProvider(
+                    create: (context) => ReviewBloc(
+                      repository: serviceLocator<ExploreRepository>(),
+                    )..add(GetWorkerReviewsEvent(widget.worker.id ?? '')),
+                    child: BlocBuilder<ReviewBloc, ReviewState>(
+                      builder: (context, state) {
+                        if (state is ReviewLoading) {
+                          return const Center(child: CircularProgressIndicator());
+                        } else if (state is ReviewsLoaded) {
+                          if (state.reviews.isEmpty) {
+                            return const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 20),
+                              child: Text('No reviews yet.'),
+                            );
+                          }
+                          return ListView.separated(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: state.reviews.length,
+                            separatorBuilder: (context, index) => const Divider(),
+                            itemBuilder: (context, index) {
+                              final review = state.reviews[index];
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        CircleAvatar(
+                                          radius: 16,
+                                          backgroundColor: Colors.blueGrey[50],
+                                          child: const Icon(Icons.person, size: 20, color: Colors.grey),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Text(
+                                          review.hirerName,
+                                          style: const TextStyle(fontWeight: FontWeight.bold),
+                                        ),
+                                        const Spacer(),
+                                        Row(
+                                          children: List.generate(
+                                            5,
+                                            (i) => Icon(
+                                              i < review.rating ? Icons.star : Icons.star_border,
+                                              size: 14,
+                                              color: Colors.amber,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    if (review.comment != null && review.comment!.isNotEmpty)
+                                      Text(
+                                        review.comment!,
+                                        style: TextStyle(color: Colors.grey[800]),
+                                      ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      DateFormat('MMM d, yyyy').format(review.createdAt),
+                                      style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          );
+                        } else if (state is ReviewError) {
+                          return Text('Error: ${state.message}');
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    ),
                   ),
                   const SizedBox(height: 100), // Bottom spacer
                 ],
@@ -525,7 +646,7 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
         }
       } catch (e) {
         // ignore: avoid_print
-        print('Failed to fetch property/worker for phone: $e');
+        print('Failed to fetch worker/worker for phone: $e');
       }
     }
 

@@ -14,10 +14,10 @@ class LoadMyChats extends ChatEvent {}
 
 class CreateOrGetChatEvent extends ChatEvent {
   final String otherUserId;
-  final String? propertyId;
-  const CreateOrGetChatEvent({required this.otherUserId, this.propertyId});
+  final String? workerId;
+  const CreateOrGetChatEvent({required this.otherUserId, this.workerId});
   @override
-  List<Object?> get props => [otherUserId, propertyId];
+  List<Object?> get props => [otherUserId, workerId];
 }
 
 class LoadMessages extends ChatEvent {
@@ -164,7 +164,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     try {
       final chat = await createOrGetChatUsecase(
         otherUserId: event.otherUserId,
-        workerId: event.propertyId,
+        workerId: event.workerId,
       );
       final messages = await getMessagesForChatUsecase(chat['_id']);
       emit(ChatLoaded(chat: chat, messages: messages));

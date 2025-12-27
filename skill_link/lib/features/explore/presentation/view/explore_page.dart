@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get/get.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
@@ -229,7 +230,7 @@ class _ExplorePageState extends State<ExplorePage> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         _buildFilterOption(
-                          label: 'All Workers',
+                          label: 'all_workers_tab'.tr,
                           icon: Icons.people_outline,
                           isSelected: _currentFilter == WorkerFilter.all,
                           onTap: () {
@@ -241,7 +242,7 @@ class _ExplorePageState extends State<ExplorePage> {
                         ),
                         const SizedBox(width: 4),
                         _buildFilterOption(
-                          label: 'Nearby Only',
+                          label: 'nearby_only'.tr,
                           icon: Icons.location_on_outlined,
                           isSelected: _currentFilter == WorkerFilter.nearby,
                           onTap: () {
@@ -264,7 +265,7 @@ class _ExplorePageState extends State<ExplorePage> {
                     return const Center(child: CircularProgressIndicator());
                   } else if (state is ExploreError) {
                     return Center(
-                      child: Text("Error loading workers: ${state.message}"),
+                      child: Text("${'error_loading_workers'.tr} ${state.message}"),
                     );
                   } else if (state is ExploreLoaded) {
                     List<ExploreWorkerEntity> workersToDisplay = List.from(
@@ -290,8 +291,9 @@ class _ExplorePageState extends State<ExplorePage> {
 
                       // Then sort by distance (Nearest first)
                       workersToDisplay.sort((a, b) {
-                        if (a.coordinates == null && b.coordinates == null)
+                        if (a.coordinates == null && b.coordinates == null) {
                           return 0;
+                        }
                         if (a.coordinates == null) return 1;
                         if (b.coordinates == null) return -1;
 
@@ -336,8 +338,8 @@ class _ExplorePageState extends State<ExplorePage> {
                     }
 
                     if (workersToDisplay.isEmpty) {
-                      return const Center(
-                        child: Text("No workers found matching your criteria"),
+                      return Center(
+                        child: Text("no_workers_found".tr),
                       );
                     }
 
@@ -537,7 +539,7 @@ class _ExplorePageState extends State<ExplorePage> {
                     });
                   }
                 },
-                tooltip: 'List View',
+                tooltip: 'list_view'.tr,
               ),
               _buildToggleButton(
                 icon: Icons.map_rounded,
@@ -549,7 +551,7 @@ class _ExplorePageState extends State<ExplorePage> {
                     });
                   }
                 },
-                tooltip: 'Map View',
+                tooltip: 'map_view'.tr,
               ),
             ],
           ),

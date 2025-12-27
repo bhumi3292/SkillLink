@@ -3,12 +3,12 @@ import 'package:skill_link/features/add_worker/domain/entity/worker/worker_entit
 
 class CartItemEntity extends Equatable {
   final String? id;
-  final WorkerEntity property;
+  final WorkerEntity worker;
 
-  const CartItemEntity({this.id, required this.property});
+  const CartItemEntity({this.id, required this.worker});
 
   @override
-  List<Object?> get props => [id, property];
+  List<Object?> get props => [id, worker];
 
   @override
   bool get stringify => true;

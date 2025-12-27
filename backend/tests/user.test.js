@@ -4,10 +4,10 @@ const jwt = require("jsonwebtoken");
 const app = require("../index"); // Adjust path if your main app file is elsewhere
 const User = require("../models/User");
 const Category = require("../models/Category");
-const Property = require("../models/Property");
+const Worker = require("../models/Worker");
 const Cart = require("../models/Cart");
 
-// --- Global variables for the Auth/Category/Property Basic test suite ---
+// --- Global variables for the Auth/Category/Worker Basic test suite ---
 let workerTokenAuthDB; // Renamed for clarity in isolated DB context
 let categoryIdAuthDB;
 let resetToken;
@@ -15,15 +15,15 @@ const testUserEmailForReset = "resettestuser@example.com";
 
 // --- Variables specific to Cart API tests ---
 let HirerTokenCartDB; // Renamed for clarity
-let testPropertyIdForCart;
+let testWorkerIdForCart;
 let testHirerIdCartDB;
 let testCategoryIdForCart;
 let workerTokenForCartTests;
 
 
-// --- Auth, Category, Property Basic Tests (using SkillLink_test_auth) ---
-describe("Auth, Category, and Basic Property API Tests", () => {
-    // beforeAll for this specific test suite (Auth, Category, Property Basic)
+// --- Auth, Category, Worker Basic Tests (using SkillLink_test_auth) ---
+describe("Auth, Category, and Basic Worker API Tests", () => {
+    // beforeAll for this specific test suite (Auth, Category, Worker Basic)
     beforeAll(async () => {
         process.env.MONGO_URI = "mongodb://localhost:27017/SkillLink_test_auth";
 
@@ -71,7 +71,7 @@ describe("Auth, Category, and Basic Property API Tests", () => {
             confirmPassword: "oldpassword123",
         });
 
-        console.log("Auth, Category, Property Basic setup complete.");
+        console.log("Auth, Category, Worker Basic setup complete.");
     });
 
     // afterAll for this specific test suite
@@ -278,8 +278,8 @@ describe("Auth, Category, and Basic Property API Tests", () => {
         });
     });
 
-    describe("Property API (Basic)", () => {
-        let tempPropertyId;
+    describe("Worker API (Basic)", () => {
+        let tempWorkerId;
         let tempCategoryId;
 
         beforeAll(async () => {
@@ -287,20 +287,20 @@ describe("Auth, Category, and Basic Property API Tests", () => {
             const categoryRes = await request(app)
                 .post("/api/category")
                 .set("Authorization", `Bearer ${workerTokenAuthDB}`)
-                .send({ name: "Temp Property Category for Property API Test" });
+                .send({ name: "Temp Worker Category for Worker API Test" });
 
             expect(categoryRes.statusCode).toBe(201);
             tempCategoryId = categoryRes.body.data._id;
 
-            // Create property with all required fields
-            const propertyRes = await request(app)
+            // Create worker with all required fields
+            const workerRes = await request(app)
                 .post("/api/properties")
                 .set("Authorization", `Bearer ${workerTokenAuthDB}`)
                 .send({
-                    title: "Temp Property for Property API Test",
-                    description: "A temp property for testing Property API.",
+                    title: "Temp Worker for Worker API Test",
+                    description: "A temp worker for testing Worker API.",
                     price: 10000,
-                    location: "Temp City for Property API Test",
+                    location: "Temp City for Worker API Test",
                     bedrooms: 1,
                     bathrooms: 1,
                     categoryId: tempCategoryId,
@@ -308,16 +308,16 @@ describe("Auth, Category, and Basic Property API Tests", () => {
                     videos: [],
                 });
 
-            expect(propertyRes.statusCode).toBe(201);
-            expect(propertyRes.body.success).toBe(true);
-            expect(propertyRes.body.data).toBeDefined();
-            expect(propertyRes.body.data._id).toBeDefined();
-            tempPropertyId = propertyRes.body.data._id;
+            expect(workerRes.statusCode).toBe(201);
+            expect(workerRes.body.success).toBe(true);
+            expect(workerRes.body.data).toBeDefined();
+            expect(workerRes.body.data._id).toBeDefined();
+            tempWorkerId = workerRes.body.data._id;
         });
 
         afterAll(async () => {
-            if (tempPropertyId) {
-                await Property.deleteOne({ _id: tempPropertyId });
+            if (tempWorkerId) {
+                await Worker.deleteOne({ _id: tempWorkerId });
             }
             if (tempCategoryId) {
                 await Category.deleteOne({ _id: tempCategoryId });
@@ -331,13 +331,13 @@ describe("Auth, Category, and Basic Property API Tests", () => {
             expect(res.body.data.length).toBeGreaterThanOrEqual(1);
         });
 
-        test("should 404 deleting non-existent property", async () => {
+        test("should 404 deleting non-existent worker", async () => {
             const res = await request(app)
                 .delete(`/api/properties/${new mongoose.Types.ObjectId()}`)
                 .set("Authorization", `Bearer ${workerTokenAuthDB}`);
             expect(res.statusCode).toBe(404);
             expect(res.body.success).toBe(false);
-            expect(res.body.message).toBe("Property not found.");
+            expect(res.body.message).toBe("Worker not found.");
         });
     });
 });
@@ -402,31 +402,31 @@ describe("Cart API Tests", () => {
         expect(workerLoginResForCart.statusCode).toBe(200);
         workerTokenForCartTests = workerLoginResForCart.body.token;
 
-        // Create a category for the property (using the NEW workerTokenForCartTests)
+        // Create a category for the worker (using the NEW workerTokenForCartTests)
         const categoryRes = await request(app)
             .post("/api/category")
             .set("Authorization", `Bearer ${workerTokenForCartTests}`)
-            .send({ name: "Cart Test Category for Property" });
+            .send({ name: "Cart Test Category for Worker" });
         expect(categoryRes.statusCode).toBe(201);
         testCategoryIdForCart = categoryRes.body.data._id;
 
-        // Create a property for testing cart functionality (using the NEW workerTokenForCartTests)
-        const propertyRes = await request(app)
+        // Create a worker for testing cart functionality (using the NEW workerTokenForCartTests)
+        const workerRes = await request(app)
             .post("/api/properties")
             .set("Authorization", `Bearer ${workerTokenForCartTests}`)
             .send({
-                title: "Cart Test Property",
+                title: "Cart Test Worker",
                 description: "A lovely place to test cart.",
                 price: 50000,
                 location: "Test City",
                 bedrooms: 2,
                 bathrooms: 1,
                 categoryId: testCategoryIdForCart,
-                images: ["http://example.com/property.jpg"],
+                images: ["http://example.com/worker.jpg"],
                 videos: [],
             });
-        expect(propertyRes.statusCode).toBe(201);
-        testPropertyIdForCart = propertyRes.body.data._id;
+        expect(workerRes.statusCode).toBe(201);
+        testWorkerIdForCart = workerRes.body.data._id;
 
         console.log("Cart setup complete.");
     });
@@ -454,39 +454,39 @@ describe("Cart API Tests", () => {
         expect(res.body.data.user.toString()).toBe(testHirerIdCartDB.toString());
     });
 
-    // Test 2: Add a property to the cart (first item, creates cart)
-    test("should add a property to cart and create a new cart if none exists", async () => {
+    // Test 2: Add a worker to the cart (first item, creates cart)
+    test("should add a worker to cart and create a new cart if none exists", async () => {
         await Cart.deleteMany({ user: testHirerIdCartDB }); // Ensure no existing cart
 
         const res = await request(app)
             .post("/api/cart/add")
             .set("Authorization", `Bearer ${HirerTokenCartDB}`)
-            .send({ propertyId: testPropertyIdForCart });
+            .send({ workerId: testWorkerIdForCart });
 
         expect(res.statusCode).toBe(201);
         expect(res.body.success).toBe(true);
-        expect(res.body.message).toBe("Cart created and property added.");
+        expect(res.body.message).toBe("Cart created and worker added.");
         expect(res.body.data.items.length).toBe(1);
-        expect(res.body.data.items[0].property.toString()).toBe(testPropertyIdForCart.toString());
+        expect(res.body.data.items[0].worker.toString()).toBe(testWorkerIdForCart.toString());
 
         // Verify it's in the DB
         const cart = await Cart.findOne({ user: testHirerIdCartDB });
         expect(cart).toBeDefined();
         expect(cart.items.length).toBe(1);
-        expect(cart.items[0].property.toString()).toBe(testPropertyIdForCart.toString());
+        expect(cart.items[0].worker.toString()).toBe(testWorkerIdForCart.toString());
     });
 
-    // Test 3: Add an existing property to the cart (should fail)
-    test("should not add a property that is already in the cart", async () => {
-        // This test assumes the previous test (Test 2) added the property.
+    // Test 3: Add an existing worker to the cart (should fail)
+    test("should not add a worker that is already in the cart", async () => {
+        // This test assumes the previous test (Test 2) added the worker.
         const res = await request(app)
             .post("/api/cart/add")
             .set("Authorization", `Bearer ${HirerTokenCartDB}`)
-            .send({ propertyId: testPropertyIdForCart });
+            .send({ workerId: testWorkerIdForCart });
 
         expect(res.statusCode).toBe(409);
         expect(res.body.success).toBe(false);
-        expect(res.body.message).toBe("Property already in cart.");
+        expect(res.body.message).toBe("Worker already in cart.");
 
         // Ensure cart still has only 1 item
         const cart = await Cart.findOne({ user: testHirerIdCartDB });
@@ -504,19 +504,19 @@ describe("Cart API Tests", () => {
         expect(res.body.success).toBe(true);
         expect(res.body.message).toBe("Cart retrieved successfully.");
         expect(res.body.data.items.length).toBe(1);
-        expect(res.body.data.items[0].property._id.toString()).toBe(testPropertyIdForCart.toString());
-        expect(res.body.data.items[0].property.title).toBe("Cart Test Property"); // Check populated data
+        expect(res.body.data.items[0].worker._id.toString()).toBe(testWorkerIdForCart.toString());
+        expect(res.body.data.items[0].worker.title).toBe("Cart Test Worker"); // Check populated data
     });
 
-    // Test 5: Remove a property from the cart
-    test("should remove a property from the cart", async () => {
+    // Test 5: Remove a worker from the cart
+    test("should remove a worker from the cart", async () => {
         const res = await request(app)
-            .delete(`/api/cart/remove/${testPropertyIdForCart}`)
+            .delete(`/api/cart/remove/${testWorkerIdForCart}`)
             .set("Authorization", `Bearer ${HirerTokenCartDB}`);
 
         expect(res.statusCode).toBe(200);
         expect(res.body.success).toBe(true);
-        expect(res.body.message).toBe("Property removed from cart.");
+        expect(res.body.message).toBe("Worker removed from cart.");
         expect(res.body.data.items).toEqual([]);
 
         // Verify it's removed from DB
@@ -524,19 +524,19 @@ describe("Cart API Tests", () => {
         expect(cart.items).toEqual([]);
     });
 
-    // Test 6: Try to remove a non-existent property from cart
-    test("should return 404 when trying to remove a property not in cart", async () => {
+    // Test 6: Try to remove a non-existent worker from cart
+    test("should return 404 when trying to remove a worker not in cart", async () => {
         // Ensure cart is empty for this test
         await Cart.updateOne({ user: testHirerIdCartDB }, { $set: { items: [] } });
 
-        const nonExistentPropertyId = new mongoose.Types.ObjectId();
+        const nonExistentWorkerId = new mongoose.Types.ObjectId();
         const res = await request(app)
-            .delete(`/api/cart/remove/${nonExistentPropertyId}`)
+            .delete(`/api/cart/remove/${nonExistentWorkerId}`)
             .set("Authorization", `Bearer ${HirerTokenCartDB}`);
 
         expect(res.statusCode).toBe(404);
         expect(res.body.success).toBe(false);
-        expect(res.body.message).toBe("Property not found in cart.");
+        expect(res.body.message).toBe("Worker not found in cart.");
     });
 
     // Test 7: Clear the entire cart
@@ -545,7 +545,7 @@ describe("Cart API Tests", () => {
         await request(app)
             .post("/api/cart/add")
             .set("Authorization", `Bearer ${HirerTokenCartDB}`)
-            .send({ propertyId: testPropertyIdForCart });
+            .send({ workerId: testWorkerIdForCart });
 
         const res = await request(app)
             .delete("/api/cart/clear")
@@ -574,29 +574,29 @@ describe("Cart API Tests", () => {
         expect(res.body.message).toBe("Cart not found to clear.");
     });
 
-    // Test 9: Add to cart with invalid propertyId (missing)
-    test("should return 400 if propertyId is missing when adding to cart", async () => {
+    // Test 9: Add to cart with invalid workerId (missing)
+    test("should return 400 if workerId is missing when adding to cart", async () => {
         const res = await request(app)
             .post("/api/cart/add")
             .set("Authorization", `Bearer ${HirerTokenCartDB}`)
-            .send({}); // Missing propertyId
+            .send({}); // Missing workerId
 
         expect(res.statusCode).toBe(400);
         expect(res.body.success).toBe(false);
-        expect(res.body.message).toBe("Property ID is required to add to cart.");
+        expect(res.body.message).toBe("Worker ID is required to add to cart.");
     });
 
-    // Test 10: Add to cart with non-existent propertyId
-    test("should return 404 if property does not exist when adding to cart", async () => {
+    // Test 10: Add to cart with non-existent workerId
+    test("should return 404 if worker does not exist when adding to cart", async () => {
         const nonExistentId = new mongoose.Types.ObjectId();
         const res = await request(app)
             .post("/api/cart/add")
             .set("Authorization", `Bearer ${HirerTokenCartDB}`)
-            .send({ propertyId: nonExistentId });
+            .send({ workerId: nonExistentId });
 
         expect(res.statusCode).toBe(404);
         expect(res.body.success).toBe(false);
-        expect(res.body.message).toBe("Property not found.");
+        expect(res.body.message).toBe("Worker not found.");
     });
 
     // Test 11: Access cart routes without authentication
@@ -608,11 +608,11 @@ describe("Cart API Tests", () => {
         expect(resGet.statusCode).toBe(401);
         expect(resGet.body.message).toBe(expectedAuthMessage);
 
-        const resPost = await request(app).post("/api/cart/add").send({ propertyId: testPropertyIdForCart });
+        const resPost = await request(app).post("/api/cart/add").send({ workerId: testWorkerIdForCart });
         expect(resPost.statusCode).toBe(401);
         expect(resPost.body.message).toBe(expectedAuthMessage);
 
-        const resDeleteRemove = await request(app).delete(`/api/cart/remove/${testPropertyIdForCart}`);
+        const resDeleteRemove = await request(app).delete(`/api/cart/remove/${testWorkerIdForCart}`);
         expect(resDeleteRemove.statusCode).toBe(401);
         expect(resDeleteRemove.body.message).toBe(expectedAuthMessage);
 

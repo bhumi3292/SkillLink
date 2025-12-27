@@ -7,10 +7,10 @@ const { asyncHandler } = require('../utils/asyncHandler');
 
 exports.createOrGetChat = asyncHandler(async (req, res) => {
     const currentUserId = req.user._id;
-    // propertyId passed from client is now referring to a Worker listing ID
+    // workerId passed from client is now referring to a Worker listing ID
     const { otherUserId, workerListingId } = req.body;
-    // Backward compatibility if client still sends propertyId
-    const targetListingId = workerListingId || req.body.propertyId;
+    // Backward compatibility if client still sends workerId
+    const targetListingId = workerListingId || req.body.workerId;
 
     if (!otherUserId) {
         return res.status(400).json({ success: false, message: "Other user ID is required." });
@@ -85,7 +85,7 @@ exports.getMyChats = asyncHandler(async (req, res) => {
 
     const chats = await Chat.find({ participants: userId })
         .populate('participants', 'fullName profilePicture')
-        .populate('workerListing', 'title images') // Populate workerListing instead of property
+        .populate('workerListing', 'title images') // Populate workerListing instead of worker
         .sort({ lastMessageAt: -1 });
 
     return res.status(200).json({ success: true, data: chats });

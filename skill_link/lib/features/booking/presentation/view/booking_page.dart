@@ -14,23 +14,18 @@ import 'package:skill_link/features/payment/presentation/bloc/payment_bloc.dart'
 import 'package:skill_link/features/payment/presentation/bloc/payment_state.dart';
 import 'package:skill_link/features/payment/presentation/view/payment_options_dialog.dart';
 import 'package:skill_link/features/booking/domain/entities/booking_entity.dart';
+import 'package:skill_link/features/booking/presentation/view/rating_dialog.dart';
+import 'package:get/get.dart';
 
 class BookingPage extends StatelessWidget {
-  const BookingPage({Key? key}) : super(key: key);
+  const BookingPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
         BlocProvider<BookingBloc>(
-          create:
-              (_) =>
-                  serviceLocator<BookingBloc>()..add(LoadUserBookingsEvent()),
-        ),
-        BlocProvider<ProfileViewModel>.value(
-          value:
-              serviceLocator<ProfileViewModel>()
-                ..add(FetchUserProfileEvent(context: context)),
+          create: (_) => serviceLocator<BookingBloc>()..add(LoadUserBookingsEvent()),
         ),
         BlocProvider<PaymentBloc>(create: (_) => serviceLocator<PaymentBloc>()),
       ],
@@ -118,8 +113,9 @@ class BookingPage extends StatelessWidget {
       ],
       child: BlocBuilder<BookingBloc, BookingState>(
         builder: (context, state) {
-          if (state is BookingLoading)
+          if (state is BookingLoading) {
             return const Center(child: CircularProgressIndicator());
+          }
           if (state is BookingsLoaded) {
             final bookings = state.bookings;
             if (bookings.isEmpty) {
@@ -155,7 +151,23 @@ class BookingPage extends StatelessWidget {
               ),
             );
           }
-          if (state is BookingError) return Center(child: Text(state.message));
+          if (state is BookingError) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                  const SizedBox(height: 16),
+                  Text(state.message, style: const TextStyle(color: Colors.red)),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => context.read<BookingBloc>().add(LoadUserBookingsEvent()),
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            );
+          }
           return const Center(child: CircularProgressIndicator());
         },
       ),
@@ -210,7 +222,7 @@ class BookingPage extends StatelessWidget {
                 ),
                 Chip(
                   label: Text(
-                    booking.status,
+                    booking.status.toLowerCase().tr,
                     style: const TextStyle(color: Colors.white),
                   ),
                   backgroundColor: _getStatusColor(booking.status),
@@ -236,9 +248,8 @@ class BookingPage extends StatelessWidget {
             const SizedBox(height: 8),
             Builder(
               builder: (ctx) {
-                final profileState =
-                    ctx.read<ProfileViewModel>().state as ProfileState?;
-                final currentUser = profileState?.user;
+                final profileState = ctx.watch<ProfileViewModel>().state;
+                final currentUser = profileState.user;
                 final isWorker =
                     currentUser != null &&
                     (currentUser.userId == booking.workerId ||
@@ -252,13 +263,14 @@ class BookingPage extends StatelessWidget {
 
                 final status = booking.status.toLowerCase();
 
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+                return Wrap(
+                  alignment: WrapAlignment.end,
+                  spacing: 8,
+                  runSpacing: 8,
                   children: [
                     if (isWorker && status == 'pending') ...[
                       TextButton(
-                        onPressed:
-                            () => ctx.read<BookingBloc>().add(
+                        onPressed: () => ctx.read<BookingBloc>().add(
                               UpdateBookingStatusEvent(
                                 bookingId: booking.id,
                                 status: 'Rejected',
@@ -269,10 +281,8 @@ class BookingPage extends StatelessWidget {
                           style: TextStyle(color: Colors.red),
                         ),
                       ),
-                      const SizedBox(width: 8),
                       ElevatedButton(
-                        onPressed:
-                            () => ctx.read<BookingBloc>().add(
+                        onPressed: () => ctx.read<BookingBloc>().add(
                               UpdateBookingStatusEvent(
                                 bookingId: booking.id,
                                 status: 'Accepted',
@@ -285,24 +295,54 @@ class BookingPage extends StatelessWidget {
                         (status == 'accepted' ||
                             status == 'confirmed' ||
                             status == 'inprogress')) ...[
-                      const SizedBox(width: 8),
                       ElevatedButton.icon(
-                        onPressed:
-                            () =>
-                                _navigateToParty(ctx, booking, forWorker: true),
+                        onPressed: () => _navigateToParty(ctx, booking, forWorker: true),
                         icon: const Icon(Icons.navigation, size: 16),
                         label: const Text('Navigate'),
                       ),
                     ],
-                    if (isHirer && status == 'completed') ...[
+                    if (isWorker && (status == 'accepted' || status == 'confirmed')) ...[
                       ElevatedButton(
-                        onPressed:
-                            () => _showPaymentOptionsDialog(
-                              ctx,
-                              booking.id,
-                              1500.0,
+                        onPressed: () => ctx.read<BookingBloc>().add(
+                              UpdateBookingStatusEvent(
+                                bookingId: booking.id,
+                                status: 'InProgress',
+                              ),
                             ),
-                        child: const Text('Pay Now'),
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                        child: Text('start_work'.tr, style: const TextStyle(color: Colors.white)),
+                      ),
+                    ],
+                    if (isWorker && status == 'inprogress') ...[
+                      ElevatedButton(
+                        onPressed: () => ctx.read<BookingBloc>().add(
+                              UpdateBookingStatusEvent(
+                                bookingId: booking.id,
+                                status: 'Completed',
+                              ),
+                            ),
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                        child: Text('complete_work'.tr, style: const TextStyle(color: Colors.white)),
+                      ),
+                    ],
+                    if (isHirer && status == 'completed') ...[
+                      OutlinedButton(
+                        onPressed: () => _showRatingPopup(ctx, booking),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Color(0xFF003366)),
+                        ),
+                        child: Text('rate_worker'.tr),
+                      ),
+                      ElevatedButton(
+                        onPressed: () => _showPaymentOptionsDialog(
+                          ctx,
+                          booking.id,
+                          1500.0,
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                        ),
+                        child: Text('pay_now'.tr, style: const TextStyle(color: Colors.white)),
                       ),
                     ],
                   ],
@@ -313,6 +353,27 @@ class BookingPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _showRatingPopup(BuildContext context, BookingEntity booking) {
+    if (booking.isRated == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('You have already rated this service.'),
+          backgroundColor: Colors.orange,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    showDialog(
+      context: context,
+      builder: (ctx) => RatingDialog(booking: booking),
+    ).then((value) {
+      if (value == true) {
+        context.read<BookingBloc>().add(LoadUserBookingsEvent());
+      }
+    });
   }
 
   Future<void> _navigateToParty(
@@ -338,8 +399,9 @@ class BookingPage extends StatelessWidget {
           (forWorker
               ? booking.worker
               : booking.hirer)?['location']?['coordinates'];
-      if (coords != null && coords is List && coords.length >= 2)
+      if (coords != null && coords is List && coords.length >= 2) {
         dest = LatLng(coords[1], coords[0]);
+      }
     } catch (_) {}
 
     Navigator.of(context).push(

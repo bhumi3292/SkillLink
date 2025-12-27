@@ -5,6 +5,9 @@ import 'package:skill_link/features/notification/presentation/bloc/notification_
 import 'package:skill_link/features/notification/presentation/bloc/notification_event.dart';
 import 'package:skill_link/features/notification/presentation/bloc/notification_state.dart';
 import 'package:intl/intl.dart';
+import 'package:skill_link/features/booking/presentation/view/pay_and_rate_page.dart';
+import 'package:skill_link/features/booking/presentation/bloc/booking_bloc.dart';
+import 'package:skill_link/features/booking/domain/repositories/booking_repository.dart';
 
 class NotificationPage extends StatelessWidget {
   const NotificationPage({super.key});
@@ -150,10 +153,31 @@ class _NotificationTile extends StatelessWidget {
           if (isUnread) {
             context.read<NotificationBloc>().add(MarkNotificationAsRead(notification.id));
           }
-          // Optional: handle navigation based on type
+          if (notification.type == 'SERVICE_COMPLETED' && notification.relatedId != null) {
+            _navigateToPayAndRate(context, notification.relatedId);
+          }
         },
       ),
     );
+  }
+
+  void _navigateToPayAndRate(BuildContext context, String bookingId) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    serviceLocator<IBookingRepository>().getBookingById(bookingId).then((result) {
+      Navigator.pop(context); // Close loading
+      result.fold(
+        (failure) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(failure.message))),
+        (booking) => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => PayAndRatePage(booking: booking)),
+        ),
+      );
+    });
   }
 
   IconData _getTypeIcon(String type) {
@@ -167,6 +191,7 @@ class _NotificationTile extends StatelessWidget {
       case 'WORKER_EN_ROUTE':
         return Icons.directions_run;
       case 'WORK_COMPLETED':
+      case 'SERVICE_COMPLETED':
         return Icons.star_outline;
       case 'PAYMENT_SUCCESS':
         return Icons.payment;
@@ -186,6 +211,7 @@ class _NotificationTile extends StatelessWidget {
       case 'WORKER_EN_ROUTE':
         return Colors.orange;
       case 'WORK_COMPLETED':
+      case 'SERVICE_COMPLETED':
         return Colors.purple;
       case 'PAYMENT_SUCCESS':
         return Colors.teal;

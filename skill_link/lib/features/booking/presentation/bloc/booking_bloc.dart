@@ -14,13 +14,14 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
     on<LoadUserBookingsEvent>(_onLoadUserBookings);
     on<UpdateBookingStatusEvent>(_onUpdateBookingStatus);
     on<BookingInitiatePaymentEvent>(_onInitiatePayment);
+    on<GetBookingByIdEvent>(_onGetBookingById);
   }
 
   Future<void> _onCreateBooking(CreateBookingEvent event, Emitter<BookingState> emit) async {
     emit(BookingLoading());
     final result = await bookingRepository.createBooking(event.workerListingId, event.date, event.timeSlot);
     result.fold(
-      (failure) => emit(BookingError(message: failure.message)), // Assuming Failure has a message property
+      (failure) => emit(BookingError(message: failure.message)), // Assuming Failure has a message worker
       (booking) => emit(BookingSuccess(booking: booking)),
     );
   }
@@ -57,6 +58,15 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
         // Note: The UI should listener for this state and open the payment URL or handle data
         // After that, we might want to reload bookings if payment affects it immediately (it won't until callback)
       }
+    );
+  }
+
+  Future<void> _onGetBookingById(GetBookingByIdEvent event, Emitter<BookingState> emit) async {
+    emit(BookingLoading());
+    final result = await bookingRepository.getBookingById(event.bookingId);
+    result.fold(
+      (failure) => emit(BookingError(message: failure.message)),
+      (booking) => emit(BookingSuccess(booking: booking)),
     );
   }
 }

@@ -11,7 +11,7 @@ class ApiEndpoints {
   // For iOS Simulator / Web, use: http://localhost:3001
   // For Real Devices, use your PC's IP (e.g., http://192.168.x.y:3001)
   // ---------------------------------------------------------
-  static const String activeServerAddress = "http://192.168.1.6:3001";
+  static const String activeServerAddress = "http://192.168.1.7:3001";
 
   static String get serverAddress => activeServerAddress;
 
@@ -32,19 +32,16 @@ class ApiEndpoints {
   // ---------- Profile ----------
   static String get uploadProfilePicture => "${baseUrl}auth/uploadImage";
 
-  // ---------- Worker----------
+  // ---------- Worker ----------
   static String get createWorker => "${baseUrl}workers";
   static String get getAllWorkers => "${baseUrl}workers";
   static String get getWorkerById => "${baseUrl}workers/";
   static String get deleteWorker => "${baseUrl}workers/";
 
-  // Aliases for compatibility
-  static String get createProperty => createWorker;
+  // Aliases for backward compatibility (renamed from Property)
   static String get getAllProperties => getAllWorkers;
-  static String get getPropertyById => getWorkerById;
-  static String get deleteProperty => deleteWorker;
 
-  static String updateProperty(String id) {
+  static String updateWorker(String id) {
     return "${baseUrl}workers/$id";
   }
 
@@ -59,7 +56,7 @@ class ApiEndpoints {
   static String get getCart => "${baseUrl}cart"; // GET
   static String get addToCart => "${baseUrl}cart/add"; // POST
   static String get removeFromCart =>
-      "${baseUrl}cart/remove/"; // DELETE (append propertyId)
+      "${baseUrl}cart/remove/"; // DELETE (append workerId)
   static String get clearCart => "${baseUrl}cart/clear"; // DELETE
 
   // ---------- Chatbot ----------
@@ -71,13 +68,13 @@ class ApiEndpoints {
   static String get bookVisit => "${baseUrl}calendar/book-visit";
   static String get manageAvailabilities =>
       "${baseUrl}calendar/availabilities"; // POST to create/update
-  static String get getworkerAvailabilities =>
+  static String get getWorkerAvailabilities =>
       "${baseUrl}calendar/worker/availabilities";
   static String deleteAvailabilityById(String availabilityId) =>
       "${baseUrl}calendar/availabilities/$availabilityId";
 
   static String get getHirerBookings => "${baseUrl}calendar/hirer/bookings";
-  static String get getworkerBookings => "${baseUrl}calendar/worker/bookings";
+  static String get getWorkerBookings => "${baseUrl}calendar/worker/bookings";
   static String updateBookingStatus(String bookingId) =>
       "${baseUrl}calendar/bookings/$bookingId/status";
   static String deleteBookingById(String bookingId) =>
@@ -97,4 +94,9 @@ class ApiEndpoints {
   static String get verifyPayment => "${baseUrl}payments/verify";
   static String getPaymentHistory(String userId) =>
       "${baseUrl}payments/history/$userId";
+
+  // ---------- Reviews ----------
+  static String get submitReview => "${baseUrl}reviews/submit";
+  static String getWorkerReviews(String workerListingId) =>
+      "${baseUrl}reviews/worker/$workerListingId";
 }

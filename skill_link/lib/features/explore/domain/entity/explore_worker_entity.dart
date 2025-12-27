@@ -23,6 +23,9 @@ class ExploreWorkerEntity {
 
   final String? workerPhone;
   final List<String>? skills;
+  final double? averageRating;
+  final int? numReviews;
+  final int? viewCount;
 
   ExploreWorkerEntity({
     this.id,
@@ -45,6 +48,9 @@ class ExploreWorkerEntity {
     this.workerEmail,
     this.workerPhone,
     this.skills,
+    this.averageRating,
+    this.numReviews,
+    this.viewCount,
   });
 
   factory ExploreWorkerEntity.fromJson(Map<String, dynamic> json) {
@@ -93,6 +99,9 @@ class ExploreWorkerEntity {
       workerEmail: json['worker']?['email'],
       workerPhone: json['worker']?['phoneNumber'],
       skills: json['skills'] != null ? List<String>.from(json['skills']) : null,
+      averageRating: (json['averageRating'] as num?)?.toDouble() ?? 0.0,
+      numReviews: json['numReviews'] as int? ?? 0,
+      viewCount: json['viewCount'] as int? ?? 0,
     );
   }
 }

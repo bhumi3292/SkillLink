@@ -12,6 +12,9 @@ class UserEntity extends Equatable {
   final String? profilePicture;
   final LatLng? location;
 
+  final double? averageRating;
+  final int? numReviews;
+
   const UserEntity({
     this.userId,
     required this.fullName,
@@ -22,6 +25,8 @@ class UserEntity extends Equatable {
     this.confirmPassword,
     this.profilePicture,
     this.location,
+    this.averageRating,
+    this.numReviews,
   });
 
   UserEntity copyWith({
@@ -33,6 +38,8 @@ class UserEntity extends Equatable {
     String? password,
     String? confirmPassword,
     String? profilePicture,
+    double? averageRating,
+    int? numReviews,
   }) {
     return UserEntity(
       userId: userId ?? this.userId,
@@ -43,6 +50,8 @@ class UserEntity extends Equatable {
       password: password ?? this.password,
       confirmPassword: confirmPassword ?? this.confirmPassword,
       profilePicture: profilePicture ?? this.profilePicture,
+      averageRating: averageRating ?? this.averageRating,
+      numReviews: numReviews ?? this.numReviews,
     );
   }
 
@@ -56,5 +65,7 @@ class UserEntity extends Equatable {
     password,
     confirmPassword,
     profilePicture,
+    averageRating,
+    numReviews,
   ];
 }

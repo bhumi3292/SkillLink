@@ -17,7 +17,7 @@ class ImageUrlHelper {
     if (imagePath == null || imagePath.isEmpty) {
       print('DEBUG: ImageUrlHelper - Path is null or empty. Returning placeholder.');
       // You might want to return a local asset placeholder here instead
-      // e.g., 'assets/images/placeholder_profile.png' or 'assets/images/placeholder_property.png'
+      // e.g., 'assets/images/placeholder_profile.png' or 'assets/images/placeholder_worker.png'
       return 'https://via.placeholder.com/150';
     }
 

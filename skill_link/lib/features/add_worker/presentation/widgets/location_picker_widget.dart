@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:latlong2/latlong.dart' as ll;
 import 'package:skill_link/features/explore/presentation/view/osm_map_widget.dart';
 

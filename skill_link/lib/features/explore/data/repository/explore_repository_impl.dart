@@ -10,9 +10,25 @@ class ExploreRepositoryImpl implements ExploreRepository {
   ExploreRepositoryImpl(this.remoteDataSource);
 
   @override
-  Future<Either<Failure, List<ExploreWorkerEntity>>>
-  getAllWorkers() async {
-    final result = await remoteDataSource.getAllWorkers();
-    return result;
+  Future<Either<Failure, List<ExploreWorkerEntity>>> getAllWorkers() async {
+    return await remoteDataSource.getAllWorkers();
+  }
+
+  @override
+  Future<Either<Failure, List<dynamic>>> getWorkerReviews(String workerListingId) async {
+    return await remoteDataSource.getWorkerReviews(workerListingId);
+  }
+
+  @override
+  Future<Either<Failure, bool>> submitReview({
+    required String bookingId,
+    required double rating,
+    String? comment,
+  }) async {
+    return await remoteDataSource.submitReview(
+      bookingId: bookingId,
+      rating: rating,
+      comment: comment,
+    );
   }
 }

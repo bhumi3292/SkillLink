@@ -74,7 +74,7 @@ class WorkerRemoteDatasource {
   Future<WorkerEntity> getWorkerById(String workerId) async {
     try {
       print('=== GET WorkerBY ID API CALL ===');
-      final url = '${ApiEndpoints.getPropertyById}$workerId';
+      final url = '${ApiEndpoints.getWorkerById}$workerId';
       print('Fetching Worker from: $url');
 
       final response = await _dio.get(url);
@@ -107,7 +107,7 @@ class WorkerRemoteDatasource {
       }
     } on DioException catch (e) {
       print(
-        'DioException in getPropertyById: ${e.response?.data ?? e.message}',
+        'DioException in getWorkerById: ${e.response?.data ?? e.message}',
       );
       print('DioException type: ${e.type}');
       print('DioException status: ${e.response?.statusCode}');
@@ -120,7 +120,7 @@ class WorkerRemoteDatasource {
 
       throw Exception(errorMessage);
     } catch (e) {
-      print('Exception in getPropertyById: $e');
+      print('Exception in getWorkerById: $e');
       throw Exception('Failed to get worker: $e');
     }
   }
@@ -133,7 +133,7 @@ class WorkerRemoteDatasource {
   ) async {
     try {
       print('=== ADD Worker API CALL ===');
-      print('Adding Worker to: ${ApiEndpoints.createProperty}');
+      print('Adding Worker to: ${ApiEndpoints.createWorker}');
       // Validate required fields on the client before sending
       final missing = <String>[];
       if (worker.name == null || worker.name!.trim().isEmpty) {
@@ -237,7 +237,7 @@ class WorkerRemoteDatasource {
 
       print('Adding Workerwith form data');
       final response = await _dio.post(
-        ApiEndpoints.createProperty,
+        ApiEndpoints.createWorker,
         data: formData,
       );
 
@@ -253,12 +253,12 @@ class WorkerRemoteDatasource {
       print('Workeradded successfully');
       print('=== END ADD WorkerAPI CALL ===');
     } on DioException catch (e) {
-      print('DioException in addProperty: ${e.response?.data ?? e.message}');
+      print('DioException in addWorker: ${e.response?.data ?? e.message}');
       throw Exception(
         'Failed to add Worker(Dio Error): ${e.response?.data ?? e.message}',
       );
     } catch (e) {
-      print('Exception in addProperty: $e');
+      print('Exception in addWorker: $e');
       throw Exception('Failed to add worker: $e');
     }
   }
@@ -274,7 +274,7 @@ class WorkerRemoteDatasource {
   ) async {
     try {
       print('=== UPDATE WorkerAPI CALL ===');
-      final url = ApiEndpoints.updateProperty(workerId);
+      final url = ApiEndpoints.updateWorker(workerId);
       print('Updating Worker at: $url');
 
       final formData = FormData();
@@ -379,12 +379,12 @@ class WorkerRemoteDatasource {
       print('Workerupdated successfully');
       print('=== END UPDATE WorkerAPI CALL ===');
     } on DioException catch (e) {
-      print('DioException in updateProperty: ${e.response?.data ?? e.message}');
+      print('DioException in updateWorker: ${e.response?.data ?? e.message}');
       throw Exception(
         'Failed to update Worker(Dio Error): ${e.response?.data ?? e.message}',
       );
     } catch (e) {
-      print('Exception in updateProperty: $e');
+      print('Exception in updateWorker: $e');
       throw Exception('Failed to update worker: $e');
     }
   }
@@ -393,7 +393,7 @@ class WorkerRemoteDatasource {
   Future<void> deleteWorker(String workerId) async {
     try {
       print('=== DELETE WorkerAPI CALL ===');
-      final url = '${ApiEndpoints.deleteProperty}$workerId';
+      final url = '${ApiEndpoints.deleteWorker}$workerId';
       print('Deleting Worker from: $url');
 
       final response = await _dio.delete(url);
@@ -410,12 +410,12 @@ class WorkerRemoteDatasource {
       print('Workerdeleted successfully');
       print('=== END DELETE WorkerAPI CALL ===');
     } on DioException catch (e) {
-      print('DioException in deleteProperty: ${e.response?.data ?? e.message}');
+      print('DioException in deleteWorker: ${e.response?.data ?? e.message}');
       throw Exception(
         'Failed to delete Worker(Dio Error): ${e.response?.data ?? e.message}',
       );
     } catch (e) {
-      print('Exception in deleteProperty: $e');
+      print('Exception in deleteWorker: $e');
       throw Exception('Failed to delete worker: $e');
     }
   }

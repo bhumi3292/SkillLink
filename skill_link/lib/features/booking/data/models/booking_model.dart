@@ -12,20 +12,30 @@ class BookingModel extends BookingEntity {
     super.location,
     super.hirer,
     super.worker,
+    super.isRated = false,
   });
 
   factory BookingModel.fromJson(Map<String, dynamic> json) {
+    String extractId(dynamic value) {
+      if (value == null) return '';
+      if (value is Map) return value['_id']?.toString() ?? '';
+      return value.toString();
+    }
+
     return BookingModel(
       id: json['_id'] ?? '',
-      workerListingId: (json['workerListing'] is Map) ? json['workerListing']['_id'] : (json['workerListing'] ?? json['property'] ?? ''),
-      hirerId: (json['Hirer'] is Map) ? json['Hirer']['_id'] : (json['Hirer'] ?? ''),
-      workerId: (json['worker'] is Map) ? json['worker']['_id'] : (json['worker'] ?? ''),
+      workerListingId: json['workerListing'] != null 
+          ? extractId(json['workerListing']) 
+          : extractId(json['property']),
+      hirerId: extractId(json['Hirer']),
+      workerId: extractId(json['worker']),
       date: json['date'] ?? '',
       timeSlot: json['timeSlot'] ?? '',
       status: json['status'] ?? 'Pending',
       location: json['location'],
       hirer: json['Hirer'] is Map ? json['Hirer'] : null,
       worker: json['worker'] is Map ? json['worker'] : null,
+      isRated: json['isRated'] ?? false,
     );
   }
 
@@ -39,6 +49,7 @@ class BookingModel extends BookingEntity {
       'timeSlot': timeSlot,
       'status': status,
       'location': location,
+      'isRated': isRated,
     };
   }
   
@@ -54,5 +65,6 @@ class BookingModel extends BookingEntity {
     location: location,
     hirer: hirer,
     worker: worker,
+    isRated: isRated,
   );
 }

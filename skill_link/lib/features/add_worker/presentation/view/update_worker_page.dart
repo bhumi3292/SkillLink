@@ -11,8 +11,8 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:skill_link/app/shared_pref/token_shared_prefs.dart';
 
-class UpdatePropertyPage extends StatefulWidget {
-  final String propertyId;
+class UpdateWorkerPage extends StatefulWidget {
+  final String workerId;
   final String initialTitle;
   final String initialLocation;
   final double initialPrice;
@@ -24,9 +24,9 @@ class UpdatePropertyPage extends StatefulWidget {
   final String initialCategoryId;
   // Add more fields as needed
 
-  const UpdatePropertyPage({
+  const UpdateWorkerPage({
     super.key,
-    required this.propertyId,
+    required this.workerId,
     required this.initialTitle,
     required this.initialLocation,
     required this.initialPrice,
@@ -39,10 +39,10 @@ class UpdatePropertyPage extends StatefulWidget {
   });
 
   @override
-  State<UpdatePropertyPage> createState() => _UpdatePropertyPageState();
+  State<UpdateWorkerPage> createState() => _UpdateWorkerPageState();
 }
 
-class _UpdatePropertyPageState extends State<UpdatePropertyPage> {
+class _UpdateWorkerPageState extends State<UpdateWorkerPage> {
   late TextEditingController _titleController;
   late TextEditingController _locationController;
   late TextEditingController _priceController;
@@ -274,7 +274,7 @@ class _UpdatePropertyPageState extends State<UpdatePropertyPage> {
       final token = await _getToken();
       // Call your update API (using Dio)
       final response = await dio.put(
-        ApiEndpoints.updateProperty(widget.propertyId),
+        ApiEndpoints.updateWorker(widget.workerId),
         data: formData,
         options: Options(
           headers: {
@@ -324,7 +324,7 @@ class _UpdatePropertyPageState extends State<UpdatePropertyPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Update Property'),
+        title: const Text('Update Worker'),
         backgroundColor: const Color(0xFF003366),
       ),
       body: SingleChildScrollView(
@@ -596,7 +596,7 @@ class _UpdatePropertyPageState extends State<UpdatePropertyPage> {
                     _isSubmitting
                         ? const CircularProgressIndicator(color: Colors.white)
                         : const Text(
-                          'Update Property',
+                          'Update Worker',
                           style: TextStyle(fontSize: 18, color: Colors.white),
                         ),
               ),

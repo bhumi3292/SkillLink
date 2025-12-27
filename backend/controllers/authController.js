@@ -117,15 +117,33 @@ exports.findUserIdByCredentials = async (req, res) => {
     }
 };
 
+const Worker = require("../models/Worker");
+
 // Get Current Authenticated User (existing)
 exports.getMe = async (req, res) => {
     if (!req.user) {
         return res.status(401).json({ success: false, message: "User data not available after authentication." });
     }
-    return res.status(200).json({
-        success: true,
-        user: req.user,
-    });
+
+    try {
+        let userData = { ...req.user.toObject() };
+
+        if (req.user.role === 'worker') {
+            const workerProfile = await Worker.findOne({ worker: req.user._id });
+            if (workerProfile) {
+                userData.averageRating = workerProfile.averageRating;
+                userData.numReviews = workerProfile.numReviews;
+            }
+        }
+
+        return res.status(200).json({
+            success: true,
+            user: userData,
+        });
+    } catch (error) {
+        console.error("GetMe Error:", error);
+        return res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
 };
 
 // Send Password Reset Link (existing)

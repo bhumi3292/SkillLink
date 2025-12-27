@@ -18,6 +18,9 @@ class WorkerApiModel extends Equatable {
   final String? description;
   @JsonKey(name: 'worker')
   final String workerId;
+  final double? averageRating;
+  final int? numReviews;
+  final int? viewCount;
 
   // Add timestamps from Mongoose schema
   final DateTime? createdAt;
@@ -33,8 +36,11 @@ class WorkerApiModel extends Equatable {
     required this.price,
     this.description,
     required this.workerId,
-    this.createdAt, // Added
-    this.updatedAt, // Added
+    this.createdAt,
+    this.updatedAt,
+    this.averageRating,
+    this.numReviews,
+    this.viewCount,
   });
 
   // Factory constructor for deserialization from JSON
@@ -145,6 +151,9 @@ class WorkerApiModel extends Equatable {
       addedByAdminId: workerId,
       createdAt: createdAt,
       updatedAt: updatedAt,
+      averageRating: averageRating,
+      numReviews: numReviews,
+      viewCount: viewCount,
     );
   }
 
@@ -163,6 +172,9 @@ class WorkerApiModel extends Equatable {
           entity.workerId ?? '', // Ensure non-nullable workerId is handled
       createdAt: entity.createdAt, // Added
       updatedAt: entity.updatedAt, // Added
+      averageRating: entity.averageRating,
+      numReviews: entity.numReviews,
+      viewCount: entity.viewCount,
     );
   }
 
@@ -174,7 +186,10 @@ class WorkerApiModel extends Equatable {
     description,
     workerId,
     createdAt,
-    updatedAt, // Added timestamps
+    updatedAt,
+    averageRating,
+    numReviews,
+    viewCount,
   ];
 
   @override
@@ -203,8 +218,11 @@ class WorkerApiModel extends Equatable {
       price: price ?? this.price,
       description: description ?? this.description,
       workerId: workerId ?? this.workerId,
-      createdAt: createdAt ?? this.createdAt, // Added
-      updatedAt: updatedAt ?? this.updatedAt, // Added
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      averageRating: averageRating ?? this.averageRating,
+      numReviews: numReviews ?? this.numReviews,
+      viewCount: viewCount ?? this.viewCount,
     );
   }
 }
