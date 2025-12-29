@@ -74,7 +74,7 @@ class WorkerRemoteDatasource {
   Future<WorkerEntity> getWorkerById(String workerId) async {
     try {
       print('=== GET WorkerBY ID API CALL ===');
-      final url = '${ApiEndpoints.getWorkerById}$workerId';
+      final url = ApiEndpoints.getWorkerById(workerId);
       print('Fetching Worker from: $url');
 
       final response = await _dio.get(url);
@@ -129,8 +129,10 @@ class WorkerRemoteDatasource {
   Future<void> addWorker(
     WorkerEntity worker,
     List<String> imagePaths,
-    List<String> videoPaths,
-  ) async {
+    List<String> videoPaths, {
+    String? licensePath,
+    String? identityCardPath,
+  }) async {
     try {
       print('=== ADD Worker API CALL ===');
       print('Adding Worker to: ${ApiEndpoints.createWorker}');
@@ -164,7 +166,34 @@ class WorkerRemoteDatasource {
         MapEntry('location', worker.location ?? ''),
         MapEntry('price', worker.rate?.toString() ?? '0'),
         MapEntry('rate', worker.rate?.toString() ?? '0'),
+        MapEntry('experience', worker.experience ?? '0'),
       ]);
+
+      // Add license file
+      if (licensePath != null && licensePath.isNotEmpty) {
+        formData.files.add(
+          MapEntry(
+            'license',
+            await MultipartFile.fromFile(
+              licensePath,
+              filename: 'license_${DateTime.now().millisecondsSinceEpoch}.pdf',
+            ),
+          ),
+        );
+      }
+
+      // Add identityCard file
+      if (identityCardPath != null && identityCardPath.isNotEmpty) {
+        formData.files.add(
+          MapEntry(
+            'identityCard',
+            await MultipartFile.fromFile(
+              identityCardPath,
+              filename: 'id_${DateTime.now().millisecondsSinceEpoch}.pdf',
+            ),
+          ),
+        );
+      }
 
       // Add categoryId if not null
       if (worker.categoryId != null && worker.categoryId!.isNotEmpty) {
@@ -181,12 +210,12 @@ class WorkerRemoteDatasource {
           final decoded = jsonDecode(raw);
           if (decoded is List && decoded.length == 2) {
             // Assume [lng, lat]
-            lng = (decoded[0] as num).toDouble();
-            lat = (decoded[1] as num).toDouble();
+            lng = (decoded[0] as num?)?.toDouble() ?? 0.0;
+            lat = (decoded[1] as num?)?.toDouble() ?? 0.0;
           } else if (decoded is Map) {
             if (decoded['lat'] != null && decoded['lng'] != null) {
-              lat = (decoded['lat'] as num).toDouble();
-              lng = (decoded['lng'] as num).toDouble();
+              lat = (decoded['lat'] as num?)?.toDouble();
+              lng = (decoded['lng'] as num?)?.toDouble();
             }
           }
         } catch (_) {
@@ -332,12 +361,12 @@ class WorkerRemoteDatasource {
         try {
           final decoded = jsonDecode(raw);
           if (decoded is List && decoded.length == 2) {
-            lng = (decoded[0] as num).toDouble();
-            lat = (decoded[1] as num).toDouble();
+            lng = (decoded[0] as num?)?.toDouble();
+            lat = (decoded[1] as num?)?.toDouble();
           } else if (decoded is Map) {
             if (decoded['lat'] != null && decoded['lng'] != null) {
-              lat = (decoded['lat'] as num).toDouble();
-              lng = (decoded['lng'] as num).toDouble();
+              lat = (decoded['lat'] as num?)?.toDouble();
+              lng = (decoded['lng'] as num?)?.toDouble();
             }
           }
         } catch (_) {
@@ -392,8 +421,8 @@ class WorkerRemoteDatasource {
   /// Delete a worker
   Future<void> deleteWorker(String workerId) async {
     try {
-      print('=== DELETE WorkerAPI CALL ===');
-      final url = '${ApiEndpoints.deleteWorker}$workerId';
+      print('=== DELETE Worker API CALL ===');
+      final url = ApiEndpoints.deleteWorker(workerId);
       print('Deleting Worker from: $url');
 
       final response = await _dio.delete(url);
