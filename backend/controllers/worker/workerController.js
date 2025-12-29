@@ -35,10 +35,14 @@ exports.createWorker = async (req, res) => {
     try {
         if (req.files?.images) uploadedFilePaths.push(...extractFilePaths(req.files.images));
         if (req.files?.videos) uploadedFilePaths.push(...extractFilePaths(req.files.videos));
+        if (req.files?.license) uploadedFilePaths.push(...extractFilePaths(req.files.license));
+        if (req.files?.identityCard) uploadedFilePaths.push(...extractFilePaths(req.files.identityCard));
 
         const filePaths = {
             images: extractFilePaths(req.files?.images),
-            videos: extractFilePaths(req.files?.videos)
+            videos: extractFilePaths(req.files?.videos),
+            licenseUrl: extractFilePaths(req.files?.license)[0] || "",
+            identityCardUrl: extractFilePaths(req.files?.identityCard)[0] || ""
         };
 
         const worker = await workerService.createWorker(req.body, req.user._id, filePaths);
