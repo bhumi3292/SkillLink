@@ -6,6 +6,7 @@ class LoginState extends Equatable {
   final String? error;
   final bool shouldNavigateToHome;
   final bool shouldNavigateToRegister;
+  final String? role;
 
   const LoginState({
     required this.isLoading,
@@ -13,6 +14,7 @@ class LoginState extends Equatable {
     this.error,
     this.shouldNavigateToHome = false,
     this.shouldNavigateToRegister = false,
+    this.role,
   });
 
   const LoginState.initial()
@@ -20,7 +22,8 @@ class LoginState extends Equatable {
         isSuccess = false,
         error = null,
         shouldNavigateToHome = false,
-        shouldNavigateToRegister = false;
+        shouldNavigateToRegister = false,
+        role = null;
 
   LoginState copyWith({
     bool? isLoading,
@@ -28,16 +31,26 @@ class LoginState extends Equatable {
     String? error,
     bool? shouldNavigateToHome,
     bool? shouldNavigateToRegister,
+    String? role,
   }) {
     return LoginState(
       isLoading: isLoading ?? this.isLoading,
       isSuccess: isSuccess ?? this.isSuccess,
-      error: error, // Note: overwrite even if null
+      error: error,
       shouldNavigateToHome: shouldNavigateToHome ?? this.shouldNavigateToHome,
-      shouldNavigateToRegister: shouldNavigateToRegister ?? this.shouldNavigateToRegister,
+      shouldNavigateToRegister:
+          shouldNavigateToRegister ?? this.shouldNavigateToRegister,
+      role: role ?? this.role,
     );
   }
 
   @override
-  List<Object?> get props => [isLoading, isSuccess, error, shouldNavigateToHome, shouldNavigateToRegister];
+  List<Object?> get props => [
+    isLoading,
+    isSuccess,
+    error,
+    shouldNavigateToHome,
+    shouldNavigateToRegister,
+    role,
+  ];
 }

@@ -11,6 +11,8 @@ class PaymentEntity extends Equatable {
   final String? transactionId;
   final String status;
   final DateTime? paymentDate;
+  final String? refundStatus;
+  final String? refundReason;
 
   const PaymentEntity({
     this.id,
@@ -23,19 +25,23 @@ class PaymentEntity extends Equatable {
     this.transactionId,
     required this.status,
     this.paymentDate,
+    this.refundStatus,
+    this.refundReason,
   });
 
   @override
   List<Object?> get props => [
-        id,
-        bookingId,
-        hirerId,
-        workerId,
-        workerName,
-        paymentGateway,
-        amount,
-        transactionId,
-        status,
-        paymentDate,
-      ];
+    id,
+    bookingId,
+    hirerId,
+    workerId,
+    workerName,
+    paymentGateway,
+    amount,
+    transactionId,
+    status,
+    paymentDate,
+    refundStatus,
+    refundReason,
+  ];
 }

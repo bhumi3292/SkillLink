@@ -1,6 +1,5 @@
 import 'package:dartz/dartz.dart';
 import 'package:skill_link/cores/error/failure.dart';
-import 'package:dio/dio.dart';
 import 'package:skill_link/cores/network/api_service.dart';
 import 'package:skill_link/features/explore/data/model/explore_worker_model.dart';
 import 'package:skill_link/app/constant/api_endpoints.dart';
@@ -31,8 +30,9 @@ class ExploreRemoteDataSourceImpl implements ExploreRemoteDataSource {
 
         if (responseData is Map<String, dynamic>) {
           dynamic maybe = responseData.containsKey('data') ? responseData['data'] : responseData;
-          if (maybe is List) workerData = maybe;
-          else if (maybe is Map && maybe.containsKey('workers')) workerData = maybe['workers'];
+          if (maybe is List) {
+            workerData = maybe;
+          } else if (maybe is Map && maybe.containsKey('workers')) workerData = maybe['workers'];
         } else if (responseData is List) {
           workerData = responseData;
         }

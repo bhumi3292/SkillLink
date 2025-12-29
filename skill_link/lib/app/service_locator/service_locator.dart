@@ -93,6 +93,12 @@ import 'package:skill_link/features/payment/domain/repository/payment_repository
 import 'package:skill_link/features/payment/domain/use_case/payment_usecases.dart';
 import 'package:skill_link/features/payment/presentation/bloc/payment_bloc.dart';
 
+// Admin
+import 'package:skill_link/features/admin/data/data_source/admin_remote_datasource.dart';
+import 'package:skill_link/features/admin/domain/repository/admin_repository.dart';
+import 'package:skill_link/features/admin/data/repository/admin_repository_impl.dart';
+import 'package:skill_link/features/admin/presentation/view_model/admin_cubit.dart';
+
 final serviceLocator = GetIt.instance;
 
 Future<void> initDependencies() async {
@@ -131,6 +137,7 @@ Future<void> initDependencies() async {
   _initBookingModules();
   _initNotificationModules();
   _initPaymentModules();
+  _initAdminModules();
 }
 
 void _initAuthModules() {
@@ -149,7 +156,6 @@ void _initAuthModules() {
   serviceLocator.registerLazySingleton<IUserRepository>(
     () => UserRemoteRepository(
       dataSource: serviceLocator(),
-      apiService: serviceLocator(),
       tokenSharedPrefs: serviceLocator(),
     ),
   );
@@ -433,5 +439,17 @@ void _initPaymentModules() {
       verifyPaymentUseCase: serviceLocator(),
       getPaymentHistoryUseCase: serviceLocator(),
     ),
+  );
+}
+
+void _initAdminModules() {
+  serviceLocator.registerLazySingleton<AdminRemoteDataSource>(
+    () => AdminRemoteDataSource(serviceLocator<ApiService>()),
+  );
+  serviceLocator.registerLazySingleton<IAdminRepository>(
+    () => AdminRepositoryImpl(serviceLocator<AdminRemoteDataSource>()),
+  );
+  serviceLocator.registerFactory<AdminCubit>(
+    () => AdminCubit(serviceLocator<IAdminRepository>()),
   );
 }

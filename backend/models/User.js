@@ -19,8 +19,12 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ["worker", "hirer"],
+        enum: ["worker", "hirer", "admin"],
         required: true
+    },
+    isSuspended: {
+        type: Boolean,
+        default: false
     },
     password: {
         type: String,

@@ -6,7 +6,6 @@ import 'package:skill_link/features/notification/presentation/bloc/notification_
 import 'package:skill_link/features/notification/presentation/bloc/notification_state.dart';
 import 'package:intl/intl.dart';
 import 'package:skill_link/features/booking/presentation/view/pay_and_rate_page.dart';
-import 'package:skill_link/features/booking/presentation/bloc/booking_bloc.dart';
 import 'package:skill_link/features/booking/domain/repositories/booking_repository.dart';
 
 class NotificationPage extends StatelessWidget {

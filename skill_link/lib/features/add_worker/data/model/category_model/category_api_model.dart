@@ -27,18 +27,8 @@ class CategoryApiModel extends Equatable {
 
   factory CategoryApiModel.fromJson(Map<String, dynamic> json) =>
       _$CategoryApiModelFromJson(json);
+  Map<String, dynamic> toJson() => _$CategoryApiModelToJson(this);
 
-  Map<String, dynamic> toJson() {
-    // For API requests, we need to send 'name' instead of 'category_name'
-    return {
-      '_id': id,
-      'name': categoryName, // Backend expects 'name' in request body
-      'createdAt': createdAt?.toIso8601String(),
-      'updatedAt': updatedAt?.toIso8601String(),
-    };
-  }
-
-  @override
   CategoryEntity toEntity() {
     return CategoryEntity(
       id: id,

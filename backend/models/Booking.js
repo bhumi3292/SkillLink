@@ -30,6 +30,31 @@ const BookingSchema = new mongoose.Schema({
         enum: ['Pending', 'Accepted', 'InProgress', 'Completed', 'Paid', 'Cancelled', 'Rejected', 'confirmed', 'pending'],
         default: 'Pending'
     },
+    // Timeline of status changes and important events
+    timeline: [
+        {
+            status: { type: String },
+            timestamp: { type: Date, default: Date.now },
+            actor: { type: mongoose.Schema.ObjectId, ref: 'User' },
+            actorRole: { type: String },
+            reason: { type: String }
+        }
+    ],
+    // If the booking was cancelled by hirer, store mandatory reason
+    cancellationReason: {
+        type: String
+    },
+    // Reschedule requests history
+    rescheduleRequests: [
+        {
+            requestedDate: { type: String },
+            requestedTimeSlot: { type: String },
+            requestedAt: { type: Date, default: Date.now },
+            status: { type: String, enum: ['pending','accepted','rejected'], default: 'pending' },
+            workerResponseReason: { type: String },
+            respondedAt: { type: Date }
+        }
+    ],
     location: {
         type: {
             type: String,

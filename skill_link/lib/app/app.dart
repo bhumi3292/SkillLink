@@ -1,3 +1,11 @@
+import 'package:skill_link/features/admin/presentation/view/admin_bookings_view.dart';
+import 'package:skill_link/features/admin/presentation/view/dispute_resolution_view.dart';
+import 'package:skill_link/features/admin/presentation/view/user_directory_view.dart';
+import 'package:skill_link/features/admin/presentation/view/category_management_view.dart';
+import 'package:skill_link/features/admin/presentation/view/admin_dashboard.dart';
+import 'package:skill_link/features/admin/presentation/view/worker_verification_list_page.dart';
+import 'package:skill_link/features/admin/presentation/view/worker_verification_detail_page.dart';
+import 'package:skill_link/features/admin/presentation/view/admin_payments_view.dart';
 import 'package:skill_link/features/profile/presentation/view/profile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -18,6 +26,7 @@ import 'package:skill_link/features/add_worker/presentation/view/add_worker_pres
 import 'package:skill_link/features/auth/presentation/view/forgot_password_page.dart';
 import 'package:skill_link/features/auth/presentation/view/reset_password_page.dart';
 import 'package:skill_link/features/favourite/presentation/bloc/cart_bloc.dart';
+import 'package:skill_link/features/explore/domain/entity/explore_worker_entity.dart';
 
 // ViewModels
 import 'package:skill_link/features/auth/presentation/view_model/login_view_model/login_view_model.dart';
@@ -94,6 +103,44 @@ class _MyAppState extends State<MyApp> {
             GetPage(
               name: '/add-worker',
               page: () => const AddWorkerPresentation(),
+            ),
+            GetPage(
+              name: '/admin/dashboard',
+              page: () => const AdminDashboard(),
+            ),
+            GetPage(
+              name: '/admin/worker-requests',
+              page: () => const WorkerVerificationListPage(),
+            ),
+            GetPage(
+              name: '/admin/workers/detail',
+              page: () {
+                final args = Get.arguments;
+                if (args is ExploreWorkerEntity) {
+                  return WorkerVerificationDetailPage(worker: args);
+                }
+                return const Scaffold(body: Center(child: Text("Invalid Arguments")));
+              },
+            ),
+            GetPage(
+              name: '/admin/categories',
+              page: () => const CategoryManagementView(),
+            ),
+            GetPage(
+              name: '/admin/users',
+              page: () => const UserDirectoryView(),
+            ),
+            GetPage(
+              name: '/admin/disputes',
+              page: () => const DisputeResolutionView(),
+            ),
+            GetPage(
+              name: '/admin/bookings',
+              page: () => const AdminBookingsView(),
+            ),
+            GetPage(
+              name: '/payment-history',
+              page: () => const AdminPaymentsView(),
             ),
           ],
         ),

@@ -14,6 +14,9 @@ class UserEntity extends Equatable {
 
   final double? averageRating;
   final int? numReviews;
+  final String? workerStatus; // 'pending', 'approved', 'rejected'
+  final String? rejectionReason;
+  final int? viewCount;
 
   const UserEntity({
     this.userId,
@@ -27,6 +30,9 @@ class UserEntity extends Equatable {
     this.location,
     this.averageRating,
     this.numReviews,
+    this.workerStatus,
+    this.rejectionReason,
+    this.viewCount,
   });
 
   UserEntity copyWith({
@@ -40,6 +46,7 @@ class UserEntity extends Equatable {
     String? profilePicture,
     double? averageRating,
     int? numReviews,
+    int? viewCount,
   }) {
     return UserEntity(
       userId: userId ?? this.userId,
@@ -52,6 +59,9 @@ class UserEntity extends Equatable {
       profilePicture: profilePicture ?? this.profilePicture,
       averageRating: averageRating ?? this.averageRating,
       numReviews: numReviews ?? this.numReviews,
+      workerStatus: workerStatus ?? workerStatus,
+      rejectionReason: rejectionReason ?? rejectionReason,
+      viewCount: viewCount ?? this.viewCount,
     );
   }
 
@@ -67,5 +77,8 @@ class UserEntity extends Equatable {
     profilePicture,
     averageRating,
     numReviews,
+    workerStatus,
+    rejectionReason,
+    viewCount,
   ];
 }

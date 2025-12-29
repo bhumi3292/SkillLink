@@ -15,6 +15,11 @@ UserApiModel _$UserApiModelFromJson(Map<String, dynamic> json) => UserApiModel(
   password: json['password'] as String?,
   confirmPassword: json['confirmPassword'] as String?,
   profilePicture: json['profilePicture'] as String?,
+  averageRating: (json['averageRating'] as num?)?.toDouble(),
+  numReviews: (json['numReviews'] as num?)?.toInt(),
+  workerStatus: json['workerStatus'] as String?,
+  rejectionReason: json['rejectionReason'] as String?,
+  viewCount: (json['viewCount'] as num?)?.toInt(),
 );
 
 Map<String, dynamic> _$UserApiModelToJson(UserApiModel instance) =>
@@ -27,4 +32,9 @@ Map<String, dynamic> _$UserApiModelToJson(UserApiModel instance) =>
       'password': instance.password,
       'confirmPassword': instance.confirmPassword,
       'profilePicture': instance.profilePicture,
+      'averageRating': instance.averageRating,
+      'numReviews': instance.numReviews,
+      'workerStatus': instance.workerStatus,
+      'rejectionReason': instance.rejectionReason,
+      'viewCount': instance.viewCount,
     };

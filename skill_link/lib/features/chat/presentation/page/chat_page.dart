@@ -35,7 +35,7 @@ class _ChatPageState extends State<ChatPage> {
 
   Future<void> _connectSocketAndLoadChats() async {
     // TODO: Replace with your actual backend IP and port
-    final socketUrl = ApiEndpoints.localNetworkAddress;
+    final socketUrl = ApiEndpoints.imageUrl;
     final tokenResult = await serviceLocator<TokenSharedPrefs>().getToken();
     final token = tokenResult.fold((failure) => '', (token) => token ?? '');
     print('[DEBUG] Dispatching ConnectSocketEvent with $socketUrl');
@@ -155,8 +155,11 @@ class _ChatList extends StatelessWidget {
                       ? DateTime.tryParse(chat['lastMessageAt'])
                       : null;
               final avatarUrl =
-                  participants.isNotEmpty && participants.first['profilePicture'] != null
-                      ? ImageUrlHelper.constructImageUrl(participants.first['profilePicture'])
+                  participants.isNotEmpty &&
+                          participants.first['profilePicture'] != null
+                      ? ImageUrlHelper.constructImageUrl(
+                        participants.first['profilePicture'],
+                      )
                       : null;
               print(
                 '[DEBUG] ChatList item: chatId=$chatId, chatName=$chatName, lastMessage=$lastMessage',
@@ -301,7 +304,11 @@ class _ChatView extends StatelessWidget {
                   children: [
                     if (other != null && other['profilePicture'] != null)
                       CircleAvatar(
-                        backgroundImage: NetworkImage(ImageUrlHelper.constructImageUrl(other['profilePicture'])),
+                        backgroundImage: NetworkImage(
+                          ImageUrlHelper.constructImageUrl(
+                            other['profilePicture'],
+                          ),
+                        ),
                         radius: 26,
                       )
                     else
@@ -330,6 +337,24 @@ class _ChatView extends StatelessWidget {
                             fontSize: 20,
                           ),
                         ),
+                        // Booking reference and service name (if present in chat metadata)
+                        if (chat['booking'] != null)
+                          Text(
+                            'Booking #${(chat['booking'] as String).length > 8 ? (chat['booking'] as String).substring(0, 8) : chat['booking']}',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        if (chat['workerListing'] != null &&
+                            chat['workerListing']['title'] != null)
+                          Text(
+                            chat['workerListing']['title'],
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey,
+                            ),
+                          ),
                         if (other?['email'] != null)
                           Text(
                             other?['email'],

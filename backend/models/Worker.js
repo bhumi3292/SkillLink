@@ -59,6 +59,28 @@ const workerSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    experience: {
+        type: Number,
+        required: true,
+        default: 0
+    },
+    licenseUrl: {
+        type: String,
+        required: true,
+    },
+    identityCardUrl: {
+        type: String,
+        required: true,
+    },
+    status: {
+        type: String,
+        enum: ["pending", "approved", "rejected"],
+        default: "pending"
+    },
+    rejectionReason: {
+        type: String,
+        default: null
+    },
     viewCount: {
         type: Number,
         default: 0

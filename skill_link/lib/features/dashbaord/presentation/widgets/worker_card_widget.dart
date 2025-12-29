@@ -18,7 +18,7 @@ class WorkerCardWidget extends StatefulWidget {
     super.key,
     required this.worker,
     this.onTap,
-    this.showFavoriteButton = true,
+    this.showFavoriteButton = false,
     this.showRemoveButton = false,
     this.isFavorite = false,
     // Removed this.baseUrl, // <--- REMOVED THIS LINE from constructor

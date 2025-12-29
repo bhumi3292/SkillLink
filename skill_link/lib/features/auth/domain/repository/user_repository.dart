@@ -6,7 +6,7 @@ import 'dart:io';
 abstract interface class IUserRepository {
   Future<Either<Failure, void>> registerUser(UserEntity user);
 
-  Future<Either<Failure, String>> loginUser(
+  Future<Either<Failure, Map<String, dynamic>>> loginUser(
     String email,
     String password,
     String stakeholder,

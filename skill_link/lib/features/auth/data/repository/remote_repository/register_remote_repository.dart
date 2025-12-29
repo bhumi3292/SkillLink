@@ -4,21 +4,17 @@ import 'package:skill_link/cores/error/failure.dart';
 import 'package:skill_link/features/auth/domain/entity/user_entity.dart';
 import 'package:skill_link/features/auth/domain/repository/user_repository.dart';
 import 'package:skill_link/features/auth/data/data_source/remote_datasource/user_remote_datasource.dart';
-import 'package:skill_link/cores/network/api_service.dart';
 import 'package:skill_link/app/shared_pref/token_shared_prefs.dart';
 import 'dart:io';
 
 class UserRemoteRepository implements IUserRepository {
   final UserRemoteDatasource _remoteDataSource;
-  final ApiService _apiService;
   final TokenSharedPrefs _tokenSharedPrefs;
 
   UserRemoteRepository({
     required UserRemoteDatasource dataSource,
-    required ApiService apiService,
     required TokenSharedPrefs tokenSharedPrefs,
   }) : _remoteDataSource = dataSource,
-       _apiService = apiService,
        _tokenSharedPrefs = tokenSharedPrefs;
 
   Failure _handleDioError(DioException e) {
@@ -63,26 +59,26 @@ class UserRemoteRepository implements IUserRepository {
   }
 
   @override
-  Future<Either<Failure, String>> loginUser(
+  Future<Either<Failure, Map<String, dynamic>>> loginUser(
     String email,
     String password,
     String stakeholder,
   ) async {
     try {
-      final token = await _remoteDataSource.loginUser(
+      final data = await _remoteDataSource.loginUser(
         email,
         password,
         stakeholder,
       );
 
-      // Persist token and simple user info for later requests
+      final token = data['token'] as String;
+
+      // Persist token for later requests
       try {
         await _tokenSharedPrefs.saveToken(token);
-      } catch (_) {
-        // Ignore errors from saving token to prefs; primary action (login) succeeded
-      }
+      } catch (_) {}
 
-      return Right(token);
+      return Right(data);
     } on DioException catch (e) {
       return Left(_handleDioError(e));
     } catch (e) {

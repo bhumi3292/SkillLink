@@ -40,11 +40,7 @@ class _NetworkDebugScreenState extends State<NetworkDebugScreen> {
 
     try {
       final socket = await Socket.connect(
-        InternetAddress(
-          ApiEndpoints.serverAddress
-              .replaceAll('http://', '')
-              .replaceAll(':3001', ''),
-        ),
+        InternetAddress(ApiEndpoints.serverIp),
         3001,
         timeout: const Duration(seconds: 5),
       );
@@ -92,7 +88,7 @@ class _NetworkDebugScreenState extends State<NetworkDebugScreen> {
                     Text('Local IP: ${_localIpAddress ?? 'Unknown'}'),
                     Text('Internet Connected: ${_isConnected ? 'Yes' : 'No'}'),
                     Text('Platform: ${Platform.operatingSystem}'),
-                    Text('Server Address: ${ApiEndpoints.serverAddress}'),
+                    Text('Server Address: ${ApiEndpoints.imageUrl}'),
                   ],
                 ),
               ),
@@ -169,11 +165,11 @@ class _NetworkDebugScreenState extends State<NetworkDebugScreen> {
                     ),
                     const SizedBox(height: 8),
                     SelectableText(
-                      'Server Address: ${ApiEndpoints.serverAddress}',
+                      'Server Address: ${ApiEndpoints.imageUrl}',
                     ),
                     SelectableText('Base URL: ${ApiEndpoints.baseUrl}'),
                     SelectableText(
-                      'Real Device Address: ${ApiEndpoints.activeServerAddress}',
+                      'Real Device Address: ${ApiEndpoints.serverIp}',
                     ),
                   ],
                 ),

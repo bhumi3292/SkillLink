@@ -13,15 +13,15 @@ const storage = multer.diskStorage({
     },
 });
 
-const allowedMimeTypes = ["image/jpeg", "image/png", "image/gif", "video/mp4", "video/quicktime", "video/webm"];
+const allowedMimeTypes = ["image/jpeg", "image/png", "image/gif", "video/mp4", "video/quicktime", "video/webm", "application/pdf"];
 
 const upload = multer({
     storage,
     fileFilter: (req, file, cb) => {
         if (allowedMimeTypes.includes(file.mimetype)) {
-            cb(null, true); // Accept the file
+            cb(null, true);
         } else {
-            cb(new Error("Unsupported file type!"), false); // Reject the file
+            cb(new Error("Unsupported file type!"), false);
         }
     },
     limits: {
@@ -32,6 +32,8 @@ const upload = multer({
 const uploadWorkerMedia = upload.fields([
     { name: "images", maxCount: 10 },
     { name: "videos", maxCount: 3 },
+    { name: "license", maxCount: 1 },
+    { name: "identityCard", maxCount: 1 },
 ]);
 
 module.exports = uploadWorkerMedia;

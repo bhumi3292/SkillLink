@@ -9,7 +9,7 @@ import 'package:esewa_flutter_sdk/esewa_payment.dart';
 import 'package:esewa_flutter_sdk/esewa_payment_success_result.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class PaymentOptionsDialog extends StatelessWidget {
+class PaymentOptionsDialog extends StatefulWidget {
   final String bookingId;
   final double amount;
 
@@ -20,32 +20,67 @@ class PaymentOptionsDialog extends StatelessWidget {
   });
 
   @override
+  State<PaymentOptionsDialog> createState() => _PaymentOptionsDialogState();
+}
+
+class _PaymentOptionsDialogState extends State<PaymentOptionsDialog> {
+  Map<String, dynamic>? _paymentData;
+  String? _selectedGateway;
+
+  @override
   Widget build(BuildContext context) {
     return BlocListener<PaymentBloc, PaymentState>(
       listener: (context, state) {
         if (state is PaymentInitiated) {
-          if (state.gateway == 'Khalti') {
-            _launchKhalti(context, state.paymentData);
-          } else if (state.gateway == 'eSewa') {
-            _launchEsewa(context, state.paymentData);
-          }
+          setState(() {
+            _paymentData = state.paymentData;
+            _selectedGateway = state.gateway;
+          });
         } else if (state is PaymentSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: Colors.green,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-          Navigator.pop(context, true);
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: Colors.green,
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+            Navigator.pop(context, true);
+          }
         } else if (state is PaymentFailure) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: Colors.red,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+          if (context.mounted) {
+            showDialog(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                title: const Text('Payment Failed'),
+                content: Text(state.message),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(ctx).pop();
+                    },
+                    child: const Text('Close'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(ctx).pop();
+                      // Retry by initiating again with same gateway
+                      if (_selectedGateway != null) {
+                        context.read<PaymentBloc>().add(
+                              InitiatePaymentEvent(
+                                bookingId: widget.bookingId,
+                                amount: widget.amount,
+                                gateway: _selectedGateway!,
+                              ),
+                            );
+                      }
+                    },
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            );
+          }
         }
       },
       child: Dialog(
@@ -70,21 +105,12 @@ class PaymentOptionsDialog extends StatelessWidget {
                   const SizedBox(width: 12),
                   const Text(
                     'Checkout',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close, color: Colors.white70, size: 20),
+                    style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
             ),
-            
+
             // Body
             Padding(
               padding: const EdgeInsets.all(24),
@@ -99,86 +125,150 @@ class PaymentOptionsDialog extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
-                  // Amount Display
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF0F5FA),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFF003366).withOpacity(0.1)),
-                    ),
-                    child: Column(
+
+                  // If paymentData present show breakdown and confirm button
+                  if (_paymentData != null) ...[
+                    _buildBreakdownCard(_paymentData!),
+                    const SizedBox(height: 16),
+                    Row(
                       children: [
-                        const Text(
-                          'TOTAL AMOUNT',
-                          style: TextStyle(
-                            fontSize: 10,
-                            letterSpacing: 1.2,
-                            color: Color(0xFF003366),
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'NPR ${amount.toStringAsFixed(0)}',
-                          style: const TextStyle(
-                            fontSize: 28,
-                            color: Color(0xFF003366),
-                            fontWeight: FontWeight.w900,
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () {
+                              // Confirm -> launch gateway
+                              if (_selectedGateway == 'Khalti') {
+                                _launchKhalti(context, _paymentData!);
+                              } else if (_selectedGateway == 'eSewa') {
+                                _launchEsewa(context, _paymentData!);
+                              }
+                            },
+                            child: const Text('Confirm & Pay'),
                           ),
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                  
-                  // Options
-                  _buildPaymentCard(
-                    context,
-                    title: 'eSewa Mobile Wallet',
-                    subtitle: 'Fast and secure payment via eSewa',
-                    color: const Color(0xFF41A124),
-                    icon: Icons.account_balance_wallet_rounded,
-                    onTap: () {
-                      context.read<PaymentBloc>().add(
-                        InitiatePaymentEvent(
-                          bookingId: bookingId,
-                          amount: amount,
-                          gateway: 'eSewa',
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  _buildPaymentCard(
-                    context,
-                    title: 'Khalti Wallet',
-                    subtitle: 'Pay easily using your Khalti account',
-                    color: const Color(0xFF5C2D91),
-                    icon: Icons.wallet_rounded,
-                    onTap: () {
-                      context.read<PaymentBloc>().add(
-                        InitiatePaymentEvent(
-                          bookingId: bookingId,
-                          amount: amount,
-                          gateway: 'Khalti',
-                        ),
-                      );
-                    },
-                  ),
-                  
-                  const SizedBox(height: 20),
-                  const Text(
-                    'Secured by SkillLink Payment Gateway',
-                    style: TextStyle(fontSize: 10, color: Colors.grey),
-                  ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Secured by SkillLink Payment Gateway',
+                      style: TextStyle(fontSize: 10, color: Colors.grey),
+                    ),
+                  ] else ...[
+                    // Amount Display
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF0F5FA),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFF003366).withValues(alpha: 0.1)),
+                      ),
+                      child: Column(
+                        children: [
+                          const Text(
+                            'TOTAL AMOUNT',
+                            style: TextStyle(
+                              fontSize: 10,
+                              letterSpacing: 1.2,
+                              color: Color(0xFF003366),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'NPR ${widget.amount.toStringAsFixed(0)}',
+                            style: const TextStyle(
+                              fontSize: 28,
+                              color: Color(0xFF003366),
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Options
+                    _buildPaymentCard(
+                      context,
+                      title: 'eSewa Mobile Wallet',
+                      subtitle: 'Fast and secure payment via eSewa',
+                      color: const Color(0xFF41A124),
+                      icon: Icons.account_balance_wallet_rounded,
+                      onTap: () {
+                        setState(() {
+                          _selectedGateway = 'eSewa';
+                        });
+                        context.read<PaymentBloc>().add(
+                              InitiatePaymentEvent(
+                                bookingId: widget.bookingId,
+                                amount: widget.amount,
+                                gateway: 'eSewa',
+                              ),
+                            );
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    _buildPaymentCard(
+                      context,
+                      title: 'Khalti Wallet',
+                      subtitle: 'Pay easily using your Khalti account',
+                      color: const Color(0xFF5C2D91),
+                      icon: Icons.wallet_rounded,
+                      onTap: () {
+                        setState(() {
+                          _selectedGateway = 'Khalti';
+                        });
+                        context.read<PaymentBloc>().add(
+                              InitiatePaymentEvent(
+                                bookingId: widget.bookingId,
+                                amount: widget.amount,
+                                gateway: 'Khalti',
+                              ),
+                            );
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      'Secured by SkillLink Payment Gateway',
+                      style: TextStyle(fontSize: 10, color: Colors.grey),
+                    ),
+                  ]
                 ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildBreakdownCard(Map<String, dynamic> data) {
+    final base = data['baseAmount'] ?? data['amount'] ?? 0;
+    final fee = data['serviceFee'] ?? 0;
+    final tax = data['taxAmount'] ?? 0;
+    final total = data['totalAmount'] ?? data['amount'] ?? 0;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FBFF),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Price Breakdown', style: TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('Base price'), Text('NPR $base')]),
+          const SizedBox(height: 6),
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('Service fee'), Text('NPR $fee')]),
+          const SizedBox(height: 6),
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('Tax'), Text('NPR $tax')]),
+          const Divider(height: 16),
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('Total', style: TextStyle(fontWeight: FontWeight.bold)), Text('NPR $total', style: const TextStyle(fontWeight: FontWeight.bold))]),
+        ],
       ),
     );
   }
@@ -200,14 +290,14 @@ class PaymentOptionsDialog extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.withOpacity(0.2)),
+            border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
           ),
           child: Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(icon, color: color, size: 24),
@@ -249,7 +339,6 @@ class PaymentOptionsDialog extends StatelessWidget {
       await launchUrl(Uri.parse(paymentUrl), mode: LaunchMode.externalApplication);
       
       // Since Khalti is web-based here, we might need a way to verify later.
-      // Usually, the return_url handles this, but for mobile, we might show a dialog.
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Please complete payment in the browser.')),
@@ -278,9 +367,9 @@ class PaymentOptionsDialog extends StatelessWidget {
           secretId: testSecret,
         ),
         esewaPayment: EsewaPayment(
-          productId: paymentData['paymentId'] ?? bookingId,
+          productId: paymentData['paymentId'] ?? widget.bookingId,
           productName: "SkillLink Service",
-          productPrice: amount.toInt().toString(), 
+          productPrice: widget.amount.toInt().toString(), 
           callbackUrl: "https://example.com",
         ),
         onPaymentSuccess: (EsewaPaymentSuccessResult result) {
@@ -291,12 +380,12 @@ class PaymentOptionsDialog extends StatelessWidget {
             ),
           );
         },
-        onPaymentFailure: () {
+        onPaymentFailure: (data) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('eSewa Payment Failed'), backgroundColor: Colors.red),
           );
         },
-        onPaymentCancellation: () {
+        onPaymentCancellation: (data) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('eSewa Payment Cancelled')),
           );
@@ -307,4 +396,3 @@ class PaymentOptionsDialog extends StatelessWidget {
     }
   }
 }
-

@@ -15,7 +15,6 @@ import 'package:skill_link/features/explore/presentation/utils/worker_converter.
 import 'package:skill_link/cores/utils/image_url_helper.dart'; // Import ImageUrlHelper here
 import 'package:skill_link/core/services/socket_notification_service.dart';
 import 'package:skill_link/features/profile/presentation/view_model/profile_state.dart';
-import 'package:skill_link/features/notification/presentation/view/notification_page.dart';
 
 class DashboardPage extends StatelessWidget {
   final VoidCallback? onSeeAllTap;
@@ -335,7 +334,7 @@ class _DashboardViewState extends State<DashboardView> {
                               ),
                             );
                           },
-                          showFavoriteButton: true,
+                          showFavoriteButton: false,
                           // REMOVED baseUrl: ApiEndpoints.imageUrl
                           // WorkerCardWidget no longer needs baseUrl in its constructor
                           // and ImageUrlHelper already uses ApiEndpoints internally.

@@ -9,15 +9,19 @@ class AddWorkerParams extends Equatable {
   final WorkerEntity worker;
   final List<String> imagePaths;
   final List<String> videoPaths;
+  final String? licensePath;
+  final String? identityCardPath;
 
   const AddWorkerParams({
     required this.worker,
     required this.imagePaths,
     required this.videoPaths,
+    this.licensePath,
+    this.identityCardPath,
   });
 
   @override
-  List<Object?> get props => [worker, imagePaths, videoPaths];
+  List<Object?> get props => [worker, imagePaths, videoPaths, licensePath, identityCardPath];
 }
 
 class AddWorkerUsecase implements UsecaseWithParams<void, AddWorkerParams> {
@@ -31,6 +35,8 @@ class AddWorkerUsecase implements UsecaseWithParams<void, AddWorkerParams> {
       params.worker,
       params.imagePaths,
       params.videoPaths,
+      licensePath: params.licensePath,
+      identityCardPath: params.identityCardPath,
     );
   }
 }

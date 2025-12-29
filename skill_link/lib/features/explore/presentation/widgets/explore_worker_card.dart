@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:skill_link/features/explore/domain/entity/explore_worker_entity.dart';
 import 'package:skill_link/cores/utils/image_url_helper.dart';
-import 'package:skill_link/features/favourite/presentation/bloc/cart_bloc.dart';
 
 class ExploreWorkerCard extends StatefulWidget {
   final ExploreWorkerEntity worker;
@@ -237,6 +235,29 @@ class _ExploreWorkerCardState extends State<ExploreWorkerCard> {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
+                  // Rating and reviews
+                  Row(
+                    children: [
+                      const Icon(Icons.star, color: Colors.amber, size: 16),
+                      const SizedBox(width: 4),
+                      Text(
+                        (widget.worker.averageRating ?? 0.0).toStringAsFixed(1),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '(${widget.worker.numReviews ?? 0} reviews)',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
                   // Location
                   Row(
                     children: [
@@ -258,8 +279,6 @@ class _ExploreWorkerCardState extends State<ExploreWorkerCard> {
                       ),
                     ],
                   ),
-
-                  const SizedBox(height: 12),
 
                   const SizedBox(height: 12),
 
@@ -294,7 +313,7 @@ class _ExploreWorkerCardState extends State<ExploreWorkerCard> {
                             IconButton(
                               icon: const Icon(Icons.call, color: Colors.green),
                               onPressed: () {
-                                // Launch phone intent handled by caller
+                                // Launch phone intent
                               },
                             ),
                           // Message button
@@ -303,53 +322,13 @@ class _ExploreWorkerCardState extends State<ExploreWorkerCard> {
                             IconButton(
                               icon: const Icon(Icons.email, color: Colors.blue),
                               onPressed: () {
-                                // Launch email intent handled by caller
+                                // Launch email intent
                               },
                             ),
-                          BlocBuilder<CartBloc, CartState>(
-                            builder: (context, cartState) {
-                              bool isFavorite = false;
-                              if (cartState is CartLoaded &&
-                                  widget.worker.id != null) {
-                                isFavorite =
-                                    cartState.cart.items?.any(
-                                      (item) =>
-                                          item.worker.id ==
-                                          widget.worker.id,
-                                    ) ??
-                                    false;
-                              }
-                              return IconButton(
-                                icon: Icon(
-                                  isFavorite
-                                      ? Icons.favorite
-                                      : Icons.favorite_border,
-                                  color:
-                                      isFavorite
-                                          ? Colors.red
-                                          : Colors.grey[600],
-                                ),
-                                onPressed: () {
-                                  if (widget.worker.id != null) {
-                                    if (isFavorite) {
-                                      context.read<CartBloc>().add(
-                                        RemoveFromCartEvent(widget.worker.id!),
-                                      );
-                                    } else {
-                                      context.read<CartBloc>().add(
-                                        AddToCartEvent(widget.worker.id!),
-                                      );
-                                    }
-                                  }
-                                },
-                              );
-                            },
-                          ),
                         ],
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
                   // Skill chip
                   if (widget.worker.categoryName != null &&
                       widget.worker.categoryName!.isNotEmpty)

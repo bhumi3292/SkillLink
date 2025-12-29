@@ -148,6 +148,8 @@ class _BookingModalState extends State<BookingModal> {
         return;
       }
 
+      if (!mounted) return;
+
       // Get Hirer ID from ProfileViewModel
       final profileState = context.read<ProfileViewModel>().state;
       final hirerId = profileState.user?.userId;
@@ -194,6 +196,8 @@ class _BookingModalState extends State<BookingModal> {
         },
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
+
+      if (!mounted) return;
 
       if (widget.onBookingSuccess != null) widget.onBookingSuccess!();
       Navigator.of(context).pop();

@@ -77,4 +77,17 @@ router.delete('/bookings/:id',
     calendarController.deleteBooking
 );
 
+// Reschedule endpoints
+router.post('/bookings/:id/reschedule',
+    requireRole('hirer'),
+    isOwnerOrRelatedResource(Booking, 'id'),
+    calendarController.requestReschedule
+);
+
+router.post('/bookings/:id/reschedule/respond',
+    requireRole('worker'),
+    isOwnerOrRelatedResource(Booking, 'id'),
+    calendarController.respondReschedule
+);
+
 module.exports = router;

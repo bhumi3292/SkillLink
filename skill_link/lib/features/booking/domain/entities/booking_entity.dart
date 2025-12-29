@@ -13,6 +13,9 @@ class BookingEntity extends Equatable {
   final dynamic hirer;
   final dynamic worker;
   final bool isRated;
+  final List<dynamic>? timeline;
+  final String? cancellationReason;
+  final List<dynamic>? rescheduleRequests;
 
   const BookingEntity({
     required this.id,
@@ -26,8 +29,26 @@ class BookingEntity extends Equatable {
     this.hirer,
     this.worker,
     this.isRated = false,
+    this.timeline,
+    this.cancellationReason,
+    this.rescheduleRequests,
   });
 
   @override
-  List<Object?> get props => [id, workerListingId, hirerId, workerId, date, timeSlot, status, location, hirer, worker, isRated];
+  List<Object?> get props => [
+    id,
+    workerListingId,
+    hirerId,
+    workerId,
+    date,
+    timeSlot,
+    status,
+    location,
+    hirer,
+    worker,
+    isRated,
+    timeline,
+    cancellationReason,
+    rescheduleRequests,
+  ];
 }

@@ -46,10 +46,18 @@ class WorkerRemoteRepository implements IWorkerRepository {
   Future<Either<Failure, void>> addWorker(
     WorkerEntity worker,
     List<String> imagePaths,
-    List<String> videoPaths,
-  ) async {
+    List<String> videoPaths, {
+    String? licensePath,
+    String? identityCardPath,
+  }) async {
     try {
-      await _remoteDataSource.addWorker(worker, imagePaths, videoPaths);
+      await _remoteDataSource.addWorker(
+        worker,
+        imagePaths,
+        videoPaths,
+        licensePath: licensePath,
+        identityCardPath: identityCardPath,
+      );
       return const Right(null);
     } on DioException catch (e) {
       return Left(_handleDioError(e));

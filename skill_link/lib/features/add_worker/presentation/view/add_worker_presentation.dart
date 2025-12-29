@@ -36,6 +36,8 @@ class _AddWorkerPresentationState extends State<AddWorkerPresentation> {
   String? _pickedAddress;
   final List<String> _selectedImagePaths = [];
   final List<String> _selectedVideoPaths = [];
+  String? _licensePath;
+  String? _identityCardPath;
 
   @override
   void dispose() {
@@ -390,6 +392,52 @@ class _AddWorkerPresentationState extends State<AddWorkerPresentation> {
               Text('Videos selected: ${_selectedVideoPaths.length}'),
               const SizedBox(height: 12),
 
+              const Text(
+                'Verification Documents *',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => _pickDoc(true),
+                      icon: Icon(
+                        Icons.description,
+                        color:
+                            _licensePath != null ? Colors.green : Colors.white,
+                      ),
+                      label: Text(
+                        _licensePath != null ? 'License OK' : 'License',
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF003366),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => _pickDoc(false),
+                      icon: Icon(
+                        Icons.badge,
+                        color:
+                            _identityCardPath != null
+                                ? Colors.green
+                                : Colors.white,
+                      ),
+                      label: Text(
+                        _identityCardPath != null ? 'ID OK' : 'ID Card',
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF003366),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -401,7 +449,10 @@ class _AddWorkerPresentationState extends State<AddWorkerPresentation> {
                       borderRadius: BorderRadius.circular(30),
                     ),
                   ),
-                  child: const Text('OK', style: TextStyle(fontSize: 16)),
+                  child: const Text(
+                    'Submit for Verification',
+                    style: TextStyle(fontSize: 16),
+                  ),
                 ),
               ),
             ],
@@ -469,7 +520,20 @@ class _AddWorkerPresentationState extends State<AddWorkerPresentation> {
       worker: entity,
       imagePaths: _selectedImagePaths,
       videoPaths: _selectedVideoPaths,
+      licensePath: _licensePath,
+      identityCardPath: _identityCardPath,
     );
+
+    if (_licensePath == null || _identityCardPath == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Please upload all mandatory documents (License & ID Card)',
+          ),
+        ),
+      );
+      return;
+    }
 
     showDialog(
       context: context,
@@ -503,7 +567,7 @@ class _AddWorkerPresentationState extends State<AddWorkerPresentation> {
   }
 
   void _openLocationPicker() async {
-    final result = await Navigator.of(context).push(
+    await Navigator.of(context).push(
       MaterialPageRoute(
         builder:
             (_) => Scaffold(
@@ -557,6 +621,25 @@ class _AddWorkerPresentationState extends State<AddWorkerPresentation> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Video pick error: $e')));
+    }
+  }
+
+  Future<void> _pickDoc(bool isLicense) async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? file = await picker.pickImage(source: ImageSource.gallery);
+      if (file == null) return;
+      setState(() {
+        if (isLicense) {
+          _licensePath = file.path;
+        } else {
+          _identityCardPath = file.path;
+        }
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Document pick error: $e')));
     }
   }
 }

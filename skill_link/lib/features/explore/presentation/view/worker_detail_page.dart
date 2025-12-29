@@ -13,7 +13,6 @@ import 'package:skill_link/features/chat/domain/use_case/chat_usecases.dart';
 import 'package:skill_link/app/shared_pref/token_shared_prefs.dart';
 
 import 'package:skill_link/features/explore/presentation/bloc/review_bloc.dart';
-import 'package:skill_link/features/explore/data/model/review_model.dart';
 import 'package:skill_link/features/explore/domain/repository/explore_repository.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';

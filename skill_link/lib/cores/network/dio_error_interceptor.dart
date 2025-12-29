@@ -11,7 +11,8 @@ class DioErrorInterceptor extends Interceptor {
       if (statusCode >= 300) {
         final data = err.response?.data;
         if (data is Map<String, dynamic>) {
-          errorMessage = data['message']?.toString() ??
+          errorMessage =
+              data['message']?.toString() ??
               err.response?.statusMessage ??
               'Unknown server error';
         } else if (data is String) {
@@ -20,7 +21,8 @@ class DioErrorInterceptor extends Interceptor {
           errorMessage = err.response?.statusMessage ?? 'Unknown server error';
         }
       } else {
-        errorMessage = 'Something went wrong with the response (unexpected status code).';
+        errorMessage =
+            'Something went wrong with the response (unexpected status code).';
       }
     } else {
       switch (err.type) {
@@ -46,7 +48,6 @@ class DioErrorInterceptor extends Interceptor {
           errorMessage = 'Bad SSL certificate.';
           break;
         case DioExceptionType.unknown:
-        default:
           errorMessage = 'An unexpected error occurred.';
           break;
       }

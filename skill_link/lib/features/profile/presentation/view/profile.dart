@@ -319,7 +319,7 @@ class _ProfilePageState extends State<ProfilePage> {
       final user = context.read<ProfileViewModel>().state.user;
       if (user?.profilePicture != null && user!.profilePicture!.isNotEmpty) {
         // Corrected line for imageUrl
-        final imageUrl = '${ApiEndpoints.localNetworkAddress}${user.profilePicture}';
+        final imageUrl = '${ApiEndpoints.imageUrl}${user.profilePicture}';
 
         await DefaultCacheManager().removeFile(imageUrl);
         print('Cleared cache for image: $imageUrl'); // Added for debugging
@@ -443,7 +443,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                     child: user.profilePicture != null && user.profilePicture!.isNotEmpty
                                         ? ClipOval(
                                             child: CachedNetworkImage(
-                                              imageUrl: '${ApiEndpoints.localNetworkAddress}${user.profilePicture}',
+                                              imageUrl: '${ApiEndpoints.imageUrl}${user.profilePicture}',
                                               width: 100,
                                               height: 100,
                                               fit: BoxFit.cover,
@@ -521,21 +521,39 @@ class _ProfilePageState extends State<ProfilePage> {
                             ),
                             if (user.stakeholder != null && user.stakeholder!.isNotEmpty) ...[
                               const SizedBox(height: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(
-                                  user.stakeholder!,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.2),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Text(
+                                      user.stakeholder!,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                  if (user.stakeholder?.toLowerCase() == 'worker') ...[
+                                    const SizedBox(width: 8),
+                                    _buildVerificationBadge(user.workerStatus),
+                                  ],
+                                ],
+                              ),
+                              if (user.workerStatus == 'rejected' && user.rejectionReason != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 8),
+                                  child: Text(
+                                    'Rejection Reason: ${user.rejectionReason}',
+                                    style: const TextStyle(color: Colors.amber, fontSize: 12),
+                                    textAlign: TextAlign.center,
                                   ),
                                 ),
-                              ),
                             ],
                             const SizedBox(height: 20),
                           ],
@@ -552,7 +570,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             child: _buildStatCard(
                               icon: Icons.visibility,
                               title: 'profile_views'.tr,
-                              value: '156', // Placeholder, should be dynamic
+                              value: '${user.viewCount ?? 0}',
                               color: Colors.blue,
                             ),
                           ),
@@ -561,7 +579,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             child: _buildStatCard(
                               icon: Icons.star,
                               title: 'rating'.tr,
-                              value: '4.8', // Placeholder, should be dynamic
+                              value: '${user.averageRating ?? 0.0}',
                               color: Colors.amber,
                             ),
                           ),
@@ -891,5 +909,49 @@ class _ProfilePageState extends State<ProfilePage> {
     _accelerometerSubscription?.cancel();
     _resetTimer?.cancel();
     super.dispose();
+  }
+
+  Widget _buildVerificationBadge(String? status) {
+    Color color;
+    String label;
+    IconData icon;
+
+    switch (status) {
+      case 'approved':
+        color = Colors.green;
+        label = 'Verified';
+        icon = Icons.verified;
+        break;
+      case 'rejected':
+        color = Colors.red;
+        label = 'Rejected';
+        icon = Icons.error;
+        break;
+      case 'pending':
+      default:
+        color = Colors.orange;
+        label = 'Under Admin Review';
+        icon = Icons.hourglass_empty;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withOpacity(0.5)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 14),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+    );
   }
 }

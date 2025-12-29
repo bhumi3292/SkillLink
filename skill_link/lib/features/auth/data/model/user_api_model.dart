@@ -20,6 +20,9 @@ class UserApiModel extends Equatable {
 
   final double? averageRating;
   final int? numReviews;
+  final String? workerStatus;
+  final String? rejectionReason;
+  final int? viewCount;
 
   const UserApiModel({
     this.userId,
@@ -32,6 +35,9 @@ class UserApiModel extends Equatable {
     this.profilePicture,
     this.averageRating,
     this.numReviews,
+    this.workerStatus,
+    this.rejectionReason,
+    this.viewCount,
   });
 
   factory UserApiModel.fromJson(Map<String, dynamic> json) => UserApiModel(
@@ -45,6 +51,9 @@ class UserApiModel extends Equatable {
     profilePicture: json['profilePicture'] as String?,
     averageRating: (json['averageRating'] as num?)?.toDouble(),
     numReviews: json['numReviews'] as int?,
+    workerStatus: json['workerStatus'] as String?,
+    rejectionReason: json['rejectionReason'] as String?,
+    viewCount: json['viewCount'] as int?,
   );
 
   Map<String, dynamic> toJson() => _$UserApiModelToJson(this);
@@ -62,6 +71,9 @@ class UserApiModel extends Equatable {
       profilePicture: profilePicture,
       averageRating: averageRating,
       numReviews: numReviews,
+      workerStatus: workerStatus,
+      rejectionReason: rejectionReason,
+      viewCount: viewCount,
     );
   }
 
@@ -77,6 +89,9 @@ class UserApiModel extends Equatable {
       profilePicture: entity.profilePicture,
       averageRating: entity.averageRating,
       numReviews: entity.numReviews,
+      workerStatus: entity.workerStatus,
+      rejectionReason: entity.rejectionReason,
+      viewCount: entity.viewCount,
     );
   }
 
@@ -92,5 +107,8 @@ class UserApiModel extends Equatable {
     profilePicture,
     averageRating,
     numReviews,
+    workerStatus,
+    rejectionReason,
+    viewCount,
   ];
 }

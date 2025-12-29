@@ -74,6 +74,62 @@ class PaymentController {
             res.status(500).json({ message: error.message });
         }
     }
+
+    /**
+     * Admin: Get all payments
+     */
+    async getAllPayments(req, res) {
+        try {
+            if (req.user.role !== 'admin') {
+                return res.status(403).json({ message: 'Unauthorized' });
+            }
+
+            const payments = await paymentService.getAllPayments();
+            res.status(200).json(payments);
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    }
+
+    async requestRefund(req, res) {
+        try {
+            const paymentId = req.params.id;
+            const { reason } = req.body;
+            const hirerId = req.user._id;
+
+            const payment = await paymentService.requestRefund(paymentId, hirerId, reason);
+            res.status(200).json(payment);
+        } catch (error) {
+            res.status(400).json({ message: error.message });
+        }
+    }
+
+    async processRefund(req, res) {
+        try {
+            if (req.user.role !== 'admin') return res.status(403).json({ message: 'Unauthorized' });
+            const paymentId = req.params.id;
+            const adminId = req.user._id;
+
+            const payment = await paymentService.processRefund(paymentId, adminId);
+            res.status(200).json(payment);
+        } catch (error) {
+            res.status(400).json({ message: error.message });
+        }
+    }
+
+    async rejectRefund(req, res) {
+        try {
+            if (req.user.role !== 'admin') return res.status(403).json({ message: 'Unauthorized' });
+            const paymentId = req.params.id;
+            const { reason } = req.body;
+            const adminId = req.user._id;
+
+            const payment = await paymentService.rejectRefund(paymentId, adminId, reason);
+            res.status(200).json(payment);
+        } catch (error) {
+            res.status(400).json({ message: error.message });
+        }
+    }
 }
 
 module.exports = new PaymentController();

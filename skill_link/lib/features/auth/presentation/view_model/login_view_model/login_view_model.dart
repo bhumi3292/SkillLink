@@ -44,6 +44,7 @@ class LoginViewModel extends Bloc<LoginEvent, LoginState> {
               isLoading: false,
               isSuccess: true,
               shouldNavigateToHome: true,
+              role: success['role'] as String?,
             ),
           );
         },

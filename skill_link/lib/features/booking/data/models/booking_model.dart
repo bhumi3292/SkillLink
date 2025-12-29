@@ -13,6 +13,9 @@ class BookingModel extends BookingEntity {
     super.hirer,
     super.worker,
     super.isRated = false,
+    super.timeline,
+    super.cancellationReason,
+    super.rescheduleRequests,
   });
 
   factory BookingModel.fromJson(Map<String, dynamic> json) {
@@ -24,9 +27,10 @@ class BookingModel extends BookingEntity {
 
     return BookingModel(
       id: json['_id'] ?? '',
-      workerListingId: json['workerListing'] != null 
-          ? extractId(json['workerListing']) 
-          : extractId(json['property']),
+      workerListingId:
+          json['workerListing'] != null
+              ? extractId(json['workerListing'])
+              : extractId(json['property']),
       hirerId: extractId(json['Hirer']),
       workerId: extractId(json['worker']),
       date: json['date'] ?? '',
@@ -36,6 +40,16 @@ class BookingModel extends BookingEntity {
       hirer: json['Hirer'] is Map ? json['Hirer'] : null,
       worker: json['worker'] is Map ? json['worker'] : null,
       isRated: json['isRated'] ?? false,
+      // optional timeline and reschedule data
+      timeline: json['timeline'] is List ? json['timeline'] : null,
+      cancellationReason:
+          json['cancellationReason'] ?? json['cancellation_reason'],
+      rescheduleRequests:
+          json['rescheduleRequests'] is List
+              ? json['rescheduleRequests']
+              : json['reschedule_requests'] is List
+              ? json['reschedule_requests']
+              : null,
     );
   }
 
@@ -50,9 +64,12 @@ class BookingModel extends BookingEntity {
       'status': status,
       'location': location,
       'isRated': isRated,
+      'timeline': timeline,
+      'cancellationReason': cancellationReason,
+      'rescheduleRequests': rescheduleRequests,
     };
   }
-  
+
   @override
   BookingEntity toEntity() => BookingEntity(
     id: id,
@@ -66,5 +83,8 @@ class BookingModel extends BookingEntity {
     hirer: hirer,
     worker: worker,
     isRated: isRated,
+    timeline: timeline,
+    cancellationReason: cancellationReason,
+    rescheduleRequests: rescheduleRequests,
   );
 }

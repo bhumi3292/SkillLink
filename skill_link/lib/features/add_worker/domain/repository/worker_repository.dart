@@ -9,8 +9,10 @@ abstract interface class IWorkerRepository {
   Future<Either<Failure, void>> addWorker(
     WorkerEntity worker,
     List<String> imagePaths,
-    List<String> videoPaths,
-  );
+    List<String> videoPaths, {
+    String? licensePath,
+    String? identityCardPath,
+  });
 
   Future<Either<Failure, void>> deleteWorker(String workerId);
   Future<Either<Failure, List<WorkerEntity>>> getWorkers();

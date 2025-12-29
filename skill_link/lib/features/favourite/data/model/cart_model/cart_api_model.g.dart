@@ -35,9 +35,7 @@ Map<String, dynamic> _$CartApiModelToJson(CartApiModel instance) =>
 CartItemApiModel _$CartItemApiModelFromJson(Map<String, dynamic> json) =>
     CartItemApiModel(
       id: json['_id'] as String?,
-      worker: WorkerApiModel.fromJson(
-        json['worker'] as Map<String, dynamic>,
-      ),
+      worker: WorkerApiModel.fromJson(json['worker'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$CartItemApiModelToJson(CartItemApiModel instance) =>

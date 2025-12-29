@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:skill_link/app/service_locator/service_locator.dart';
 import 'package:skill_link/features/booking/domain/entities/booking_entity.dart';

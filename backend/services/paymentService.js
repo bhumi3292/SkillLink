@@ -3,6 +3,8 @@ const crypto = require('crypto');
 const Payment = require('../models/Payment');
 const Booking = require('../models/Booking');
 const bookingService = require('./bookingService');
+const notificationService = require('./notificationService');
+const User = require('../models/User');
 
 class PaymentService {
     /**
@@ -12,12 +14,22 @@ class PaymentService {
         const booking = await Booking.findById(bookingId).populate('worker');
         if (!booking) throw new Error('Booking not found');
 
+        // Compute simple breakdown (server authoritative)
+        const baseAmount = Math.round(amount);
+        const serviceFee = Math.round(baseAmount * 0.05); // 5%
+        const taxAmount = Math.round((baseAmount + serviceFee) * 0.13); // 13% VAT
+        const totalAmount = baseAmount + serviceFee + taxAmount;
+
         const payment = new Payment({
             bookingId,
             hirerId,
             workerId: booking.worker._id,
             paymentGateway: 'Khalti',
-            amount,
+            amount: totalAmount,
+            baseAmount,
+            serviceFee,
+            taxAmount,
+            totalAmount,
             status: 'Pending'
         });
 
@@ -47,7 +59,10 @@ class PaymentService {
 
             return {
                 paymentId: payment._id,
-                amount: amount,
+                baseAmount,
+                serviceFee,
+                taxAmount,
+                totalAmount,
                 payment_url: response.data.payment_url,
                 pidx: response.data.pidx
             };
@@ -90,6 +105,28 @@ class PaymentService {
             return { success: false, message: `Payment status: ${response.data?.status || 'Unknown'}` };
         } catch (error) {
             console.error('Khalti Verification Error:', error.response?.data || error.message);
+            // Mark payment failed if we can find it
+            try {
+                const payment = await Payment.findById(paymentId);
+                if (payment) {
+                    payment.status = 'Failed';
+                    await payment.save();
+                    // Notify admins
+                    const admins = await User.find({ role: 'admin' });
+                    for (const a of admins) {
+                        await notificationService.sendNotification(
+                            a._id,
+                            'Payment Failure',
+                            `Payment ${payment._id} for booking ${payment.bookingId} failed during Khalti verification.`,
+                            'PAYMENT_FAILURE',
+                            payment._id
+                        );
+                    }
+                }
+            } catch (e) {
+                console.error('Error marking payment failed:', e.message);
+            }
+
             throw new Error('Khalti verification failed');
         }
     }
@@ -111,12 +148,22 @@ class PaymentService {
         const booking = await Booking.findById(bookingId).populate('worker');
         if (!booking) throw new Error('Booking not found');
 
+        // Compute breakdown
+        const baseAmount = Math.round(amount);
+        const serviceFee = Math.round(baseAmount * 0.05);
+        const taxAmount = Math.round((baseAmount + serviceFee) * 0.13);
+        const totalAmount = baseAmount + serviceFee + taxAmount;
+
         const payment = new Payment({
             bookingId,
             hirerId,
             workerId: booking.worker._id,
             paymentGateway: 'eSewa',
-            amount,
+            amount: totalAmount,
+            baseAmount,
+            serviceFee,
+            taxAmount,
+            totalAmount,
             status: 'Pending'
         });
 
@@ -130,7 +177,10 @@ class PaymentService {
 
         return {
             paymentId: payment._id,
-            amount: amount,
+            baseAmount,
+            serviceFee,
+            taxAmount,
+            totalAmount,
             transaction_uuid,
             product_code,
             signature,
@@ -207,8 +257,135 @@ class PaymentService {
             return { success: false, message: 'eSewa verification failed or transaction incomplete' };
         } catch (error) {
             console.error('eSewa Verification Error:', error.message);
+            // Attempt to mark payment failed and notify admins
+            try {
+                // if possible, parse paymentId
+                let paymentId;
+                if (typeof encodedData === 'string') {
+                    const parsed = encodedData.trim().startsWith('{') ? JSON.parse(encodedData) : JSON.parse(Buffer.from(encodedData, 'base64').toString('utf-8'));
+                    paymentId = parsed?.productId || parsed?.paymentId;
+                } else if (encodedData?.productId) {
+                    paymentId = encodedData.productId;
+                }
+
+                if (paymentId) {
+                    const payment = await Payment.findById(paymentId);
+                    if (payment) {
+                        payment.status = 'Failed';
+                        await payment.save();
+                        const admins = await User.find({ role: 'admin' });
+                        for (const a of admins) {
+                            await notificationService.sendNotification(
+                                a._id,
+                                'Payment Failure',
+                                `Payment ${payment._id} for booking ${payment.bookingId} failed during eSewa verification.`,
+                                'PAYMENT_FAILURE',
+                                payment._id
+                            );
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error('Error marking eSewa payment failed:', e.message);
+            }
+
             throw new Error(error.message || 'eSewa verification failed');
         }
+    }
+
+    async getAllPayments() {
+        return await Payment.find().populate('bookingId').populate('workerId', 'fullName').sort({ createdAt: -1 });
+    }
+
+    async requestRefund(paymentId, hirerId, reason) {
+        const payment = await Payment.findById(paymentId);
+        if (!payment) throw new Error('Payment not found');
+
+        if (payment.hirerId.toString() !== hirerId.toString()) {
+            throw new Error('Unauthorized refund request');
+        }
+
+        if (payment.status !== 'Completed' && payment.status !== 'Paid') {
+            throw new Error('Only completed payments can be refunded');
+        }
+
+        payment.refundStatus = 'requested';
+        payment.refundReason = reason || null;
+        payment.refundRequestedBy = hirerId;
+        await payment.save();
+
+        // Notify admins
+        const admins = await User.find({ role: 'admin' });
+        for (const a of admins) {
+            await notificationService.sendNotification(
+                a._id,
+                'Refund Requested',
+                `Refund requested for payment ${payment._id} (booking ${payment.bookingId}). Reason: ${reason || 'N/A'}`,
+                'REFUND_REQUEST',
+                payment._id
+            );
+        }
+
+        return payment;
+    }
+
+    async processRefund(paymentId, adminId) {
+        const payment = await Payment.findById(paymentId);
+        if (!payment) throw new Error('Payment not found');
+
+        if (payment.refundStatus !== 'requested') {
+            throw new Error('No refund requested for this payment');
+        }
+
+        payment.refundStatus = 'refunded';
+        payment.refundProcessedBy = adminId;
+        payment.refundProcessedAt = new Date();
+        await payment.save();
+
+        // Update booking status if applicable
+        try {
+            await bookingService.updateBookingStatus(payment.bookingId, 'Refunded', adminId, 'admin');
+        } catch (e) {
+            // Non-fatal
+            console.error('Failed to update booking status on refund:', e.message);
+        }
+
+        // Notify hirer
+        await notificationService.sendNotification(
+            payment.hirerId,
+            'Refund Processed',
+            `Your refund for payment ${payment._id} has been processed.`,
+            'REFUND_PROCESSED',
+            payment._id
+        );
+
+        return payment;
+    }
+
+    async rejectRefund(paymentId, adminId, reason) {
+        const payment = await Payment.findById(paymentId);
+        if (!payment) throw new Error('Payment not found');
+
+        if (payment.refundStatus !== 'requested') {
+            throw new Error('No refund requested for this payment');
+        }
+
+        payment.refundStatus = 'rejected';
+        payment.refundProcessedBy = adminId;
+        payment.refundProcessedAt = new Date();
+        // preserve refundReason requested by hirer; add admin note
+        payment.refundAdminNote = reason || null;
+        await payment.save();
+
+        await notificationService.sendNotification(
+            payment.hirerId,
+            'Refund Rejected',
+            `Your refund for payment ${payment._id} was rejected. Reason: ${reason || 'N/A'}`,
+            'REFUND_REJECTED',
+            payment._id
+        );
+
+        return payment;
     }
 
     async getPaymentHistory(userId) {

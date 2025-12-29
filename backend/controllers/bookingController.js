@@ -20,7 +20,7 @@ exports.createBooking = async (req, res) => {
 exports.updateBookingStatus = async (req, res) => {
     try {
         const { id } = req.params;
-        const { status } = req.body;
+        const { status, reason } = req.body;
         const userId = req.user._id;
         const userRole = req.user.role; // Assuming auth middleware populates this
 
@@ -28,7 +28,7 @@ exports.updateBookingStatus = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Status is required' });
         }
 
-        const updatedBooking = await bookingService.updateBookingStatus(id, status, userId, userRole);
+        const updatedBooking = await bookingService.updateBookingStatus(id, status, userId, userRole, reason);
         return res.status(200).json({ success: true, data: updatedBooking });
     } catch (error) {
         return res.status(400).json({ success: false, message: error.message });

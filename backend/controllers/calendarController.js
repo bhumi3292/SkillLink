@@ -397,7 +397,7 @@ exports.getworkerBookings = async (req, res) => {
 
 exports.updateBookingStatus = async (req, res) => {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, reason } = req.body;
     const workerId = req.user._id;
 
     // Frontend uses 'Confirmed', 'Rejected', 'Cancelled', 'InProgress', 'Completed'
@@ -424,6 +424,11 @@ exports.updateBookingStatus = async (req, res) => {
 
         const oldStatus = booking.status;
         booking.status = newStatus;
+        // Push a timeline entry recording this status change (include reason if provided)
+        if (!booking.timeline) booking.timeline = [];
+        const entry = { status: newStatus, timestamp: new Date(), actor: workerId, actorRole: req.user.role || 'worker' };
+        if (reason) entry.reason = reason;
+        booking.timeline.push(entry);
         if ((newStatus === 'rejected' || newStatus === 'cancelled') &&
             (oldStatus === 'pending' || oldStatus === 'confirmed')) {
             // Slot needs to be freed up
@@ -443,6 +448,18 @@ exports.updateBookingStatus = async (req, res) => {
                 }
             } else {
                 console.warn(`Availability for listing ${booking.workerListing._id} on ${normalizedDate} not found when updating booking status to ${newStatus}. Slot not re-added.`);
+            }
+        }
+
+        // If rejected, notify hirer including reason
+        if (newStatus === 'rejected') {
+            try {
+                const notificationService = require('../services/notificationService');
+                const hirerId = booking.Hirer || booking.hirer || booking.hirerId;
+                const msg = reason ? `Your booking request has been rejected. Reason: ${reason}` : 'Your booking request has been rejected.';
+                await notificationService.sendNotification(hirerId, 'Booking Rejected', msg, 'BOOKING_REJECTED', booking._id);
+            } catch (e) {
+                console.warn('Failed to send rejection notification with reason:', e.message);
             }
         }
 
@@ -476,7 +493,16 @@ exports.deleteBooking = async (req, res) => {
             return res.status(400).json({ success: false, message: `Booking cannot be cancelled from '${oldStatus}' status.` });
         }
 
+        // Accept optional/mandatory reason from body when hirer cancels
+        const { reason } = req.body;
+        if (req.user.role === 'hirer' && !reason) {
+            return res.status(400).json({ success: false, message: 'Cancellation reason is required when cancelled by hirer.' });
+        }
+
         booking.status = 'cancelled'; // Set status to cancelled
+        if (req.user.role === 'hirer') booking.cancellationReason = reason;
+        if (!booking.timeline) booking.timeline = [];
+        booking.timeline.push({ status: 'cancelled', timestamp: new Date(), actor: userId, actorRole: req.user.role || 'hirer', reason: reason || '' });
         await booking.save();
 
         if (oldStatus === 'pending' || oldStatus === 'confirmed') {
@@ -501,5 +527,134 @@ exports.deleteBooking = async (req, res) => {
     } catch (error) {
         console.error('Error in deleteBooking:', error);
         res.status(500).json({ success: false, message: 'Server error cancelling booking.', error: error.message });
+    }
+};
+
+// Hirer requests reschedule for a booking
+exports.requestReschedule = async (req, res) => {
+    const { id } = req.params; // booking id
+    const { requestedDate, requestedTimeSlot } = req.body;
+    const hirerId = req.user._id;
+
+    if (!requestedDate || !requestedTimeSlot) {
+        return res.status(400).json({ success: false, message: 'Requested date and time slot are required.' });
+    }
+
+    try {
+        const booking = await Booking.findById(id).populate('workerListing');
+        if (!booking) return res.status(404).json({ success: false, message: 'Booking not found.' });
+        if (booking.Hirer.toString() !== hirerId.toString()) return res.status(403).json({ success: false, message: 'Not authorized.' });
+
+        // Append reschedule request
+        booking.rescheduleRequests = booking.rescheduleRequests || [];
+        booking.rescheduleRequests.push({ requestedDate, requestedTimeSlot, requestedAt: new Date(), status: 'pending' });
+
+        // Add timeline entry
+        booking.timeline = booking.timeline || [];
+        booking.timeline.push({ status: 'reschedule_requested', timestamp: new Date(), actor: hirerId, actorRole: req.user.role || 'hirer', reason: `${requestedDate} ${requestedTimeSlot}` });
+
+        await booking.save();
+
+        // Notify worker
+        const notificationService = require('../services/notificationService');
+        await notificationService.sendNotification(booking.worker, 'Reschedule Requested', `Hirer requested reschedule to ${requestedDate} ${requestedTimeSlot}`, 'RESCHEDULE_REQUEST', booking._id);
+
+        res.status(200).json({ success: true, message: 'Reschedule request submitted.', booking: booking.toObject() });
+    } catch (error) {
+        console.error('Error in requestReschedule:', error);
+        res.status(500).json({ success: false, message: 'Server error requesting reschedule.', error: error.message });
+    }
+};
+
+// Worker responds to a reschedule request
+exports.respondReschedule = async (req, res) => {
+    const { id } = req.params; // booking id
+    const { requestIndex, action, reason } = req.body; // action: 'accept' or 'reject'
+    const workerId = req.user._id;
+
+    if (!action || !['accept','reject'].includes(action)) return res.status(400).json({ success: false, message: 'Invalid action.' });
+
+    try {
+        const booking = await Booking.findById(id);
+        if (!booking) return res.status(404).json({ success: false, message: 'Booking not found.' });
+        if (booking.worker.toString() !== workerId.toString()) return res.status(403).json({ success: false, message: 'Not authorized.' });
+
+        const idx = (typeof requestIndex === 'number') ? requestIndex : (booking.rescheduleRequests ? booking.rescheduleRequests.length -1 : -1);
+        if (idx < 0 || !booking.rescheduleRequests || !booking.rescheduleRequests[idx]) return res.status(404).json({ success: false, message: 'Reschedule request not found.' });
+
+        const reqItem = booking.rescheduleRequests[idx];
+        if (reqItem.status !== 'pending') return res.status(400).json({ success: false, message: 'This request has already been responded to.' });
+
+        if (action === 'reject') {
+            reqItem.status = 'rejected';
+            reqItem.workerResponseReason = reason || '';
+            reqItem.respondedAt = new Date();
+            booking.timeline = booking.timeline || [];
+            booking.timeline.push({ status: 'reschedule_rejected', timestamp: new Date(), actor: workerId, actorRole: req.user.role || 'worker', reason: reason || '' });
+
+            await booking.save();
+
+            // Notify hirer
+            const notificationService = require('../services/notificationService');
+            await notificationService.sendNotification(booking.Hirer, 'Reschedule Rejected', `Worker rejected reschedule: ${reason || 'No reason provided'}`, 'RESCHEDULE_REJECTED', booking._id);
+
+            return res.status(200).json({ success: true, message: 'Reschedule request rejected.', booking: booking.toObject() });
+        }
+
+        // action === 'accept'
+        // Validate availability for requested slot
+        const normalizedDate = normalizeDateString(reqItem.requestedDate);
+        const Availability = require('../models/calendar');
+        const availability = await Availability.findOne({ workerListing: booking.workerListing, date: new Date(normalizedDate) });
+        // If availability exists and has the requested slot, remove it
+        if (availability && availability.timeSlots.includes(reqItem.requestedTimeSlot)) {
+            // Check for conflicting bookings
+            const existingActiveBooking = await Booking.findOne({ workerListing: booking.workerListing, date: normalizedDate, timeSlot: reqItem.requestedTimeSlot, status: { $in: ['pending','confirmed','Accepted','InProgress'] } });
+            if (existingActiveBooking) {
+                return res.status(409).json({ success: false, message: 'Requested time slot is already booked.' });
+            }
+
+            // Update booking date/time
+            booking.date = normalizedDate;
+            booking.timeSlot = reqItem.requestedTimeSlot;
+            reqItem.status = 'accepted';
+            reqItem.respondedAt = new Date();
+            booking.timeline = booking.timeline || [];
+            booking.timeline.push({ status: 'reschedule_accepted', timestamp: new Date(), actor: workerId, actorRole: req.user.role || 'worker', reason: `${reqItem.requestedDate} ${reqItem.requestedTimeSlot}` });
+
+            // Remove the slot from availability
+            availability.timeSlots = availability.timeSlots.filter(s => s !== reqItem.requestedTimeSlot);
+            await availability.save();
+
+            await booking.save();
+
+            const notificationService = require('../services/notificationService');
+            await notificationService.sendNotification(booking.Hirer, 'Reschedule Accepted', `Worker accepted reschedule to ${reqItem.requestedDate} ${reqItem.requestedTimeSlot}`, 'RESCHEDULE_ACCEPTED', booking._id);
+
+            return res.status(200).json({ success: true, message: 'Reschedule accepted and booking updated.', booking: booking.toObject() });
+        } else {
+            // If no availability object, still allow accepting but ensure no conflicting bookings
+            const existingActiveBooking = await Booking.findOne({ workerListing: booking.workerListing, date: reqItem.requestedDate, timeSlot: reqItem.requestedTimeSlot, status: { $in: ['pending','confirmed','Accepted','InProgress'] } });
+            if (existingActiveBooking) {
+                return res.status(409).json({ success: false, message: 'Requested time slot is already booked.' });
+            }
+
+            booking.date = reqItem.requestedDate;
+            booking.timeSlot = reqItem.requestedTimeSlot;
+            reqItem.status = 'accepted';
+            reqItem.respondedAt = new Date();
+            booking.timeline = booking.timeline || [];
+            booking.timeline.push({ status: 'reschedule_accepted', timestamp: new Date(), actor: workerId, actorRole: req.user.role || 'worker', reason: `${reqItem.requestedDate} ${reqItem.requestedTimeSlot}` });
+            await booking.save();
+
+            const notificationService = require('../services/notificationService');
+            await notificationService.sendNotification(booking.Hirer, 'Reschedule Accepted', `Worker accepted reschedule to ${reqItem.requestedDate} ${reqItem.requestedTimeSlot}`, 'RESCHEDULE_ACCEPTED', booking._id);
+
+            return res.status(200).json({ success: true, message: 'Reschedule accepted and booking updated.', booking: booking.toObject() });
+        }
+
+    } catch (error) {
+        console.error('Error in respondReschedule:', error);
+        res.status(500).json({ success: false, message: 'Server error responding to reschedule.', error: error.message });
     }
 };

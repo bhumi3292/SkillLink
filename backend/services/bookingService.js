@@ -63,7 +63,7 @@ class BookingService {
      * Update Booking Status
      *Handles transitions: Pending -> Accepted/Rejected, Accepted -> InProgress, InProgress -> Completed, Completed -> Paid
      */
-    async updateBookingStatus(bookingId, newStatus, userId, userRole) {
+    async updateBookingStatus(bookingId, newStatus, userId, userRole, reason) {
         const booking = await Booking.findById(bookingId).populate('Hirer').populate('worker');
         if (!booking) {
             throw new Error('Booking not found');
@@ -118,6 +118,25 @@ class BookingService {
             throw new Error('Failed to update booking');
         }
 
+        // Append timeline entry for this status change (include reason if provided)
+        try {
+            const timelineEntry = {
+                status: canonicalStatus,
+                timestamp: new Date(),
+                actor: userId,
+                actorRole: userRole
+            };
+            if (reason) timelineEntry.reason = reason;
+
+            await Booking.findByIdAndUpdate(bookingId, {
+                $push: {
+                    timeline: timelineEntry
+                }
+            });
+        } catch (e) {
+            console.warn('Failed to append timeline entry:', e.message);
+        }
+
         // --- Dual Notifications ---
         const hirerId = updatedBooking.Hirer._id || updatedBooking.Hirer;
         const workerId = updatedBooking.worker._id || updatedBooking.worker;
@@ -126,8 +145,10 @@ class BookingService {
             await notificationService.sendNotification(hirerId, 'Booking Accepted', 'Your booking has been accepted by the worker.', 'BOOKING_ACCEPTED', booking._id);
             await notificationService.sendNotification(workerId, 'Booking Update', 'You have accepted the booking.', 'BOOKING_ACCEPTED', booking._id);
         } else if (normalizedNewStatus === 'rejected') {
-            await notificationService.sendNotification(hirerId, 'Booking Rejected', 'Your booking request has been rejected.', 'BOOKING_REJECTED', booking._id);
-            await notificationService.sendNotification(workerId, 'Booking Update', 'You rejected the booking request.', 'BOOKING_REJECTED', booking._id);
+            const hirerMsg = reason ? `Your booking request has been rejected. Reason: ${reason}` : 'Your booking request has been rejected.';
+            const workerMsg = reason ? `You rejected the booking request. Reason: ${reason}` : 'You rejected the booking request.';
+            await notificationService.sendNotification(hirerId, 'Booking Rejected', hirerMsg, 'BOOKING_REJECTED', booking._id);
+            await notificationService.sendNotification(workerId, 'Booking Update', workerMsg, 'BOOKING_REJECTED', booking._id);
         } else if (normalizedNewStatus === 'inprogress') {
             await notificationService.sendNotification(hirerId, 'Service Started', 'The worker has started the service. Live tracking initiated.', 'SERVICE_STARTED', booking._id);
             await notificationService.sendNotification(workerId, 'Job Started', 'You have started the work. Please navigate to the location.', 'SERVICE_STARTED', booking._id);

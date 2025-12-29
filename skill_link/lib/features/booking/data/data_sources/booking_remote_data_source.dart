@@ -5,10 +5,34 @@ import '../../../../cores/error/failure.dart';
 import '../models/booking_model.dart';
 
 abstract class BookingRemoteDataSource {
-  Future<BookingModel> createBooking(String workerListingId, String date, String timeSlot);
+  Future<BookingModel> createBooking(
+    String workerListingId,
+    String date,
+    String timeSlot,
+  );
   Future<List<BookingModel>> getUserBookings();
-  Future<BookingModel> updateBookingStatus(String bookingId, String status);
-  Future<dynamic> initiatePayment(String bookingId, double amount, String method);
+  Future<BookingModel> updateBookingStatus(
+    String bookingId,
+    String status, {
+    String? reason,
+  });
+  Future<BookingModel> requestReschedule(
+    String bookingId,
+    String requestedDate,
+    String requestedTimeSlot,
+  );
+  Future<BookingModel> respondReschedule(
+    String bookingId,
+    int requestIndex,
+    String action,
+    String? reason,
+  );
+  Future<BookingModel> cancelBooking(String bookingId, String reason);
+  Future<dynamic> initiatePayment(
+    String bookingId,
+    double amount,
+    String method,
+  );
   Future<BookingModel> getBookingById(String bookingId);
 }
 
@@ -17,7 +41,7 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
 
   BookingRemoteDataSourceImpl({required this.dio});
 
-  String get baseUrl => "${ApiEndpoints.baseUrl}bookings"; 
+  String get baseUrl => ApiEndpoints.bookings;
 
   // Helper to get token (if Dio interceptor isn't already handling it)
   Future<String?> _getToken() async {
@@ -26,7 +50,11 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
   }
 
   @override
-  Future<BookingModel> createBooking(String workerListingId, String date, String timeSlot) async {
+  Future<BookingModel> createBooking(
+    String workerListingId,
+    String date,
+    String timeSlot,
+  ) async {
     try {
       final token = await _getToken();
       final response = await dio.post(
@@ -36,11 +64,7 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
           'date': date,
           'timeSlot': timeSlot,
         },
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $token',
-          },
-        ),
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
 
       if (response.statusCode == 201) {
@@ -59,11 +83,7 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
       final token = await _getToken();
       final response = await dio.get(
         baseUrl, // Changed from '$baseUrl/Hirer'
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $token',
-          },
-        ),
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
 
       if (response.statusCode == 200) {
@@ -77,21 +97,18 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     }
   }
 
-
   @override
-  Future<BookingModel> updateBookingStatus(String bookingId, String status) async {
+  Future<BookingModel> updateBookingStatus(
+    String bookingId,
+    String status, {
+    String? reason,
+  }) async {
     try {
       final token = await _getToken();
       final response = await dio.patch(
-        '$baseUrl/$bookingId/status',
-        data: {
-          'status': status,
-        },
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $token',
-          },
-        ),
+        ApiEndpoints.updateBookingStatus(bookingId),
+        data: {'status': status, if (reason != null) 'reason': reason},
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
 
       if (response.statusCode == 200) {
@@ -105,32 +122,118 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
   }
 
   @override
-  Future<dynamic> initiatePayment(String bookingId, double amount, String method) async {
+  Future<BookingModel> requestReschedule(
+    String bookingId,
+    String requestedDate,
+    String requestedTimeSlot,
+  ) async {
     try {
       final token = await _getToken();
-      final paymentUrl = baseUrl.replaceAll('/bookings', '/payments'); 
-      
       final response = await dio.post(
-        '$paymentUrl/initiate',
+        ApiEndpoints.requestReschedule(bookingId),
         data: {
-          'bookingId': bookingId,
-          'amount': amount,
-          'method': method,
+          'requestedDate': requestedDate,
+          'requestedTimeSlot': requestedTimeSlot,
         },
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $token',
-          },
-        ),
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
 
       if (response.statusCode == 200) {
-        return response.data['data']; 
+        final bookingJson = response.data['booking'] ?? response.data['data'];
+        return BookingModel.fromJson(bookingJson);
       } else {
         throw ServerFailure(message: response.data['message']);
       }
     } on DioException catch (e) {
-      throw ServerFailure(message: e.response?.data['message'] ?? 'Payment Initiation Failed');
+      throw ServerFailure(message: e.response?.data['message'] ?? 'API Error');
+    }
+  }
+
+  @override
+  Future<BookingModel> respondReschedule(
+    String bookingId,
+    int requestIndex,
+    String action,
+    String? reason,
+  ) async {
+    try {
+      final token = await _getToken();
+      final response = await dio.post(
+        ApiEndpoints.respondReschedule(bookingId),
+        data: {
+          'requestIndex': requestIndex,
+          'action': action,
+          'reason': reason ?? '',
+        },
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      if (response.statusCode == 200) {
+        final bookingJson = response.data['booking'] ?? response.data['data'];
+        return BookingModel.fromJson(bookingJson);
+      } else {
+        throw ServerFailure(message: response.data['message']);
+      }
+    } on DioException catch (e) {
+      throw ServerFailure(message: e.response?.data['message'] ?? 'API Error');
+    }
+  }
+
+  @override
+  Future<BookingModel> cancelBooking(String bookingId, String reason) async {
+    try {
+      final token = await _getToken();
+      final response = await dio.delete(
+        ApiEndpoints.deleteBookingById(bookingId),
+        data: {'reason': reason},
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      if (response.statusCode == 200) {
+        // deleteBooking returns success message; try to return booking if present
+        if (response.data['booking'] != null) {
+          return BookingModel.fromJson(response.data['booking']);
+        }
+        // If no booking returned, fetch booking by id to return latest
+        final bookingResp = await dio.get(
+          ApiEndpoints.getBookingById(bookingId),
+          options: Options(headers: {'Authorization': 'Bearer $token'}),
+        );
+        return BookingModel.fromJson(bookingResp.data['data']);
+      } else {
+        throw ServerFailure(message: response.data['message']);
+      }
+    } on DioException catch (e) {
+      throw ServerFailure(message: e.response?.data['message'] ?? 'API Error');
+    }
+  }
+
+  @override
+  Future<dynamic> initiatePayment(
+    String bookingId,
+    double amount,
+    String method,
+  ) async {
+    try {
+      final token = await _getToken();
+      // Using ApiEndpoints directly for initiatePayment as baseUrl replacement might be tricky with regex
+      // Or just use ApiEndpoints.initiatePayment which is clearer
+
+      final response = await dio.post(
+        ApiEndpoints.initiatePayment,
+        data: {'bookingId': bookingId, 'amount': amount, 'method': method},
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      if (response.statusCode == 200) {
+        return response.data['data'];
+      } else {
+        throw ServerFailure(message: response.data['message']);
+      }
+    } on DioException catch (e) {
+      throw ServerFailure(
+        message: e.response?.data['message'] ?? 'Payment Initiation Failed',
+      );
     }
   }
 
@@ -139,12 +242,8 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     try {
       final token = await _getToken();
       final response = await dio.get(
-        '$baseUrl/$bookingId',
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $token',
-          },
-        ),
+        ApiEndpoints.getBookingById(bookingId),
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
 
       if (response.statusCode == 200) {
@@ -157,4 +256,3 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     }
   }
 }
-

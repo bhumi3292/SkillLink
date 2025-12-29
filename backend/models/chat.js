@@ -37,6 +37,12 @@ const chatSchema = new mongoose.Schema(
             ref: 'Worker',
             required: false // Not all chats will be tied to a worker listing
         },
+        // Optional link to a booking when chat is initiated from a booking context
+        booking: {
+            type: mongoose.Schema.ObjectId,
+            ref: 'Booking',
+            required: false
+        },
         lastMessage: { // This field can store the text of the last message for quick display
             type: String,
             default: ""

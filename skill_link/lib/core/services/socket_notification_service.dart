@@ -24,7 +24,7 @@ class SocketNotificationService {
     flutterLocalNotificationsPlugin.initialize(initializationSettings);
 
     // Connect to Socket
-    socket = IO.io(ApiEndpoints.serverAddress, <String, dynamic>{ 
+    socket = IO.io(ApiEndpoints.imageUrl, <String, dynamic>{ 
       'transports': ['websocket'],
       'autoConnect': false,
     });

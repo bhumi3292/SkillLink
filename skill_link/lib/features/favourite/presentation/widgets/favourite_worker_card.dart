@@ -38,7 +38,7 @@ class _FavouriteWorkerCardState extends State<FavouriteWorkerCard> {
 
   String _getImageUrl(String imagePath) {
     // Use ApiEndpoints.localNetworkAddress for the base URL
-    return '${ApiEndpoints.localNetworkAddress}/$imagePath';
+    return '${ApiEndpoints.imageUrl}/$imagePath';
   }
 
   Widget _buildImageCarousel() {

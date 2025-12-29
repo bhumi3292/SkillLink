@@ -129,6 +129,10 @@ class WorkerApiModel extends Equatable {
       if (p != null) normalized['price'] = p;
     }
 
+    // Defensive default: when backend omits price or it's null, provide 0.0
+    if (normalized['price'] == null) {
+      normalized['price'] = 0.0;
+    }
     return _$WorkerApiModelFromJson(normalized);
   }
 
@@ -180,7 +184,11 @@ class WorkerApiModel extends Equatable {
 
   @override
   List<Object?> get props => [
-    id, images, videos, title, location,
+    id,
+    images,
+    videos,
+    title,
+    location,
     categoryId,
     price,
     description,
@@ -220,9 +228,9 @@ class WorkerApiModel extends Equatable {
       workerId: workerId ?? this.workerId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
-      averageRating: averageRating ?? this.averageRating,
-      numReviews: numReviews ?? this.numReviews,
-      viewCount: viewCount ?? this.viewCount,
+      averageRating: averageRating ?? averageRating,
+      numReviews: numReviews ?? numReviews,
+      viewCount: viewCount ?? viewCount,
     );
   }
 }

@@ -5,10 +5,9 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:skill_link/cores/utils/image_url_helper.dart';
 import 'package:skill_link/app/service_locator/service_locator.dart';
 import 'package:skill_link/features/booking/presentation/bloc/booking_bloc.dart';
+import 'package:skill_link/features/booking/presentation/widgets/booking_timeline.dart';
 import 'package:skill_link/features/booking/presentation/view/worker_navigation_page.dart';
 import 'package:skill_link/features/profile/presentation/view_model/profile_view_model.dart';
-import 'package:skill_link/features/profile/presentation/view_model/profile_state.dart';
-import 'package:skill_link/features/profile/presentation/view_model/profile_event.dart';
 import 'package:skill_link/core/services/location_service.dart';
 import 'package:skill_link/features/payment/presentation/bloc/payment_bloc.dart';
 import 'package:skill_link/features/payment/presentation/bloc/payment_state.dart';
@@ -25,7 +24,9 @@ class BookingPage extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider<BookingBloc>(
-          create: (_) => serviceLocator<BookingBloc>()..add(LoadUserBookingsEvent()),
+          create:
+              (_) =>
+                  serviceLocator<BookingBloc>()..add(LoadUserBookingsEvent()),
         ),
         BlocProvider<PaymentBloc>(create: (_) => serviceLocator<PaymentBloc>()),
       ],
@@ -66,7 +67,7 @@ class BookingPage extends StatelessWidget {
           Text(
             'Manage your service appointments and track progress',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withValues(alpha: 0.9),
               fontSize: 13,
             ),
           ),
@@ -158,10 +159,16 @@ class BookingPage extends StatelessWidget {
                 children: [
                   const Icon(Icons.error_outline, size: 48, color: Colors.red),
                   const SizedBox(height: 16),
-                  Text(state.message, style: const TextStyle(color: Colors.red)),
+                  Text(
+                    state.message,
+                    style: const TextStyle(color: Colors.red),
+                  ),
                   const SizedBox(height: 16),
                   ElevatedButton(
-                    onPressed: () => context.read<BookingBloc>().add(LoadUserBookingsEvent()),
+                    onPressed:
+                        () => context.read<BookingBloc>().add(
+                          LoadUserBookingsEvent(),
+                        ),
                     child: const Text('Retry'),
                   ),
                 ],
@@ -270,19 +277,35 @@ class BookingPage extends StatelessWidget {
                   children: [
                     if (isWorker && status == 'pending') ...[
                       TextButton(
-                        onPressed: () => ctx.read<BookingBloc>().add(
-                              UpdateBookingStatusEvent(
-                                bookingId: booking.id,
-                                status: 'Rejected',
+                        onPressed: () async {
+                          final reasonController = TextEditingController();
+                          final confirmed = await showDialog<bool>(
+                            context: ctx,
+                            builder: (dctx) => AlertDialog(
+                              title: const Text('Reject Booking'),
+                              content: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Text('Provide an optional reason for rejection'),
+                                  const SizedBox(height: 8),
+                                  TextField(controller: reasonController, maxLines: 3),
+                                ],
                               ),
+                              actions: [
+                                TextButton(onPressed: () => Navigator.pop(dctx, false), child: const Text('Cancel')),
+                                ElevatedButton(onPressed: () => Navigator.pop(dctx, true), child: const Text('Submit')),
+                              ],
                             ),
-                        child: const Text(
-                          'Reject',
-                          style: TextStyle(color: Colors.red),
-                        ),
+                          );
+                          if (confirmed == true) {
+                            ctx.read<BookingBloc>().add(UpdateBookingStatusEvent(bookingId: booking.id, status: 'Rejected', reason: reasonController.text.trim().isEmpty ? null : reasonController.text.trim()));
+                          }
+                        },
+                        child: const Text('Reject', style: TextStyle(color: Colors.red)),
                       ),
                       ElevatedButton(
-                        onPressed: () => ctx.read<BookingBloc>().add(
+                        onPressed:
+                            () => ctx.read<BookingBloc>().add(
                               UpdateBookingStatusEvent(
                                 bookingId: booking.id,
                                 status: 'Accepted',
@@ -296,55 +319,194 @@ class BookingPage extends StatelessWidget {
                             status == 'confirmed' ||
                             status == 'inprogress')) ...[
                       ElevatedButton.icon(
-                        onPressed: () => _navigateToParty(ctx, booking, forWorker: true),
+                        onPressed:
+                            () =>
+                                _navigateToParty(ctx, booking, forWorker: true),
                         icon: const Icon(Icons.navigation, size: 16),
                         label: const Text('Navigate'),
                       ),
                     ],
-                    if (isWorker && (status == 'accepted' || status == 'confirmed')) ...[
+                    if (isWorker &&
+                        (status == 'accepted' || status == 'confirmed')) ...[
                       ElevatedButton(
-                        onPressed: () => ctx.read<BookingBloc>().add(
+                        onPressed:
+                            () => ctx.read<BookingBloc>().add(
                               UpdateBookingStatusEvent(
                                 bookingId: booking.id,
                                 status: 'InProgress',
                               ),
                             ),
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-                        child: Text('start_work'.tr, style: const TextStyle(color: Colors.white)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                        ),
+                        child: Text(
+                          'start_work'.tr,
+                          style: const TextStyle(color: Colors.white),
+                        ),
                       ),
                     ],
                     if (isWorker && status == 'inprogress') ...[
                       ElevatedButton(
-                        onPressed: () => ctx.read<BookingBloc>().add(
+                        onPressed:
+                            () => ctx.read<BookingBloc>().add(
                               UpdateBookingStatusEvent(
                                 bookingId: booking.id,
                                 status: 'Completed',
                               ),
                             ),
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                        child: Text('complete_work'.tr, style: const TextStyle(color: Colors.white)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                        ),
+                        child: Text(
+                          'complete_work'.tr,
+                          style: const TextStyle(color: Colors.white),
+                        ),
                       ),
                     ],
                     if (isHirer && status == 'completed') ...[
+                      ElevatedButton(
+                        onPressed:
+                            () => _showPaymentOptionsDialog(
+                              ctx,
+                              booking.id,
+                              1500.0,
+                            ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                        ),
+                        child: Text(
+                          'pay_now'.tr,
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ],
+                    if (isHirer &&
+                        (status == 'pending' ||
+                            status == 'accepted' ||
+                            status == 'confirmed')) ...[
+                      TextButton(
+                        onPressed: () async {
+                          final reasonController = TextEditingController();
+                          final confirmed = await showDialog<bool>(
+                            context: ctx,
+                            builder:
+                                (dctx) => AlertDialog(
+                                  title: const Text('Cancel Booking'),
+                                  content: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Text(
+                                        'Please provide a reason for cancellation',
+                                      ),
+                                      const SizedBox(height: 8),
+                                      TextField(
+                                        controller: reasonController,
+                                        maxLines: 3,
+                                      ),
+                                    ],
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed:
+                                          () => Navigator.pop(dctx, false),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    ElevatedButton(
+                                      onPressed:
+                                          () => Navigator.pop(dctx, true),
+                                      child: const Text('Submit'),
+                                    ),
+                                  ],
+                                ),
+                          );
+
+                          if (confirmed == true &&
+                              reasonController.text.trim().isNotEmpty) {
+                            ctx.read<BookingBloc>().add(
+                              CancelBookingEvent(
+                                bookingId: booking.id,
+                                reason: reasonController.text.trim(),
+                              ),
+                            );
+                          } else if (confirmed == true) {
+                            ScaffoldMessenger.of(ctx).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Cancellation reason is required.',
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                        child: Text(
+                          'Cancel Booking',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    ],
+                    if (isHirer &&
+                        status == 'paid' &&
+                        booking.isRated != true) ...[
                       OutlinedButton(
                         onPressed: () => _showRatingPopup(ctx, booking),
                         style: OutlinedButton.styleFrom(
                           side: const BorderSide(color: Color(0xFF003366)),
                         ),
-                        child: Text('rate_worker'.tr),
-                      ),
-                      ElevatedButton(
-                        onPressed: () => _showPaymentOptionsDialog(
-                          ctx,
-                          booking.id,
-                          1500.0,
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                        ),
-                        child: Text('pay_now'.tr, style: const TextStyle(color: Colors.white)),
+                        child: const Text(
+                          'Pay & Rate',
+                        ), // As requested in Section 4.2
                       ),
                     ],
+                     // Timeline button (all users)
+                    TextButton(
+                      onPressed: () async {
+                        showDialog(
+                          context: ctx,
+                          builder: (dctx) => Dialog(
+                            child: SizedBox(
+                              width: 360,
+                              height: 480,
+                              child: BlocProvider.value(
+                                value: ctx.read<BookingBloc>(),
+                                child: Builder(builder: (bctx) {
+                                  bctx.read<BookingBloc>().add(GetBookingByIdEvent(booking.id));
+                                  return Padding(
+                                    padding: const EdgeInsets.all(12.0),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            const Text('Booking Timeline', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                                            IconButton(onPressed: () => Navigator.pop(dctx), icon: const Icon(Icons.close))
+                                          ],
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Expanded(
+                                          child: BlocBuilder<BookingBloc, BookingState>(
+                                            builder: (contextBloc, state) {
+                                              if (state is BookingLoading) return const Center(child: CircularProgressIndicator());
+                                              if (state is BookingSuccess) {
+                                                final b = state.booking;
+                                                return BookingTimeline(timeline: b.timeline);
+                                              }
+                                              if (state is BookingError) return Center(child: Text(state.message));
+                                              return const Center(child: CircularProgressIndicator());
+                                            },
+                                          ),
+                                        )
+                                      ],
+                                    ),
+                                  );
+                                }),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                      child: const Text('Timeline'),
+                    ),
                   ],
                 );
               },

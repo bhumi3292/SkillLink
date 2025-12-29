@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../bloc/payment_bloc.dart';
+import '../bloc/payment_event.dart';
 import '../bloc/payment_state.dart';
+import 'package:skill_link/app/constant/api_endpoints.dart';
+import 'package:skill_link/cores/network/api_service.dart';
+import 'package:skill_link/app/service_locator/service_locator.dart';
+import 'package:skill_link/app/shared_pref/token_shared_prefs.dart';
 
 class PaymentHistoryPage extends StatelessWidget {
   const PaymentHistoryPage({super.key});
@@ -127,6 +132,86 @@ class PaymentHistoryPage extends StatelessWidget {
                                 ),
                             ],
                           ),
+                          const SizedBox(height: 8),
+                          // Refund actions
+                          if (payment.status == 'Completed' || payment.status == 'Paid')
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.orange,
+                                ),
+                                onPressed: () async {
+                                  // If already requested, inform user
+                                  if (payment.refundStatus != null && payment.refundStatus != 'none') {
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('Refund already requested or processed')),
+                                      );
+                                    }
+                                    return;
+                                  }
+
+                                  final TextEditingController reasonCtrl = TextEditingController();
+                                  final confirm = await showDialog<bool>(
+                                    context: context,
+                                    builder: (ctx) => AlertDialog(
+                                      title: const Text('Request Refund'),
+                                      content: TextField(
+                                        controller: reasonCtrl,
+                                        decoration: const InputDecoration(hintText: 'Reason for refund'),
+                                        maxLines: 3,
+                                      ),
+                                      actions: [
+                                        TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancel')),
+                                        ElevatedButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Submit')),
+                                      ],
+                                    ),
+                                  );
+
+                                  if (confirm != true) return;
+
+                                  try {
+                                    final api = serviceLocator<ApiService>();
+                                    final resp = await api.dio.post(
+                                      ApiEndpoints.requestRefund(payment.id ?? ''),
+                                      data: {'reason': reasonCtrl.text},
+                                    );
+
+                                    if (resp.statusCode == 200) {
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(content: Text('Refund requested successfully')),
+                                        );
+                                        // reload history
+                                        final idEither = await serviceLocator<TokenSharedPrefs>().getUserId();
+                                        idEither.fold(
+                                          (f) => null,
+                                          (uid) {
+                                            if (uid != null) {
+                                              context.read<PaymentBloc>().add(GetPaymentHistoryEvent(uid));
+                                            }
+                                          },
+                                        );
+                                      }
+                                    } else {
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('Failed: ${resp.data ?? resp.statusCode}')),
+                                        );
+                                      }
+                                    }
+                                  } catch (e) {
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text('Error: ${e.toString()}')),
+                                      );
+                                    }
+                                  }
+                                },
+                                child: const Text('Request Refund'),
+                              ),
+                            ),
                         ],
                       ),
                     ),

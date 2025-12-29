@@ -13,7 +13,7 @@ class UserLocalRepository implements IUserRepository {
   }
 
   @override
-  Future<Either<Failure, String>> loginUser(
+  Future<Either<Failure, Map<String, dynamic>>> loginUser(
     String email,
     String password,
     String stakeholder,

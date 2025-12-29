@@ -26,6 +26,9 @@ WorkerApiModel _$WorkerApiModelFromJson(
       json['updatedAt'] == null
           ? null
           : DateTime.parse(json['updatedAt'] as String),
+  averageRating: (json['averageRating'] as num?)?.toDouble(),
+  numReviews: (json['numReviews'] as num?)?.toInt(),
+  viewCount: (json['viewCount'] as num?)?.toInt(),
 );
 
 Map<String, dynamic> _$WorkerApiModelToJson(WorkerApiModel instance) =>
@@ -39,6 +42,9 @@ Map<String, dynamic> _$WorkerApiModelToJson(WorkerApiModel instance) =>
       'price': instance.price,
       'description': instance.description,
       'worker': instance.workerId,
+      'averageRating': instance.averageRating,
+      'numReviews': instance.numReviews,
+      'viewCount': instance.viewCount,
       'createdAt': instance.createdAt?.toIso8601String(),
       'updatedAt': instance.updatedAt?.toIso8601String(),
     };

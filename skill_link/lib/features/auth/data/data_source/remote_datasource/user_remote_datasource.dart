@@ -49,7 +49,7 @@ class UserRemoteDatasource implements IUserDataSource {
   }
 
   @override
-  Future<String> loginUser(
+  Future<Map<String, dynamic>> loginUser(
     String email,
     String password,
     String stakeholder,
@@ -66,12 +66,12 @@ class UserRemoteDatasource implements IUserDataSource {
       print('DEBUG: Login response: ${response.data}');
       if (response.statusCode == 200) {
         final token = response.data['token'];
-        final userId = response.data['user']?['_id'];
-        final role = response.data['user']?['stakeholder'] ?? stakeholder;
+        final role = response.data['user']?['role'] ?? response.data['user']?['stakeholder'] ?? stakeholder;
+        
         if (token == null || (token as String).isEmpty) {
           throw Exception("Login successful but no token was received.");
         }
-        return token;
+        return {'token': token, 'role': role};
       } else {
         print(response.statusCode);
         throw Exception(

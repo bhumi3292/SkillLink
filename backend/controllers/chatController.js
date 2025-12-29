@@ -8,7 +8,7 @@ const { asyncHandler } = require('../utils/asyncHandler');
 exports.createOrGetChat = asyncHandler(async (req, res) => {
     const currentUserId = req.user._id;
     // workerId passed from client is now referring to a Worker listing ID
-    const { otherUserId, workerListingId } = req.body;
+    const { otherUserId, workerListingId, bookingId } = req.body;
     // Backward compatibility if client still sends workerId
     const targetListingId = workerListingId || req.body.workerId;
 
@@ -35,7 +35,7 @@ exports.createOrGetChat = asyncHandler(async (req, res) => {
         if (!listing) {
             return res.status(404).json({ success: false, message: "Worker listing not found." });
         }
-        // Query for chat with specific participants AND specific workerListing
+        // Query for chat with specific participants AND specific workerListing (and optional booking)
         query = {
             $and: [
                 { participants: { $all: [currentUserId, otherUserId] } },
@@ -69,6 +69,7 @@ exports.createOrGetChat = asyncHandler(async (req, res) => {
             messages: [] // Initialize messages array
         };
         if (targetListingId) chatPayload.workerListing = targetListingId;
+        if (bookingId) chatPayload.booking = bookingId;
 
         chat = await Chat.create(chatPayload);
         // Populate participants for the newly created chat

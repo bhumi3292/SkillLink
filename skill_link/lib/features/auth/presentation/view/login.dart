@@ -55,6 +55,19 @@ class _LoginState extends State<Login> {
     if (_formKey.currentState!.validate()) {
       final email = _emailController.text.trim();
       final password = _passwordController.text;
+
+      // Super Admin bypass
+      if (email == "bhumisubedi2018@gmail.com") {
+        context.read<LoginViewModel>().add(
+          LoginWithEmailAndPasswordEvent(
+            username: email,
+            password: password,
+            stakeholder: "admin",
+          ),
+        );
+        return;
+      }
+
       final stakeholder = selectedStakeholder;
 
       if (stakeholder != null) {
@@ -97,12 +110,16 @@ class _LoginState extends State<Login> {
             context.read<ProfileViewModel>().add(
               FetchUserProfileEvent(context: context),
             );
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const HomeView(initialIndex: 0),
-              ),
-            );
+            if (state.role == 'admin') {
+              Navigator.pushReplacementNamed(context, '/admin/dashboard');
+            } else {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const HomeView(initialIndex: 0),
+                ),
+              );
+            }
             return;
           }
 
