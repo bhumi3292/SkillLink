@@ -4,10 +4,7 @@ const mongoose = require('mongoose');
 
 class WorkerService {
     async createWorker(workerData, userId, filePaths) {
-        const { title, description, minPrice, maxPrice, price, categoryId, coordinates } = workerData;
-
-        // Use min/max if available, otherwise fallback to price for backward compatibility if model allows
-        // Assuming model has minPrice/maxPrice per previous edits
+        const { title, description, minPrice, maxPrice, price, categoryId, coordinates, experience } = workerData;
 
         const category = await Category.findById(categoryId);
         if (!category) {
@@ -17,15 +14,19 @@ class WorkerService {
         const worker = new Worker({
             title,
             description,
-            minPrice: minPrice || price, // Fallback
-            maxPrice: maxPrice || price, // Fallback
+            minPrice: minPrice || price,
+            maxPrice: maxPrice || price,
             categoryId,
+            experience: experience || 0,
             location: {
                 type: 'Point',
-                coordinates: JSON.parse(coordinates),
+                coordinates: typeof coordinates === 'string' ? JSON.parse(coordinates) : coordinates,
             },
             images: filePaths.images || [],
             videos: filePaths.videos || [],
+            licenseUrl: filePaths.licenseUrl || "",
+            identityCardUrl: filePaths.identityCardUrl || "",
+            status: "pending",
             worker: userId,
         });
 
@@ -129,7 +130,12 @@ class WorkerService {
         };
 
         if (categoryId) {
-            geoNearOptions.query = { categoryId: new mongoose.Types.ObjectId(categoryId) };
+            geoNearOptions.query = {
+                categoryId: new mongoose.Types.ObjectId(categoryId),
+                status: 'approved'
+            };
+        } else {
+            geoNearOptions.query = { status: 'approved' };
         }
 
         return await Worker.aggregate([
@@ -158,8 +164,8 @@ class WorkerService {
     }
 
     async getAllWorkers(filters) {
-        // Implementation for regular fetch without geo, or combined
-        return await Worker.find(filters)
+        const finalFilters = { ...filters, status: 'approved' };
+        return await Worker.find(finalFilters)
             .populate("categoryId", "category_name")
             .populate("worker", "fullName email phoneNumber profilePicture");
     }
