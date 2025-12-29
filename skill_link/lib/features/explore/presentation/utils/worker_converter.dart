@@ -48,7 +48,9 @@ class WorkerConverter {
       coordinates: (workerEntity.coordinates != null) ? (() {
         try {
           final decoded = jsonDecode(workerEntity.coordinates!);
-          return LatLng((decoded[1] as num).toDouble(), (decoded[0] as num).toDouble());
+          final lng = (decoded[0] as num?)?.toDouble() ?? 0.0;
+          final lat = (decoded[1] as num?)?.toDouble() ?? 0.0;
+          return LatLng(lat, lng);
         } catch (_) { return null; }
       }()) : null,
     );
