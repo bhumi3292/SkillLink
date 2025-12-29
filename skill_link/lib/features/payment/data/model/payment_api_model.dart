@@ -11,6 +11,8 @@ class PaymentApiModel extends Equatable {
   final String? transactionId;
   final String status;
   final String? paymentDate;
+  final String? refundStatus;
+  final String? refundReason;
 
   const PaymentApiModel({
     this.id,
@@ -22,6 +24,8 @@ class PaymentApiModel extends Equatable {
     this.transactionId,
     required this.status,
     this.paymentDate,
+    this.refundStatus,
+    this.refundReason,
   });
 
   factory PaymentApiModel.fromJson(Map<String, dynamic> json) {
@@ -31,10 +35,12 @@ class PaymentApiModel extends Equatable {
       hirerId: json['hirerId'],
       workerId: json['workerId'],
       paymentGateway: json['paymentGateway'],
-      amount: (json['amount'] as num).toDouble(),
+      amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
       transactionId: json['transactionId'],
       status: json['status'],
       paymentDate: json['paymentDate'],
+      refundStatus: json['refundStatus'],
+      refundReason: json['refundReason'],
     );
   }
 
@@ -66,19 +72,23 @@ class PaymentApiModel extends Equatable {
       transactionId: transactionId,
       status: status,
       paymentDate: paymentDate != null ? DateTime.parse(paymentDate!) : null,
+      refundStatus: refundStatus,
+      refundReason: refundReason,
     );
   }
 
   @override
   List<Object?> get props => [
-        id,
-        bookingId,
-        hirerId,
-        workerId,
-        paymentGateway,
-        amount,
-        transactionId,
-        status,
-        paymentDate,
-      ];
+    id,
+    bookingId,
+    hirerId,
+    workerId,
+    paymentGateway,
+    amount,
+    transactionId,
+    status,
+    paymentDate,
+    refundStatus,
+    refundReason,
+  ];
 }

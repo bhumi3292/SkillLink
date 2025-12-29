@@ -22,9 +22,11 @@ class ReviewModel extends Equatable {
       id: json['_id'] as String,
       hirerName: (json['hirer'] is Map) ? (json['hirer']['fullName'] ?? 'Anonymous') : 'Anonymous',
       hirerProfilePicture: (json['hirer'] is Map) ? json['hirer']['profilePicture'] : null,
-      rating: (json['rating'] as num).toDouble(),
+      rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
       comment: json['comment'] as String?,
-      createdAt: DateTime.parse(json['createdAt']),
+      createdAt: json['createdAt'] != null 
+          ? DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now()
+          : DateTime.now(),
     );
   }
 
