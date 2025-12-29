@@ -20,6 +20,9 @@ class ExploreWorkerModel extends ExploreWorkerEntity {
     super.workerEmail,
     super.workerPhone,
     super.skills,
+    super.averageRating,
+    super.numReviews,
+    super.viewCount,
   });
 
   factory ExploreWorkerModel.fromJson(Map<String, dynamic> json) {
@@ -130,6 +133,9 @@ class ExploreWorkerModel extends ExploreWorkerEntity {
               ? json['worker']['phoneNumber']?.toString()
               : null,
       skills: json['skills'] != null ? List<String>.from(json['skills']) : [],
+      averageRating: (json['averageRating'] as num?)?.toDouble() ?? 0.0,
+      numReviews: json['numReviews'] as int? ?? 0,
+      viewCount: json['viewCount'] as int? ?? 0,
     );
   }
 

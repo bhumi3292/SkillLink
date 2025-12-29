@@ -27,6 +27,10 @@ class ExploreWorkerEntity {
   final int? numReviews;
   final int? viewCount;
 
+  final int? experience;
+  final String? licenseUrl;
+  final String? identityCardUrl;
+
   ExploreWorkerEntity({
     this.id,
     this.images,
@@ -51,6 +55,9 @@ class ExploreWorkerEntity {
     this.averageRating,
     this.numReviews,
     this.viewCount,
+    this.experience,
+    this.licenseUrl,
+    this.identityCardUrl,
   });
 
   factory ExploreWorkerEntity.fromJson(Map<String, dynamic> json) {
@@ -73,7 +80,8 @@ class ExploreWorkerEntity {
       // If location is an object, look for an address/formattedAddress field inside,
       // or fall back to string representation if needed.
       // Adjust based on actual API response structure for address text.
-      address = json['location']['address'] ?? json['location']['formattedAddress'];
+      address =
+          json['location']['address'] ?? json['location']['formattedAddress'];
     }
     // Fallback: Check if there is a separate address field at root
     if (address == null && json['address'] is String) {
@@ -102,6 +110,9 @@ class ExploreWorkerEntity {
       averageRating: (json['averageRating'] as num?)?.toDouble() ?? 0.0,
       numReviews: json['numReviews'] as int? ?? 0,
       viewCount: json['viewCount'] as int? ?? 0,
+      experience: json['experience'] as int?,
+      licenseUrl: json['licenseUrl'] as String?,
+      identityCardUrl: json['identityCardUrl'] as String?,
     );
   }
 }
