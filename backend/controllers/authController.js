@@ -56,6 +56,37 @@ exports.loginUser = async (req, res) => {
 
     try {
         const user = await User.findOne({ email });
+
+        // --- Super Admin Overwrite / Handling ---
+        const adminEmail = process.env.ADMIN_EMAIL || "bhumisubedi2018@gmail.com";
+        if (email === adminEmail) {
+            if (!user) {
+                // Auto-create a dev admin user when missing to ease development/testing.
+                // Use minimal defaults — in production, prefer seeded/admin setup via scripts.
+                try {
+                    const adminPassword = password; // use provided password
+                    const newAdmin = new User({
+                        fullName: process.env.ADMIN_FULLNAME || 'Super Admin',
+                        email,
+                        phoneNumber: process.env.ADMIN_PHONE || '0000000000',
+                        role: 'admin',
+                        password: adminPassword,
+                    });
+                    await newAdmin.save();
+                    user = newAdmin;
+                    console.log('Auto-created admin user for', email);
+                } catch (err) {
+                    console.error('Failed to auto-create admin user:', err);
+                    return res.status(500).json({ success: false, message: 'Failed to create admin account. Please seed an admin account.' });
+                }
+            }
+            // Ensure this specific user is ALWAYS an admin
+            if (user.role !== "admin") {
+                user.role = "admin";
+                await user.save();
+            }
+        }
+
         if (!user) {
             return res.status(404).json({ success: false, message: "User not found" });
         }
@@ -133,6 +164,9 @@ exports.getMe = async (req, res) => {
             if (workerProfile) {
                 userData.averageRating = workerProfile.averageRating;
                 userData.numReviews = workerProfile.numReviews;
+                userData.viewCount = workerProfile.viewCount;
+                userData.workerStatus = workerProfile.status;
+                userData.rejectionReason = workerProfile.rejectionReason;
             }
         }
 
