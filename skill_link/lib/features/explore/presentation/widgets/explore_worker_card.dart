@@ -286,24 +286,29 @@ class _ExploreWorkerCardState extends State<ExploreWorkerCard> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Rs ${widget.worker.price?.toStringAsFixed(0) ?? '0'}',
-                            style: theme.textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: theme.primaryColor,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Starting from Rs ${widget.worker.price?.toStringAsFixed(0) ?? '0'}',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: theme.primaryColor,
+                                fontSize: 14,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '/ per visit',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: Colors.grey[600],
+                            const SizedBox(height: 2),
+                            Text(
+                              'per service',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: Colors.grey[600],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                       Row(
                         children: [
