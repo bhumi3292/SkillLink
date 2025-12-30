@@ -579,7 +579,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             child: _buildStatCard(
                               icon: Icons.star,
                               title: 'rating'.tr,
-                              value: '${user.averageRating ?? 0.0}',
+                              value: (user.averageRating ?? 0.0).toStringAsFixed(1),
                               color: Colors.amber,
                             ),
                           ),

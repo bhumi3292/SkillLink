@@ -15,6 +15,11 @@ const CategorySchema = new mongoose.Schema({
     isActive: {
         type: Boolean,
         default: true
+    },
+    basePrice: {
+        type: Number,
+        required: true,
+        default: 1500 // Default base price if not specified
     }
 }, { timestamps: true });
 

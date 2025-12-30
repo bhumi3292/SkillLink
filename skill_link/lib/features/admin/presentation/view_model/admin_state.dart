@@ -58,3 +58,19 @@ class AdminBookingsLoaded extends AdminState {
   @override
   List<Object?> get props => [bookings];
 }
+
+class AdminBannersLoaded extends AdminState {
+  final List<dynamic> banners;
+  const AdminBannersLoaded(this.banners);
+
+  @override
+  List<Object?> get props => [banners];
+}
+
+class AdminBannerActionSuccess extends AdminState {
+  final String message;
+  const AdminBannerActionSuccess(this.message);
+
+  @override
+  List<Object?> get props => [message];
+}

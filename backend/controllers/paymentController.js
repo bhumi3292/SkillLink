@@ -84,7 +84,13 @@ class PaymentController {
                 return res.status(403).json({ message: 'Unauthorized' });
             }
 
-            const payments = await paymentService.getAllPayments();
+            const { status, refundStatus } = req.query;
+            const filters = {};
+            if (status) filters.status = status;
+            if (refundStatus) filters.refundStatus = refundStatus;
+
+            const payments = await paymentService.getAllPayments(filters);
+            // Return raw array for frontend compatibility
             res.status(200).json(payments);
         } catch (error) {
             res.status(500).json({ message: error.message });

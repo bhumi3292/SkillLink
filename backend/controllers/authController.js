@@ -167,6 +167,7 @@ exports.getMe = async (req, res) => {
                 userData.viewCount = workerProfile.viewCount;
                 userData.workerStatus = workerProfile.status;
                 userData.rejectionReason = workerProfile.rejectionReason;
+                userData.workerId = workerProfile._id;
             }
         }
 
@@ -397,3 +398,31 @@ exports.updateLocation = async (req, res) => {
         res.status(500).json({ success: false, message: "Server error during location update." });
     }
 };
+
+exports.updateNotificationPreferences = async (req, res) => {
+    const userId = req.user._id;
+    const { push, booking, chat } = req.body;
+
+    try {
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found." });
+        }
+
+        if (push !== undefined) user.notificationPreferences.push = push;
+        if (booking !== undefined) user.notificationPreferences.booking = booking;
+        if (chat !== undefined) user.notificationPreferences.chat = chat;
+
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            message: "Notification preferences updated.",
+            data: user.notificationPreferences
+        });
+    } catch (error) {
+        console.error("Error in updateNotificationPreferences:", error);
+        res.status(500).json({ success: false, message: "Server error during notification preferences update." });
+    }
+};
+

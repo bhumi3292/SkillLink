@@ -135,4 +135,28 @@ class UserRemoteRepository implements IUserRepository {
       );
     }
   }
+
+  @override
+  Future<Either<Failure, NotificationPreferences>> updateNotificationPreferences(
+    bool push,
+    bool booking,
+    bool chat,
+  ) async {
+    try {
+      final prefs = await _remoteDataSource.updateNotificationPreferences(
+        push,
+        booking,
+        chat,
+      );
+      return Right(prefs);
+    } on DioException catch (e) {
+      return Left(_handleDioError(e));
+    } catch (e) {
+      return Left(
+        RemoteDatabaseFailure(
+          message: 'Failed to update notification preferences: $e',
+        ),
+      );
+    }
+  }
 }

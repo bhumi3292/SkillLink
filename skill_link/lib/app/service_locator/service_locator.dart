@@ -28,6 +28,14 @@ import 'package:skill_link/features/profile/data/repository/profile_repository_i
 import 'package:skill_link/features/profile/domain/use_case/update_profile_usecase.dart';
 import 'package:skill_link/features/profile/presentation/view_model/profile_view_model.dart';
 import 'package:skill_link/features/profile/domain/use_case/upload_profile_picture_usecase.dart';
+import 'package:skill_link/features/auth/domain/use_case/update_notification_preferences_usecase.dart';
+import 'package:skill_link/features/profile/data/data_source/worker_profile_remote_datasource.dart';
+import 'package:skill_link/features/profile/data/repository/worker_profile_repository_impl.dart';
+import 'package:skill_link/features/profile/domain/repository/worker_profile_repository.dart';
+import 'package:skill_link/features/profile/domain/use_case/get_worker_profile_usecase.dart';
+import 'package:skill_link/features/profile/domain/use_case/update_worker_profile_usecase.dart';
+import 'package:skill_link/features/profile/domain/use_case/deactivate_worker_usecase.dart';
+import 'package:skill_link/features/profile/presentation/view_model/worker_profile_bloc.dart';
 
 // Add Worker (Worker)
 import 'package:skill_link/features/add_worker/data/data_source/worker/remote_datasource/worker_remote_datasource.dart';
@@ -98,6 +106,10 @@ import 'package:skill_link/features/admin/data/data_source/admin_remote_datasour
 import 'package:skill_link/features/admin/domain/repository/admin_repository.dart';
 import 'package:skill_link/features/admin/data/repository/admin_repository_impl.dart';
 import 'package:skill_link/features/admin/presentation/view_model/admin_cubit.dart';
+// Banner
+import 'package:skill_link/features/banner/data/data_source/banner_remote_datasource.dart';
+import 'package:skill_link/features/banner/data/repository/banner_repository_impl.dart';
+import 'package:skill_link/features/banner/presentation/bloc/banner_bloc.dart';
 
 final serviceLocator = GetIt.instance;
 
@@ -138,6 +150,21 @@ Future<void> initDependencies() async {
   _initNotificationModules();
   _initPaymentModules();
   _initAdminModules();
+  _initBannerModules();
+}
+
+void _initBannerModules() {
+  serviceLocator.registerLazySingleton<BannerRemoteDatasource>(
+    () => BannerRemoteDatasource(apiService: serviceLocator()),
+  );
+
+  serviceLocator.registerLazySingleton<IBannerRepository>(
+    () => BannerRepositoryImpl(remoteDatasource: serviceLocator()),
+  );
+
+  serviceLocator.registerFactory<BannerBloc>(
+    () => BannerBloc(repository: serviceLocator<IBannerRepository>()),
+  );
 }
 
 void _initAuthModules() {
@@ -211,7 +238,37 @@ void _initProfileModules() {
       uploadProfilePictureUsecase: serviceLocator(),
       userGetCurrentUsecase: serviceLocator(),
       updateUserProfileUsecase: serviceLocator(),
+      updateNotificationPreferencesUseCase: serviceLocator(),
       tokenSharedPrefs: serviceLocator(),
+    ),
+  );
+
+  serviceLocator.registerLazySingleton<UpdateNotificationPreferencesUseCase>(
+    () => UpdateNotificationPreferencesUseCase(serviceLocator<IUserRepository>()),
+  );
+
+  // --- Worker Profile ---
+  serviceLocator.registerLazySingleton<WorkerProfileRemoteDataSource>(
+    () => WorkerProfileRemoteDataSource(serviceLocator()),
+  );
+  serviceLocator.registerLazySingleton<IWorkerProfileRepository>(
+    () => WorkerProfileRepositoryImpl(serviceLocator()),
+  );
+  serviceLocator.registerLazySingleton<GetWorkerProfileUseCase>(
+    () => GetWorkerProfileUseCase(serviceLocator()),
+  );
+  serviceLocator.registerLazySingleton<UpdateWorkerProfileUseCase>(
+    () => UpdateWorkerProfileUseCase(serviceLocator()),
+  );
+  serviceLocator.registerLazySingleton<DeactivateWorkerUseCase>(
+    () => DeactivateWorkerUseCase(serviceLocator()),
+  );
+
+  serviceLocator.registerFactory<WorkerProfileBloc>(
+    () => WorkerProfileBloc(
+      getWorkerProfileUseCase: serviceLocator(),
+      updateWorkerProfileUseCase: serviceLocator(),
+      deactivateWorkerUseCase: serviceLocator(),
     ),
   );
 }

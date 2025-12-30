@@ -23,6 +23,13 @@ class ExploreWorkerModel extends ExploreWorkerEntity {
     super.averageRating,
     super.numReviews,
     super.viewCount,
+    super.experience,
+    super.licenseUrl,
+    super.licenseIsImage,
+    super.identityIsImage,
+    super.identityCardUrl,
+    super.status,
+    super.rejectionReason,
   });
 
   factory ExploreWorkerModel.fromJson(Map<String, dynamic> json) {
@@ -136,6 +143,13 @@ class ExploreWorkerModel extends ExploreWorkerEntity {
       averageRating: (json['averageRating'] as num?)?.toDouble() ?? 0.0,
       numReviews: json['numReviews'] as int? ?? 0,
       viewCount: json['viewCount'] as int? ?? 0,
+      experience: json['experience'] as int?,
+      licenseUrl: json['licenseUrl'] as String?,
+      licenseIsImage: json['licenseIsImage'] as bool?,
+      identityIsImage: json['identityIsImage'] as bool?,
+      identityCardUrl: json['identityCardUrl'] as String?,
+      status: json['status'] as String?,
+      rejectionReason: json['rejectionReason'] as String?,
     );
   }
 

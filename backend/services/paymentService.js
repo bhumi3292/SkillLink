@@ -293,8 +293,49 @@ class PaymentService {
         }
     }
 
-    async getAllPayments() {
-        return await Payment.find().populate('bookingId').populate('workerId', 'fullName').sort({ createdAt: -1 });
+    async getAllPayments(filters = {}) {
+        const query = {};
+        if (filters.status) query.status = filters.status;
+        if (filters.refundStatus) query.refundStatus = filters.refundStatus;
+
+        const payments = await Payment.find(query)
+            .populate({ path: 'bookingId', populate: [{ path: 'workerListing', select: 'title location address' }] })
+            .populate('workerId', 'fullName')
+            .populate('hirerId', 'fullName')
+            .sort({ createdAt: -1 });
+
+        // Map and sanitize for admin UI: remove internal fields, format amounts and dates, convert locations to map links
+        return payments.map(p => {
+            const booking = p.bookingId || {};
+            const location = booking.location || {};
+
+            let mapLink = null;
+            if (location.coordinates && Array.isArray(location.coordinates) && location.coordinates.length >= 2) {
+                const lon = location.coordinates[0];
+                const lat = location.coordinates[1];
+                mapLink = `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`;
+            }
+
+            // Keep response shape compatible with existing frontend model expectations
+            return {
+                _id: p._id,
+                bookingId: booking, // populated booking (may include location)
+                hirerId: p.hirerId || null, // populated user with fullName if available
+                workerId: p.workerId || null,
+                paymentGateway: p.paymentGateway,
+                amount: p.totalAmount || p.amount || 0,
+                baseAmount: p.baseAmount || 0,
+                serviceFee: p.serviceFee || 0,
+                taxAmount: p.taxAmount || 0,
+                totalAmount: p.totalAmount || p.amount || 0,
+                transactionId: p.transactionId || null,
+                status: p.status,
+                refundStatus: p.refundStatus,
+                refundReason: p.refundReason || null,
+                paymentDate: p.paymentDate || p.createdAt,
+                locationMapLink: mapLink,
+            };
+        });
     }
 
     async requestRefund(paymentId, hirerId, reason) {

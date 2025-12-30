@@ -239,7 +239,8 @@ class _AddWorkerPresentationState extends State<AddWorkerPresentation> {
               _buildOutlinedField(_skillController, 'Primary Skill'),
               const SizedBox(height: 12),
 
-              _buildOutlinedField(_experienceController, 'Experience'),
+              _buildOutlinedField(_experienceController, 'Experience',
+                  keyboardType: TextInputType.number),
               const SizedBox(height: 12),
 
               _buildOutlinedField(
@@ -493,7 +494,7 @@ class _AddWorkerPresentationState extends State<AddWorkerPresentation> {
   Future<void> _submitToBackend() async {
     final skill = _skillController.text.trim();
     final name = skill.isNotEmpty ? skill : 'Worker';
-    final experience = _experienceController.text.trim();
+    final experience = int.tryParse(_experienceController.text.trim()) ?? 0;
     final rate = double.tryParse(_rateController.text.trim()) ?? 0.0;
     final description = _descriptionController.text.trim();
     final portfolioUrl = _portfolioController.text.trim();

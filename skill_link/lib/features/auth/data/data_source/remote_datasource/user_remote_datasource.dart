@@ -197,4 +197,36 @@ class UserRemoteDatasource implements IUserDataSource {
       throw Exception('An unexpected error occurred: $e');
     }
   }
+
+  Future<NotificationPreferences> updateNotificationPreferences(
+    bool push,
+    bool booking,
+    bool chat,
+  ) async {
+    try {
+      final response = await _apiService.dio.put(
+        ApiEndpoints.updateNotificationPreferences,
+        data: {
+          'push': push,
+          'booking': booking,
+          'chat': chat,
+        },
+      );
+
+      print('DEBUG: Update notification preferences response: ${response.data}');
+
+      if (response.statusCode == 200) {
+        return NotificationPreferences.fromJson(
+            response.data['data']); // Backend returns data in 'data' field
+      } else {
+        throw Exception(
+          "Failed to update notification preferences: ${response.statusCode} ${response.statusMessage}",
+        );
+      }
+    } on DioException catch (e) {
+      throw Exception('Failed to update notification preferences: ${e.error}');
+    } catch (e) {
+      throw Exception('An unexpected error occurred: $e');
+    }
+  }
 }

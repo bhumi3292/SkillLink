@@ -8,7 +8,7 @@ class GetAllWorkersUsecase {
 
   GetAllWorkersUsecase(this.repository);
 
-  Future<Either<Failure, List<ExploreWorkerEntity>>> call() async {
-    return await repository.getAllWorkers();
+  Future<Either<Failure, List<ExploreWorkerEntity>>> call({double? lat, double? long}) async {
+    return await repository.getAllWorkers(lat: lat, long: long);
   }
 }

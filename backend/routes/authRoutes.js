@@ -62,6 +62,8 @@ router.put('/update-profile', authenticateUser, authController.updateProfile);
 
 router.put('/update-location', authenticateUser, authController.updateLocation);
 
+router.put('/update-notification-preferences', authenticateUser, authController.updateNotificationPreferences);
+
 // Image Upload Route - THIS IS THE RELEVANT SECTION. IT IS ALREADY A POST.
 // Frontend needs to send a POST request to this endpoint.
 router.post('/uploadImage', authenticateUser, upload.single('profilePicture'), async (req, res) => {

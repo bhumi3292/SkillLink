@@ -4,7 +4,7 @@ import '../../domain/entity/payment_entity.dart';
 class PaymentApiModel extends Equatable {
   final String? id;
   final dynamic bookingId; // Can be string or object
-  final String hirerId;
+  final dynamic hirerId;
   final dynamic workerId; // Can be string or object
   final String paymentGateway;
   final double amount;

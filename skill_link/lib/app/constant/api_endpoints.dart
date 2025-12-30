@@ -16,6 +16,8 @@ class ApiEndpoints {
 
   // ---------- User ----------
   static String get updateUser => "${baseUrl}auth/update-profile";
+  static String get updateNotificationPreferences =>
+      "${baseUrl}auth/update-notification-preferences";
   static String deleteUser(String id) => "${baseUrl}user/delete/$id";
 
   // ---------- Profile ----------
@@ -24,6 +26,7 @@ class ApiEndpoints {
   // ---------- Worker ----------
   static String get createWorker => "${baseUrl}workers";
   static String get getAllWorkers => "${baseUrl}workers";
+  static String get getNearbyWorkers => "${baseUrl}workers/nearby";
   static String getWorkerById(String id) => "${baseUrl}workers/$id";
   static String deleteWorker(String id) => "${baseUrl}workers/$id";
 
@@ -103,7 +106,7 @@ class ApiEndpoints {
   // ---------- Admin Panel ----------
   static String get adminDashboardStats => "${baseUrl}admin/dashboard-stats";
   static String get adminPendingWorkers => "${baseUrl}admin/workers/pending";
-  static String get adminVerifyWorker => "${baseUrl}admin/workers/verify";
+  static String get adminVerifyWorker => "${baseUrl}admin/verify-worker";
   static String get adminAllUsers => "${baseUrl}admin/users";
   static String toggleUserSuspension(String userId) =>
       "${baseUrl}admin/users/$userId/toggle-suspension";
@@ -114,4 +117,7 @@ class ApiEndpoints {
   static String get adminResolveReport => "${baseUrl}admin/reports/resolve";
   static String get createReport => "${baseUrl}reports";
   static String get adminAllBookings => "${baseUrl}admin/bookings";
+  // ---------- Banners ----------
+  static String get publicActiveBanners => "${baseUrl}banners/active";
+  static String get adminBanners => "${baseUrl}admin/banners";
 }

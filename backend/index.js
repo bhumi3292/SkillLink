@@ -44,6 +44,7 @@ const reportRoutes = require('./routes/reportRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const publicBannerRoutes = require('./routes/publicBannerRoutes');
 
 app.use("/api/auth", authRoutes);
 app.use("/api/workers", workerRoutes);
@@ -62,6 +63,7 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/banners', publicBannerRoutes);
 
 app.get("/", (req, res) => {
     res.status(200).send("SkillLink backend running successfully!");

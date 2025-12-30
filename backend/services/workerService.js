@@ -71,11 +71,25 @@ class WorkerService {
         const updatedImages = [...existingImagesToKeep, ...newImages];
         const updatedVideos = [...existingVideosToKeep, ...newVideos];
 
+        // Validation: Prevent editing service info while verification is pending
+        // Basic info (Location) is allowed. User info (Name, Photo) is handled separately.
+        if (worker.status === 'pending') {
+            // If trying to update service fields
+            if (title || description || minPrice || maxPrice || experience || categoryId) {
+                throw new Error("Cannot edit service details while verification is pending. Only location can be updated.");
+            }
+        }
+
         const dataToUpdate = {
-            title, description, minPrice, maxPrice,
             images: updatedImages,
             videos: updatedVideos,
         };
+
+        if (title) dataToUpdate.title = title;
+        if (description) dataToUpdate.description = description;
+        if (minPrice) dataToUpdate.minPrice = minPrice;
+        if (maxPrice) dataToUpdate.maxPrice = maxPrice;
+        if (experience) dataToUpdate.experience = experience;
 
         if (coordinates) {
             dataToUpdate.location = {
@@ -105,8 +119,13 @@ class WorkerService {
             throw new Error("Unauthorized access.");
         }
 
-        const filesToDelete = [...worker.images, ...worker.videos];
-        await worker.deleteOne();
+        const filesToDelete = []; // Soft delete keeps files
+
+        // Soft Delete
+        worker.isActive = false;
+        await worker.save();
+
+        // await worker.deleteOne(); // Removed hard delete
 
         return { success: true, filesToDelete };
     }
@@ -132,10 +151,11 @@ class WorkerService {
         if (categoryId) {
             geoNearOptions.query = {
                 categoryId: new mongoose.Types.ObjectId(categoryId),
-                status: 'approved'
+                status: 'approved',
+                isActive: true
             };
         } else {
-            geoNearOptions.query = { status: 'approved' };
+            geoNearOptions.query = { status: 'approved', isActive: true };
         }
 
         return await Worker.aggregate([
@@ -152,6 +172,9 @@ class WorkerService {
             },
             { $unwind: "$categoryId" },
             {
+                $match: { "categoryId.isActive": true } // Ensure category is active
+            },
+            {
                 $lookup: {
                     from: "users",
                     localField: "worker",
@@ -164,10 +187,13 @@ class WorkerService {
     }
 
     async getAllWorkers(filters) {
-        const finalFilters = { ...filters, status: 'approved' };
-        return await Worker.find(finalFilters)
-            .populate("categoryId", "category_name")
+        const finalFilters = { ...filters, status: 'approved', isActive: true };
+        const workers = await Worker.find(finalFilters)
+            .populate("categoryId", "category_name isActive")
             .populate("worker", "fullName email phoneNumber profilePicture");
+
+        // Filter out workers whose category is not active
+        return workers.filter(w => w.categoryId && w.categoryId.isActive !== false);
     }
 
     async getWorkerById(id) {

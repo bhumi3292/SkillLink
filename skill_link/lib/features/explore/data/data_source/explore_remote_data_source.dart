@@ -5,7 +5,7 @@ import 'package:skill_link/features/explore/data/model/explore_worker_model.dart
 import 'package:skill_link/app/constant/api_endpoints.dart';
 
 abstract class ExploreRemoteDataSource {
-  Future<Either<Failure, List<ExploreWorkerModel>>> getAllWorkers();
+  Future<Either<Failure, List<ExploreWorkerModel>>> getAllWorkers({double? lat, double? long});
   Future<Either<Failure, List<dynamic>>> getWorkerReviews(String workerListingId);
   Future<Either<Failure, bool>> submitReview({
     required String bookingId,
@@ -20,9 +20,19 @@ class ExploreRemoteDataSourceImpl implements ExploreRemoteDataSource {
   ExploreRemoteDataSourceImpl(this.apiService);
 
   @override
-  Future<Either<Failure, List<ExploreWorkerModel>>> getAllWorkers() async {
+  Future<Either<Failure, List<ExploreWorkerModel>>> getAllWorkers({double? lat, double? long}) async {
     try {
-      final response = await apiService.dio.get(ApiEndpoints.getAllWorkers.replaceFirst(ApiEndpoints.baseUrl, ''));
+      String endpoint;
+      Map<String, dynamic>? queryParams;
+
+      if (lat != null && long != null) {
+        endpoint = ApiEndpoints.getNearbyWorkers.replaceFirst(ApiEndpoints.baseUrl, '');
+        queryParams = {'latitude': lat, 'longitude': long};
+      } else {
+        endpoint = ApiEndpoints.getAllWorkers.replaceFirst(ApiEndpoints.baseUrl, '');
+      }
+
+      final response = await apiService.dio.get(endpoint, queryParameters: queryParams);
 
       if (response.statusCode == 200) {
         final responseData = response.data;

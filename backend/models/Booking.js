@@ -27,8 +27,12 @@ const BookingSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Pending', 'Accepted', 'InProgress', 'Completed', 'Paid', 'Cancelled', 'Rejected', 'confirmed', 'pending'],
+        enum: ['Pending', 'Accepted', 'InProgress', 'Completed', 'Paid', 'Rated', 'Cancelled', 'Rejected', 'confirmed', 'pending'],
         default: 'Pending'
+    },
+    price: {
+        type: Number,
+        required: true
     },
     // Timeline of status changes and important events
     timeline: [
@@ -50,7 +54,7 @@ const BookingSchema = new mongoose.Schema({
             requestedDate: { type: String },
             requestedTimeSlot: { type: String },
             requestedAt: { type: Date, default: Date.now },
-            status: { type: String, enum: ['pending','accepted','rejected'], default: 'pending' },
+            status: { type: String, enum: ['pending', 'accepted', 'rejected'], default: 'pending' },
             workerResponseReason: { type: String },
             respondedAt: { type: Date }
         }

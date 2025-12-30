@@ -25,16 +25,17 @@ class AdminCubit extends Cubit<AdminState> {
     );
   }
 
-  Future<void> verifyWorker(String workerId, String action, {String? reason}) async {
+  Future<void> verifyWorker(
+    String workerId,
+    String action, {
+    String? reason,
+  }) async {
     emit(AdminLoading());
     final result = await _repository.verifyWorker(workerId, action, reason);
-    result.fold(
-      (failure) => emit(AdminError(failure.message)),
-      (_) {
-        emit(const AdminActionSuccess('Worker status updated successfully'));
-        fetchPendingWorkers(); // Refresh list
-      },
-    );
+    result.fold((failure) => emit(AdminError(failure.message)), (_) {
+      emit(const AdminActionSuccess('Worker status updated successfully'));
+      fetchPendingWorkers(); // Refresh list
+    });
   }
 
   Future<void> fetchAllUsers() async {
@@ -48,23 +49,17 @@ class AdminCubit extends Cubit<AdminState> {
 
   Future<void> toggleUserSuspension(String userId) async {
     final result = await _repository.toggleUserSuspension(userId);
-    result.fold(
-      (failure) => emit(AdminError(failure.message)),
-      (_) {
-        emit(const AdminActionSuccess('User status updated'));
-        fetchAllUsers(); // Refresh list
-      },
-    );
+    result.fold((failure) => emit(AdminError(failure.message)), (_) {
+      emit(const AdminActionSuccess('User status updated'));
+      fetchAllUsers(); // Refresh list
+    });
   }
 
   Future<void> toggleCategory(String categoryId) async {
     final result = await _repository.toggleCategoryStatus(categoryId);
-    result.fold(
-      (failure) => emit(AdminError(failure.message)),
-      (_) {
-        emit(const AdminActionSuccess('Category status updated'));
-      },
-    );
+    result.fold((failure) => emit(AdminError(failure.message)), (_) {
+      emit(const AdminActionSuccess('Category status updated'));
+    });
   }
 
   Future<void> fetchAllBookings() async {
@@ -74,5 +69,45 @@ class AdminCubit extends Cubit<AdminState> {
       (failure) => emit(AdminError(failure.message)),
       (bookings) => emit(AdminBookingsLoaded(bookings)),
     );
+  }
+
+  Future<void> fetchAllBanners() async {
+    emit(AdminLoading());
+    final result = await _repository.getAllBanners();
+    result.fold(
+      (failure) => emit(AdminError(failure.message)),
+      (banners) => emit(AdminBannersLoaded(banners)),
+    );
+  }
+
+  Future<void> createBanner(Map<String, dynamic> body, {dynamic image}) async {
+    emit(AdminLoading());
+    final result = await _repository.createBanner(body, image: image);
+    result.fold((failure) => emit(AdminError(failure.message)), (banner) {
+      emit(const AdminBannerActionSuccess('Banner created'));
+      fetchAllBanners();
+    });
+  }
+
+  Future<void> updateBanner(
+    String id,
+    Map<String, dynamic> body, {
+    dynamic image,
+  }) async {
+    emit(AdminLoading());
+    final result = await _repository.updateBanner(id, body, image: image);
+    result.fold((failure) => emit(AdminError(failure.message)), (banner) {
+      emit(const AdminBannerActionSuccess('Banner updated'));
+      fetchAllBanners();
+    });
+  }
+
+  Future<void> deleteBanner(String id) async {
+    emit(AdminLoading());
+    final result = await _repository.deleteBanner(id);
+    result.fold((failure) => emit(AdminError(failure.message)), (_) {
+      emit(const AdminBannerActionSuccess('Banner deleted'));
+      fetchAllBanners();
+    });
   }
 }

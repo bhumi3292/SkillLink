@@ -5,6 +5,7 @@ const Category = require("../models/Category");
 const Booking = require("../models/Booking");
 const Report = require("../models/Report");
 const Payment = require("../models/Payment");
+const axios = require('axios');
 
 // --- DASHBOARD STATS ---
 exports.getDashboardStats = async (req, res) => {
@@ -44,7 +45,62 @@ exports.getPendingWorkers = async (req, res) => {
         const workers = await Worker.find({ status: "pending" })
             .populate("worker", "fullName email phoneNumber profilePicture")
             .populate("categoryId", "category_name");
-        res.status(200).json({ success: true, data: workers });
+
+        // Convert each mongoose doc to plain object and add helpful flags
+        const out = await Promise.all(workers.map(async (w) => {
+            const obj = w.toObject();
+
+            const detectIsImageByExtension = (url) => {
+                if (!url || typeof url !== 'string') return false;
+                const lower = url.split('?')[0].toLowerCase();
+                return lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.png') || lower.endsWith('.gif') || lower.endsWith('.webp');
+            };
+
+            // Default by extension
+            obj.licenseIsImage = detectIsImageByExtension(obj.licenseUrl);
+            obj.identityIsImage = detectIsImageByExtension(obj.identityCardUrl);
+
+            // If filenames suggest PDF but the stored file might actually be an image (wrong extension), try HEAD request to detect content-type
+            const buildFull = (path) => {
+                if (!path || typeof path !== 'string') return null;
+                if (path.startsWith('http://') || path.startsWith('https://')) return path;
+                const host = (typeof req.get === 'function') ? `${req.protocol}://${req.get('host')}` : (process.env.BACKEND_URL || 'http://localhost:3001');
+                return `${host.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
+            };
+
+            try {
+                if (obj.licenseUrl && !obj.licenseIsImage) {
+                    const full = buildFull(obj.licenseUrl);
+                    if (full) {
+                        const head = await axios.head(full, { timeout: 3000 }).catch(() => null);
+                        const ct = head?.headers?.['content-type'] || head?.headers?.['Content-Type'];
+                        if (ct && typeof ct === 'string' && ct.startsWith('image/')) obj.licenseIsImage = true;
+                    }
+                }
+
+                if (obj.identityCardUrl && !obj.identityIsImage) {
+                    const full2 = buildFull(obj.identityCardUrl);
+                    if (full2) {
+                        const head2 = await axios.head(full2, { timeout: 3000 }).catch(() => null);
+                        const ct2 = head2?.headers?.['content-type'] || head2?.headers?.['Content-Type'];
+                        if (ct2 && typeof ct2 === 'string' && ct2.startsWith('image/')) obj.identityIsImage = true;
+                    }
+                }
+            } catch (e) {
+                // Non-fatal: keep earlier extension-based guess
+            }
+
+            // Add map link if coordinates present
+            if (obj.location && Array.isArray(obj.location.coordinates) && obj.location.coordinates.length >= 2) {
+                const lon = obj.location.coordinates[0];
+                const lat = obj.location.coordinates[1];
+                obj.locationMapLink = `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`;
+            }
+
+            return obj;
+        }));
+
+        res.status(200).json({ success: true, data: out });
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });
     }

@@ -5,6 +5,7 @@ import 'package:skill_link/core/services/location_service.dart';
 import 'package:skill_link/app/service_locator/service_locator.dart';
 import 'package:skill_link/core/services/geocoding_service.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:skill_link/features/explore/domain/entity/explore_worker_entity.dart';
 
 /// A production-ready Map Widget using flutter_osm_plugin.
 /// Supports: Picking (Center Pin), Search, Route Drawing, and Live Tracking.
@@ -15,6 +16,10 @@ class OsmMapWidget extends StatefulWidget {
   final Function(GeoPoint, String address)? onLocationSelected;
   final bool showRoute;
   final String? pickerTitle;
+  
+  // New features for Explore Map
+  final List<ExploreWorkerEntity>? workerMarkers;
+  final Function(ExploreWorkerEntity)? onMarkerTap;
 
   const OsmMapWidget({
     super.key,
@@ -24,6 +29,8 @@ class OsmMapWidget extends StatefulWidget {
     this.onLocationSelected,
     this.showRoute = false,
     this.pickerTitle,
+    this.workerMarkers,
+    this.onMarkerTap,
   });
 
   @override
@@ -176,6 +183,16 @@ class _OsmMapWidgetState extends State<OsmMapWidget> {
                   ),
                   [widget.destinationLocation!],
                 ),
+              if (widget.workerMarkers != null)
+                 ...widget.workerMarkers!.where((w) => w.coordinates != null).map((worker) {
+                   return StaticPositionGeoPoint(
+                     worker.id! + "_marker", // unique id
+                     const MarkerIcon(
+                       icon: Icon(Icons.person_pin_circle, color: Colors.purple, size: 48),
+                     ),
+                     [GeoPoint(latitude: worker.coordinates!.latitude, longitude: worker.coordinates!.longitude)],
+                   );
+                 }),
             ],
             roadConfiguration: const RoadOption(
               roadColor: Colors.blueAccent,
@@ -210,6 +227,19 @@ class _OsmMapWidgetState extends State<OsmMapWidget> {
             if (widget.isPicker) {
               await controller.goToLocation(geoPoint);
               _autofillAddressFromCoords(geoPoint);
+            } else if (widget.workerMarkers != null) {
+               // Find the worker with this location
+               // Use a small epsilon for float comparison if needed, though usually exact object match if from map
+               try {
+                 final worker = widget.workerMarkers!.firstWhere((w) => 
+                    w.coordinates != null && 
+                    (w.coordinates!.latitude - geoPoint.latitude).abs() < 0.0001 &&
+                    (w.coordinates!.longitude - geoPoint.longitude).abs() < 0.0001
+                 );
+                 widget.onMarkerTap?.call(worker);
+               } catch (e) {
+                 // Not a worker marker (maybe user location)
+               }
             }
           },
         ),

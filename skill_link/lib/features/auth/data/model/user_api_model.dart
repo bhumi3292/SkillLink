@@ -23,6 +23,8 @@ class UserApiModel extends Equatable {
   final String? workerStatus;
   final String? rejectionReason;
   final int? viewCount;
+  final String? workerProfileId; // Added
+  final Map<String, dynamic>? notificationPreferences;
 
   const UserApiModel({
     this.userId,
@@ -38,25 +40,48 @@ class UserApiModel extends Equatable {
     this.workerStatus,
     this.rejectionReason,
     this.viewCount,
+    this.workerProfileId,
+    this.notificationPreferences,
   });
 
   factory UserApiModel.fromJson(Map<String, dynamic> json) => UserApiModel(
-    userId: json['_id'] as String?,
-    fullName: json['fullName'] as String,
-    email: json['email'] as String,
-    phoneNumber: json['phoneNumber'] as String?,
-    stakeholder: json['role'] as String?,
-    password: json['password'] as String?,
-    confirmPassword: json['confirmPassword'] as String?,
-    profilePicture: json['profilePicture'] as String?,
-    averageRating: (json['averageRating'] as num?)?.toDouble(),
-    numReviews: json['numReviews'] as int?,
-    workerStatus: json['workerStatus'] as String?,
-    rejectionReason: json['rejectionReason'] as String?,
-    viewCount: json['viewCount'] as int?,
-  );
+        userId: json['_id'] as String?,
+        fullName: json['fullName'] as String,
+        email: json['email'] as String,
+        phoneNumber: json['phoneNumber'] as String?,
+        stakeholder: json['role'] as String?,
+        password: json['password'] as String?,
+        confirmPassword: json['confirmPassword'] as String?,
+        profilePicture: json['profilePicture'] as String?,
+        averageRating: (json['averageRating'] as num?)?.toDouble(),
+        numReviews: json['numReviews'] as int?,
+        workerStatus: json['workerStatus'] as String?,
+        rejectionReason: json['rejectionReason'] as String?,
+        viewCount: json['viewCount'] as int?,
+        workerProfileId: json['workerId'] as String?, // Mapping from backend 'workerId'
+        notificationPreferences:
+            json['notificationPreferences'] as Map<String, dynamic>?,
+      );
 
-  Map<String, dynamic> toJson() => _$UserApiModelToJson(this);
+  Map<String, dynamic> toJson() {
+    return {
+      '_id': userId,
+      'fullName': fullName,
+      'email': email,
+      'phoneNumber': phoneNumber,
+      'role': stakeholder,
+      'password': password,
+      'confirmPassword': confirmPassword,
+      'profilePicture': profilePicture,
+      'averageRating': averageRating,
+      'numReviews': numReviews,
+      'workerStatus': workerStatus,
+      'rejectionReason': rejectionReason,
+      'viewCount': viewCount,
+      'workerId': workerProfileId, // To JSON
+      'notificationPreferences': notificationPreferences,
+    };
+  }
 
   // When converting FROM ApiModel TO UserEntity (e.g., after fetching profile)
   UserEntity toEntity() {
@@ -74,6 +99,10 @@ class UserApiModel extends Equatable {
       workerStatus: workerStatus,
       rejectionReason: rejectionReason,
       viewCount: viewCount,
+      workerProfileId: workerProfileId,
+      notificationPreferences: notificationPreferences != null
+          ? NotificationPreferences.fromJson(notificationPreferences!)
+          : null,
     );
   }
 
@@ -92,23 +121,28 @@ class UserApiModel extends Equatable {
       workerStatus: entity.workerStatus,
       rejectionReason: entity.rejectionReason,
       viewCount: entity.viewCount,
+      workerProfileId: entity.workerProfileId,
+      notificationPreferences: entity.notificationPreferences?.toJson(),
     );
   }
 
   @override
   List<Object?> get props => [
-    userId,
-    fullName,
-    email,
-    phoneNumber,
-    stakeholder,
-    password,
-    confirmPassword,
-    profilePicture,
-    averageRating,
-    numReviews,
-    workerStatus,
-    rejectionReason,
-    viewCount,
-  ];
+        userId,
+        fullName,
+        email,
+        phoneNumber,
+        stakeholder,
+        password,
+        confirmPassword,
+        profilePicture,
+        averageRating,
+        numReviews,
+        workerStatus,
+        rejectionReason,
+        viewCount,
+        workerProfileId,
+        notificationPreferences,
+      ];
 }
+

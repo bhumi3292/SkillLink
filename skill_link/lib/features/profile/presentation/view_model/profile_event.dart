@@ -70,3 +70,20 @@ class UpdateUserProfileEvent extends ProfileEvent {
   @override
   List<Object?> get props => [context, fullName, email, phoneNumber, currentPassword, newPassword];
 }
+
+class UpdateNotificationPreferencesEvent extends ProfileEvent {
+  final BuildContext context;
+  final bool push;
+  final bool booking;
+  final bool chat;
+
+  const UpdateNotificationPreferencesEvent({
+    required this.context,
+    required this.push,
+    required this.booking,
+    required this.chat,
+  });
+
+  @override
+  List<Object?> get props => [context, push, booking, chat];
+}

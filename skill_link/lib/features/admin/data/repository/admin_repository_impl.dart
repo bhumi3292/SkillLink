@@ -29,7 +29,11 @@ class AdminRepositoryImpl implements IAdminRepository {
   }
 
   @override
-  Future<Either<Failure, void>> verifyWorker(String workerId, String action, String? rejectionReason) async {
+  Future<Either<Failure, void>> verifyWorker(
+    String workerId,
+    String action,
+    String? rejectionReason,
+  ) async {
     try {
       await _remoteDataSource.verifyWorker(workerId, action, rejectionReason);
       return const Right(null);
@@ -73,6 +77,57 @@ class AdminRepositoryImpl implements IAdminRepository {
     try {
       final bookings = await _remoteDataSource.getAllBookings();
       return Right(bookings);
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<dynamic>>> getAllBanners() async {
+    try {
+      final banners = await _remoteDataSource.getAllBanners();
+      return Right(banners);
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> createBanner(
+    Map<String, dynamic> body, {
+    image,
+  }) async {
+    try {
+      final banner = await _remoteDataSource.createBanner(body, image: image);
+      return Right(banner);
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> updateBanner(
+    String id,
+    Map<String, dynamic> body, {
+    image,
+  }) async {
+    try {
+      final banner = await _remoteDataSource.updateBanner(
+        id,
+        body,
+        image: image,
+      );
+      return Right(banner);
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteBanner(String id) async {
+    try {
+      await _remoteDataSource.deleteBanner(id);
+      return const Right(null);
     } catch (e) {
       return Left(ServerFailure(message: e.toString()));
     }

@@ -8,7 +8,9 @@ const {
     getOneWorker,
     updateWorker,
     deleteWorker,
-    updateAvailability
+    updateAvailability,
+    updateWorkerProfile,
+    getNearbyWorkers
 } = require('../controllers/worker/workerController');
 
 const {
@@ -17,6 +19,8 @@ const {
     isWorkerOwner // Logic currently checks role ownership
 } = require('../middlewares/authorizedUser');
 
+const uploadWorkerMedia = require('../middlewares/worker/workerMediaUpload');
+
 router.put(
     '/update-availability',
     authenticateUser,
@@ -24,7 +28,15 @@ router.put(
     updateAvailability
 );
 
-const uploadWorkerMedia = require('../middlewares/worker/workerMediaUpload');
+router.put(
+    '/profile',
+    authenticateUser,
+    isworker,
+    uploadWorkerMedia,
+    updateWorkerProfile
+);
+
+
 
 router.post(
     '/',
@@ -34,6 +46,7 @@ router.post(
     createWorker
 );
 
+router.get('/nearby', getNearbyWorkers);
 router.get('/', getAllWorkers);
 router.get('/:id', getOneWorker);
 

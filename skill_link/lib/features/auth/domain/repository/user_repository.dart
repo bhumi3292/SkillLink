@@ -21,4 +21,10 @@ abstract interface class IUserRepository {
     String? currentPassword,
     String? newPassword,
   );
+
+  Future<Either<Failure, NotificationPreferences>> updateNotificationPreferences(
+    bool push,
+    bool booking,
+    bool chat,
+  );
 }

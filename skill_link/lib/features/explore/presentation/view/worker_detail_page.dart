@@ -373,6 +373,14 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
                               return;
                             }
 
+                            if (currentUser.stakeholder?.toLowerCase() == 'admin') {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text('Admins cannot make bookings.')),
+                              );
+                              return;
+                            }
+
                             showDialog(
                               context: context,
                               builder:
@@ -545,6 +553,21 @@ class _WorkerDetailPageState extends State<WorkerDetailPage> {
     final userId = await _getUserIdFromPrefs();
 
     if (!mounted) return;
+
+    // Check for Admin role
+    try {
+      final profileState = context.read<ProfileViewModel>().state;
+      final currentUser = profileState.user;
+      if (currentUser != null &&
+          currentUser.stakeholder?.toLowerCase() == 'admin') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Admins cannot initiate chats.')),
+        );
+        return;
+      }
+    } catch (_) {
+      // Ignore if profile state isn't available
+    }
 
     if (userId == null || workerId == null) {
       ScaffoldMessenger.of(context).showSnackBar(

@@ -11,7 +11,15 @@ abstract class ExploreEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-class GetWorkersEvent extends ExploreEvent {}
+class GetWorkersEvent extends ExploreEvent {
+  final double? lat;
+  final double? long;
+
+  const GetWorkersEvent({this.lat, this.long});
+
+  @override
+  List<Object?> get props => [lat, long];
+}
 
 class FilterWorkersEvent extends ExploreEvent {
   final String searchText;
@@ -86,7 +94,8 @@ class ExploreBloc extends Bloc<ExploreEvent, ExploreState> {
   ) async {
     emit(ExploreLoading());
 
-    final result = await getAllWorkersUsecase();
+    // If location is provided, fetch nearby workers. Otherwise fetch all.
+    final result = await getAllWorkersUsecase(lat: event.lat, long: event.long);
     result.fold((failure) => emit(ExploreError(failure.message)), (workers) {
       _allWorkers = workers;
       emit(

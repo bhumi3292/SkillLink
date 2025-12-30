@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:skill_link/app/service_locator/service_locator.dart';
 import 'package:skill_link/cores/utils/image_url_helper.dart';
 import 'package:skill_link/features/auth/presentation/view/login.dart';
+import 'package:skill_link/features/profile/presentation/view/edit_profile_page.dart';
+import 'package:skill_link/features/profile/presentation/view/edit_worker_profile_page.dart';
 import 'package:skill_link/features/profile/presentation/view_model/profile_event.dart';
 import 'package:skill_link/features/profile/presentation/view_model/profile_state.dart';
 import 'package:skill_link/features/profile/presentation/view_model/profile_view_model.dart';
@@ -180,7 +182,12 @@ class ProfilePage extends StatelessWidget {
                          
                          ElevatedButton(
                            onPressed: () {
-                             // Navigate to edit profile or similar
+                             Navigator.push(
+                               context,
+                               MaterialPageRoute(
+                                 builder: (context) => EditProfilePage(user: user),
+                               ),
+                             );
                            },
                            style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF003366),
@@ -191,6 +198,34 @@ class ProfilePage extends StatelessWidget {
                            ),
                            child: const Text("Edit Profile", style: TextStyle(color: Colors.white)),
                          ),
+                         
+                         // Manage Services Button
+                         if ((user.stakeholder == 'worker' ||
+                                 user.stakeholder == 'Worker') &&
+                             user.workerProfileId != null) ...[
+                           const SizedBox(height: 12),
+                           ElevatedButton(
+                             onPressed: () {
+                               Navigator.push(
+                                 context,
+                                 MaterialPageRoute(
+                                   builder: (context) => EditWorkerProfilePage(
+                                     workerProfileId: user.workerProfileId!,
+                                   ),
+                                 ),
+                               );
+                             },
+                             style: ElevatedButton.styleFrom(
+                               backgroundColor: Colors.orange,
+                               minimumSize: const Size(double.infinity, 50),
+                               shape: RoundedRectangleBorder(
+                                 borderRadius: BorderRadius.circular(12),
+                               ),
+                             ),
+                             child: const Text("Manage Services",
+                                 style: TextStyle(color: Colors.white)),
+                           ),
+                         ],
                       ],
                     ),
                   ),

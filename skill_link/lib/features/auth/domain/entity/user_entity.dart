@@ -17,6 +17,8 @@ class UserEntity extends Equatable {
   final String? workerStatus; // 'pending', 'approved', 'rejected'
   final String? rejectionReason;
   final int? viewCount;
+  final NotificationPreferences? notificationPreferences;
+  final String? workerProfileId; // ⭐ Added workerProfileId ⭐
 
   const UserEntity({
     this.userId,
@@ -33,6 +35,8 @@ class UserEntity extends Equatable {
     this.workerStatus,
     this.rejectionReason,
     this.viewCount,
+    this.notificationPreferences,
+    this.workerProfileId,
   });
 
   UserEntity copyWith({
@@ -47,6 +51,8 @@ class UserEntity extends Equatable {
     double? averageRating,
     int? numReviews,
     int? viewCount,
+    NotificationPreferences? notificationPreferences,
+    String? workerProfileId,
   }) {
     return UserEntity(
       userId: userId ?? this.userId,
@@ -62,23 +68,70 @@ class UserEntity extends Equatable {
       workerStatus: workerStatus ?? workerStatus,
       rejectionReason: rejectionReason ?? rejectionReason,
       viewCount: viewCount ?? this.viewCount,
+      notificationPreferences: notificationPreferences ?? this.notificationPreferences,
+      workerProfileId: workerProfileId ?? this.workerProfileId,
     );
   }
 
   @override
   List<Object?> get props => [
-    userId,
-    fullName,
-    email,
-    phoneNumber,
-    stakeholder,
-    password,
-    confirmPassword,
-    profilePicture,
-    averageRating,
-    numReviews,
-    workerStatus,
-    rejectionReason,
-    viewCount,
-  ];
+        userId,
+        fullName,
+        email,
+        phoneNumber,
+        stakeholder,
+        password,
+        confirmPassword,
+        profilePicture,
+        averageRating,
+        numReviews,
+        workerStatus,
+        rejectionReason,
+        viewCount,
+        notificationPreferences,
+        workerProfileId,
+      ];
+}
+
+class NotificationPreferences extends Equatable {
+  final bool push;
+  final bool booking;
+  final bool chat;
+
+  const NotificationPreferences({
+    this.push = true,
+    this.booking = true,
+    this.chat = true,
+  });
+
+  factory NotificationPreferences.fromJson(Map<String, dynamic> json) {
+    return NotificationPreferences(
+      push: json['push'] as bool? ?? true,
+      booking: json['booking'] as bool? ?? true,
+      chat: json['chat'] as bool? ?? true,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'push': push,
+      'booking': booking,
+      'chat': chat,
+    };
+  }
+
+  NotificationPreferences copyWith({
+    bool? push,
+    bool? booking,
+    bool? chat,
+  }) {
+    return NotificationPreferences(
+      push: push ?? this.push,
+      booking: booking ?? this.booking,
+      chat: chat ?? this.chat,
+    );
+  }
+
+  @override
+  List<Object?> get props => [push, booking, chat];
 }

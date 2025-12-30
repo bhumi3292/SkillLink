@@ -29,7 +29,11 @@ class ExploreWorkerEntity {
 
   final int? experience;
   final String? licenseUrl;
+  final bool? licenseIsImage;
+  final bool? identityIsImage;
   final String? identityCardUrl;
+  final String? status;
+  final String? rejectionReason;
 
   ExploreWorkerEntity({
     this.id,
@@ -57,7 +61,11 @@ class ExploreWorkerEntity {
     this.viewCount,
     this.experience,
     this.licenseUrl,
+    this.licenseIsImage,
+    this.identityIsImage,
     this.identityCardUrl,
+    this.status,
+    this.rejectionReason,
   });
 
   factory ExploreWorkerEntity.fromJson(Map<String, dynamic> json) {
@@ -112,7 +120,11 @@ class ExploreWorkerEntity {
       viewCount: json['viewCount'] as int? ?? 0,
       experience: json['experience'] as int?,
       licenseUrl: json['licenseUrl'] as String?,
+      licenseIsImage: json['licenseIsImage'] as bool?,
+      identityIsImage: json['identityIsImage'] as bool?,
       identityCardUrl: json['identityCardUrl'] as String?,
+      status: json['status'] as String?,
+      rejectionReason: json['rejectionReason'] as String?,
     );
   }
 }

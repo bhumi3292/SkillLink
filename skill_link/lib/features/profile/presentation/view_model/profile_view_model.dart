@@ -4,6 +4,7 @@ import 'package:skill_link/features/auth/domain/use_case/user_get_current_usecas
 import 'package:skill_link/features/auth/domain/use_case/update_user_profile_usecase.dart';
 import 'package:skill_link/features/profile/domain/use_case/upload_profile_picture_usecase.dart';
 import 'package:skill_link/features/profile/domain/use_case/update_profile_usecase.dart';
+import 'package:skill_link/features/auth/domain/use_case/update_notification_preferences_usecase.dart';
 import 'package:skill_link/features/profile/presentation/view_model/profile_event.dart';
 import 'package:skill_link/features/profile/presentation/view_model/profile_state.dart';
 import 'package:skill_link/app/shared_pref/token_shared_prefs.dart';
@@ -13,6 +14,7 @@ class ProfileViewModel extends Bloc<ProfileEvent, ProfileState> {
   final UploadProfilePictureUsecase uploadProfilePictureUsecase;
   final UpdateUserProfileUsecase updateUserProfileUsecase;
   final UpdateProfileUsecase updateProfileUsecase;
+  final UpdateNotificationPreferencesUseCase updateNotificationPreferencesUseCase;
   final TokenSharedPrefs _tokenSharedPrefs;
 
   ProfileViewModel({
@@ -20,6 +22,7 @@ class ProfileViewModel extends Bloc<ProfileEvent, ProfileState> {
     required this.uploadProfilePictureUsecase,
     required this.updateUserProfileUsecase,
     required this.updateProfileUsecase,
+    required this.updateNotificationPreferencesUseCase,
     required TokenSharedPrefs tokenSharedPrefs,
   }) : _tokenSharedPrefs = tokenSharedPrefs,
        super(const ProfileState.initial()) {
@@ -28,6 +31,7 @@ class ProfileViewModel extends Bloc<ProfileEvent, ProfileState> {
     on<UpdateLocalUserEvent>(_onUpdateLocalUser);
     on<LogoutEvent>(_onLogout);
     on<UpdateUserProfileEvent>(_onUpdateUserProfile);
+    on<UpdateNotificationPreferencesEvent>(_onUpdateNotificationPreferences);
   }
 
   Future<void> _onFetchUserProfile(
@@ -242,5 +246,35 @@ class ProfileViewModel extends Bloc<ProfileEvent, ProfileState> {
     } catch (e) {
       emit(state.copyWith(isLoading: false, errorMessage: e.toString()));
     }
+  }
+
+  Future<void> _onUpdateNotificationPreferences(
+    UpdateNotificationPreferencesEvent event,
+    Emitter<ProfileState> emit,
+  ) async {
+    emit(state.copyWith(isLoading: true, errorMessage: null));
+
+    final result = await updateNotificationPreferencesUseCase.call(
+      push: event.push,
+      booking: event.booking,
+      chat: event.chat,
+    );
+
+    result.fold(
+      (failure) {
+        emit(state.copyWith(isLoading: false, errorMessage: failure.message));
+      },
+      (prefs) {
+        // Update local user state with new preferences
+        final updatedUser = state.user?.copyWith(notificationPreferences: prefs);
+        emit(
+          state.copyWith(
+            isLoading: false,
+            user: updatedUser,
+            successMessage: 'Notification preferences updated successfully!',
+          ),
+        );
+      },
+    );
   }
 }

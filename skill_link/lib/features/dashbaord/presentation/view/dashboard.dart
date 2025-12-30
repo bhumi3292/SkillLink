@@ -10,6 +10,8 @@ import 'package:skill_link/features/dashbaord/presentation/view_model/dashboard_
 import 'package:skill_link/features/add_worker/data/model/worker_model/worker_api_model.dart';
 import 'package:skill_link/features/dashbaord/presentation/widgets/worker_card_widget.dart';
 import 'package:skill_link/features/dashbaord/presentation/widgets/horizontal_worker_card.dart';
+import 'package:skill_link/features/banner/presentation/widgets/banner_carousel.dart';
+import 'package:skill_link/features/banner/presentation/bloc/banner_bloc.dart';
 import 'package:skill_link/features/explore/presentation/view/worker_detail_page.dart';
 import 'package:skill_link/features/explore/presentation/utils/worker_converter.dart';
 import 'package:skill_link/cores/utils/image_url_helper.dart'; // Import ImageUrlHelper here
@@ -34,6 +36,9 @@ class DashboardPage extends StatelessWidget {
                   serviceLocator<DashboardViewModel>()..loadProperties(),
         ),
         BlocProvider<CartBloc>(create: (context) => serviceLocator<CartBloc>()),
+        BlocProvider<BannerBloc>(
+          create: (context) => serviceLocator<BannerBloc>(),
+        ),
       ],
       child: DashboardView(onSeeAllTap: onSeeAllTap),
     );
@@ -50,7 +55,6 @@ class DashboardView extends StatefulWidget {
 }
 
 class _DashboardViewState extends State<DashboardView> {
-
   @override
   void initState() {
     super.initState();
@@ -65,7 +69,7 @@ class _DashboardViewState extends State<DashboardView> {
     return BlocListener<ProfileViewModel, ProfileState>(
       listener: (context, state) {
         if (state.user != null) {
-           serviceLocator<SocketNotificationService>().init(state.user!.userId!);
+          serviceLocator<SocketNotificationService>().init(state.user!.userId!);
         }
       },
       child: SafeArea(
@@ -174,8 +178,8 @@ class _DashboardViewState extends State<DashboardView> {
                         ],
                       ),
                     ),
-                    // Notification button removed as per user request
 
+                    // Notification button removed as per user request
                   ],
                 ),
                 const SizedBox(height: 24),
@@ -274,27 +278,10 @@ class _DashboardViewState extends State<DashboardView> {
             ),
           const SizedBox(height: 20),
 
-          // --- Promotional Banner ---
+          // --- Dynamic Promotional Banners (from admin) ---
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              // It's generally better to use ImageUrlHelper for this too if it's from your backend
-              // For now, keeping it as is since it's a direct external URL.
-              child: CachedNetworkImage(
-                // Changed to CachedNetworkImage for consistency
-                imageUrl:
-                    "https://thumbs.dreamstime.com/z/commercial-real-estate-banner-blue-colors-hands-smartphone-buildings-skyscrapers-cityscape-worker-searching-app-concept-186877789.jpg",
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: 140,
-                placeholder:
-                    (context, url) =>
-                        const Center(child: CircularProgressIndicator()),
-                errorWidget:
-                    (context, error, stackTrace) => const Icon(Icons.error),
-              ),
-            ),
+            child: const BannerCarousel(),
           ),
           const SizedBox(height: 20),
 

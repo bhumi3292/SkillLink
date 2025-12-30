@@ -168,6 +168,16 @@ class AdminDashboard extends StatelessWidget {
                     ),
                     _buildManagementTile(
                       context,
+                      'Promotional Banners',
+                      'Manage home page banners',
+                      Icons.photo_library,
+                      Colors.teal,
+                      () {
+                        Navigator.pushNamed(context, '/admin/banners');
+                      },
+                    ),
+                    _buildManagementTile(
+                      context,
                       'Analytics & Logs',
                       'System performance and audit logs',
                       Icons.insights,
@@ -194,11 +204,11 @@ class AdminDashboard extends StatelessWidget {
   }) {
     return InkWell(
       onTap: () {
-        if (route != null && route == '/payment-history') {
-          // open payments summary with filters
-          _openPaymentsSummary(context);
-        } else if (route != null) {
-          Navigator.pushNamed(context, route);
+        if (route != null) {
+          if (route == '/payment-history')
+             Navigator.pushNamed(context, '/admin/payments'); // Redirect to consistent route if needed
+          else 
+             Navigator.pushNamed(context, route);
         }
       },
       child: Container(
@@ -278,149 +288,4 @@ class AdminDashboard extends StatelessWidget {
       ),
     );
   }
-}
-
-void _openPaymentsSummary(BuildContext context) {
-  final api = serviceLocator<ApiService>();
-
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    builder: (ctx) {
-      return FractionallySizedBox(
-        heightFactor: 0.85,
-        child: StatefulBuilder(
-          builder: (context, setState) {
-            Future<List<dynamic>> fetchPayments() async {
-              final resp = await api.dio.get(
-                ApiEndpoints.adminPayments.replaceFirst(
-                  ApiEndpoints.baseUrl,
-                  '',
-                ),
-              );
-              if (resp.statusCode == 200) return resp.data as List<dynamic>;
-              return [];
-            }
-
-            return FutureBuilder<List<dynamic>>(
-              future: fetchPayments(),
-              builder: (context, snap) {
-                if (snap.connectionState != ConnectionState.done) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                final data = snap.data ?? [];
-
-                // compute totals and counts
-                double totalAmount = 0;
-                final Map<String, int> counts = {};
-                for (final item in data) {
-                  final amt = (item['amount'] as num?) ?? 0;
-                  totalAmount += amt.toDouble();
-                  final status = (item['status'] ?? 'unknown').toString();
-                  counts[status] = (counts[status] ?? 0) + 1;
-                }
-
-                String filter = 'All';
-                List<dynamic> filtered = data;
-
-                void applyFilter(String f) {
-                  setState(() {
-                    filter = f;
-                    if (f == 'All') {
-                      filtered = data;
-                    } else {
-                      filtered =
-                          data
-                              .where((d) => (d['status'] ?? '').toString() == f)
-                              .toList();
-                    }
-                  });
-                }
-
-                // initial set
-                if (filtered.isEmpty) filtered = data;
-
-                return Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Payments Summary',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.refresh),
-                            onPressed: () => setState(() {}),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Total amount: NPR ${totalAmount.toStringAsFixed(0)}',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        children: [
-                          ChoiceChip(
-                            label: const Text('All'),
-                            selected: filter == 'All',
-                            onSelected: (_) => applyFilter('All'),
-                          ),
-                          for (final s in counts.keys)
-                            ChoiceChip(
-                              label: Text(s),
-                              selected: filter == s,
-                              onSelected: (_) => applyFilter(s),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      const Text(
-                        'Recent Payments',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Expanded(
-                        child:
-                            filtered.isEmpty
-                                ? const Center(child: Text('No payments'))
-                                : ListView.separated(
-                                  itemCount: filtered.length,
-                                  separatorBuilder: (_, __) => const Divider(),
-                                  itemBuilder: (context, i) {
-                                    final p = filtered[i];
-                                    return ListTile(
-                                      title: Text(
-                                        'REF: ${p['bookingId'] ?? ''} - NPR ${p['amount'] ?? 0}',
-                                      ),
-                                      subtitle: Text(
-                                        'Status: ${p['status'] ?? 'unknown'}',
-                                      ),
-                                      trailing: Text(p['paymentGateway'] ?? ''),
-                                    );
-                                  },
-                                ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            );
-          },
-        ),
-      );
-    },
-  );
 }

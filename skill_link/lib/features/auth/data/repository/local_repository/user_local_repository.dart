@@ -41,4 +41,13 @@ class UserLocalRepository implements IUserRepository {
   ) async {
     throw UnimplementedError();
   }
+
+  @override
+  Future<Either<Failure, NotificationPreferences>> updateNotificationPreferences(
+    bool push,
+    bool booking,
+    bool chat,
+  ) async {
+    throw UnimplementedError();
+  }
 }

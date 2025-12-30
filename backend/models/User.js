@@ -45,6 +45,11 @@ const userSchema = new mongoose.Schema({
             type: [Number], // [longitude, latitude]
             default: [85.3240, 27.7172] // Default Kathmandu
         }
+    },
+    notificationPreferences: {
+        push: { type: Boolean, default: true },
+        booking: { type: Boolean, default: true },
+        chat: { type: Boolean, default: true }
     }
 }, { timestamps: true });
 

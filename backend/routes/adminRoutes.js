@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const adminController = require("../controllers/adminController");
 const { authenticateUser, requireRole } = require("../middlewares/auth");
+const adminBannerRoutes = require('./adminBannerRoutes');
 
 // --- Admin Dashboard & Stats ---
 router.get("/dashboard-stats", authenticateUser, requireRole("admin"), adminController.getDashboardStats);
@@ -9,7 +10,7 @@ router.get("/analytics", authenticateUser, requireRole("admin"), adminController
 
 // --- Worker Verification ---
 router.get("/workers/pending", authenticateUser, requireRole("admin"), adminController.getPendingWorkers);
-router.post("/workers/verify", authenticateUser, requireRole("admin"), adminController.verifyWorker);
+router.post("/verify-worker", authenticateUser, requireRole("admin"), adminController.verifyWorker);
 
 // --- User Management ---
 router.get("/users", authenticateUser, requireRole("admin"), adminController.getAllUsers);
@@ -26,5 +27,8 @@ router.post("/reports/resolve", authenticateUser, requireRole("admin"), adminCon
 
 // --- Bookings ---
 router.get("/bookings", authenticateUser, requireRole("admin"), adminController.getAllBookings);
+
+// --- Banner Management (admin) ---
+router.use('/banners', authenticateUser, requireRole('admin'), adminBannerRoutes);
 
 module.exports = router;

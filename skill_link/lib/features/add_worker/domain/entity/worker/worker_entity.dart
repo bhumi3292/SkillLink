@@ -7,7 +7,7 @@ class WorkerEntity extends Equatable {
   final String? name;
   String? get title => name;
   final String? primarySkill;
-  final String? experience;
+  final int? experience;
   final String? description;
   final String? location;
   final String? categoryId;
@@ -78,7 +78,7 @@ class WorkerEntity extends Equatable {
       videos: (json['videos'] as List?)?.map((e) => e.toString()).toList(),
       name: json['name'] as String?,
       primarySkill: json['primarySkill'] as String?,
-      experience: json['experience'] as String?,
+      experience: (json['experience'] as num?)?.toInt(),
       description: json['description'] as String?,
       location: (json['location'] is Map) 
           ? (json['location']['address'] ?? json['location']['formattedAddress'] ?? '') 
@@ -140,7 +140,7 @@ class WorkerEntity extends Equatable {
     List<String>? videos,
     String? name,
     String? primarySkill,
-    String? experience,
+    int? experience,
     String? description,
     String? location,
     String? categoryId,

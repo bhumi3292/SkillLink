@@ -3,6 +3,7 @@ import 'package:skill_link/features/admin/presentation/view/dispute_resolution_v
 import 'package:skill_link/features/admin/presentation/view/user_directory_view.dart';
 import 'package:skill_link/features/admin/presentation/view/category_management_view.dart';
 import 'package:skill_link/features/admin/presentation/view/admin_dashboard.dart';
+import 'package:skill_link/features/admin/presentation/banner/banner_list_page.dart';
 import 'package:skill_link/features/admin/presentation/view/worker_verification_list_page.dart';
 import 'package:skill_link/features/admin/presentation/view/worker_verification_detail_page.dart';
 import 'package:skill_link/features/admin/presentation/view/admin_payments_view.dart';
@@ -15,6 +16,7 @@ import 'package:skill_link/cores/localization/localization_service.dart';
 import 'dart:async';
 
 import 'package:skill_link/app/service_locator/service_locator.dart';
+import 'package:skill_link/features/admin/presentation/view_model/admin_cubit.dart';
 import 'package:skill_link/features/splash_screen/presentation/view/splash_view.dart';
 import 'package:skill_link/features/splash_screen/presentation/widgets/theme.dart'; // Assuming this is getApplication()
 import 'package:skill_link/features/auth/presentation/view/login.dart';
@@ -119,7 +121,9 @@ class _MyAppState extends State<MyApp> {
                 if (args is ExploreWorkerEntity) {
                   return WorkerVerificationDetailPage(worker: args);
                 }
-                return const Scaffold(body: Center(child: Text("Invalid Arguments")));
+                return const Scaffold(
+                  body: Center(child: Text("Invalid Arguments")),
+                );
               },
             ),
             GetPage(
@@ -139,7 +143,21 @@ class _MyAppState extends State<MyApp> {
               page: () => const AdminBookingsView(),
             ),
             GetPage(
+              name: '/admin/banners',
+              page:
+                  () => BlocProvider(
+                    create:
+                        (context) =>
+                            serviceLocator<AdminCubit>()..fetchAllBanners(),
+                    child: const AdminBannerListPage(),
+                  ),
+            ),
+            GetPage(
               name: '/payment-history',
+              page: () => const AdminPaymentsView(),
+            ),
+            GetPage(
+              name: '/admin/payments',
               page: () => const AdminPaymentsView(),
             ),
           ],

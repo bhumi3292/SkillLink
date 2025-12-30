@@ -166,7 +166,7 @@ class WorkerRemoteDatasource {
         MapEntry('location', worker.location ?? ''),
         MapEntry('price', worker.rate?.toString() ?? '0'),
         MapEntry('rate', worker.rate?.toString() ?? '0'),
-        MapEntry('experience', worker.experience ?? '0'),
+        MapEntry('experience', worker.experience?.toString() ?? '0'),
       ]);
 
       // Add license file

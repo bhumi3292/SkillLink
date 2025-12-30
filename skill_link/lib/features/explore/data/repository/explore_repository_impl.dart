@@ -10,8 +10,8 @@ class ExploreRepositoryImpl implements ExploreRepository {
   ExploreRepositoryImpl(this.remoteDataSource);
 
   @override
-  Future<Either<Failure, List<ExploreWorkerEntity>>> getAllWorkers() async {
-    return await remoteDataSource.getAllWorkers();
+  Future<Either<Failure, List<ExploreWorkerEntity>>> getAllWorkers({double? lat, double? long}) async {
+    return await remoteDataSource.getAllWorkers(lat: lat, long: long);
   }
 
   @override
