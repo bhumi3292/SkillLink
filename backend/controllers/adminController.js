@@ -55,9 +55,13 @@ exports.verifyWorker = async (req, res) => {
     try {
         const status = action === "approve" ? "approved" : "rejected";
         const update = { status };
-        if (action === "reject") {
+        if (action === "approve") {
+            update.rejectionReason = null;
+            update.isActive = true;
+        } else if (action === "reject") {
             if (!rejectionReason) return res.status(400).json({ success: false, message: "Rejection reason is mandatory." });
             update.rejectionReason = rejectionReason;
+            update.isActive = false;
         }
 
         const worker = await Worker.findByIdAndUpdate(workerId, update, { new: true });
