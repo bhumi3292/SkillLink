@@ -58,8 +58,13 @@ class ReviewController {
                 });
             }
 
-            // 6. Mark booking as rated
-            await Booking.findByIdAndUpdate(bookingId, { $set: { isRated: true } });
+            // 6. Mark booking as rated and update status
+            await Booking.findByIdAndUpdate(bookingId, {
+                $set: {
+                    isRated: true,
+                    status: 'Rated'
+                }
+            });
 
             return res.status(201).json({ success: true, data: review });
         } catch (error) {
