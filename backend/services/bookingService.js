@@ -19,10 +19,15 @@ class BookingService {
             throw new Error('Worker listing not found');
         }
 
-        // 2. Check for double booking
-        // "One active booking per worker" - assuming this means at a specific time, 
-        // OR literally one active job at a time. 
-        // Let's implement specific time slot collision check first.
+        // 2. Fetch Category for Base Price
+        const Category = require('../models/Category'); // Lazy load or move to top
+        const category = await Category.findById(workerListing.categoryId);
+
+        if (!category || !category.basePrice) {
+            throw new Error('Booking blocked: Service base price is missing.');
+        }
+
+        // 3. Check for double booking
         const existingBooking = await Booking.findOne({
             workerListing: workerListingId,
             date: date,
@@ -34,7 +39,7 @@ class BookingService {
             throw new Error('This time slot is already booked.');
         }
 
-        // 3. Create Booking
+        // 4. Create Booking
         const booking = new Booking({
             workerListing: workerListingId,
             Hirer: hirerId,
@@ -42,7 +47,8 @@ class BookingService {
             date,
             timeSlot,
             location,
-            status: 'Pending'
+            status: 'Pending',
+            price: category.basePrice
         });
 
         await booking.save();
