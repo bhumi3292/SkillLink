@@ -453,8 +453,8 @@ class BookingPage extends StatelessWidget {
                           side: const BorderSide(color: Color(0xFF003366)),
                         ),
                         child: const Text(
-                          'Pay & Rate',
-                        ), // As requested in Section 4.2
+                          'Rate Worker',
+                        ), // Button allows rating after payment
                       ),
                     ],
                      // Timeline button (all users)
