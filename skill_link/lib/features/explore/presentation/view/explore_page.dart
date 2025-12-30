@@ -1,15 +1,14 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get/get.dart';
-import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:skill_link/app/service_locator/service_locator.dart';
 import 'package:skill_link/core/services/location_service.dart';
 import 'package:skill_link/features/explore/domain/entity/explore_worker_entity.dart';
 import 'package:skill_link/features/explore/presentation/bloc/explore_bloc.dart';
+import 'package:skill_link/features/explore/presentation/view/osm_map_widget.dart';
 import 'package:skill_link/features/explore/presentation/view/worker_detail_page.dart';
 import 'package:skill_link/features/explore/presentation/widgets/explore_worker_card.dart';
 import 'package:skill_link/features/explore/presentation/widgets/explore_filter_dialog.dart';
@@ -33,31 +32,28 @@ class _ExplorePageState extends State<ExplorePage> {
   double? _maxPrice;
   WorkerFilter _currentFilter = WorkerFilter.all;
 
-  bool _isMapView = false; // Default to List View
   Position? _currentPosition;
-  final MapController _mapController = MapController();
-  StreamSubscription<Position>? _positionStreamSubscription;
-  final bool _followUser = true;
+  bool _hasLocationPermission = false;
+  
+  // Draggable Scrollable Sheet Controller
+  final DraggableScrollableController _scrollSheetController = DraggableScrollableController();
 
   @override
   void initState() {
     super.initState();
     _cartBloc = serviceLocator<CartBloc>();
     _cartBloc.add(GetCartEvent());
-    context.read<ExploreBloc>().add(GetWorkersEvent());
+    
+    // Initial fetch (will get all workers or default location ones)
+    context.read<ExploreBloc>().add(const GetWorkersEvent());
+    
     _initializeAndSubscribeToLocation();
-  }
-
-  @override
-  void dispose() {
-    _positionStreamSubscription?.cancel();
-    _mapController.dispose();
-    super.dispose();
   }
 
   Future<void> _initializeAndSubscribeToLocation() async {
     final locationService = serviceLocator<LocationService>();
     final hasPermission = await locationService.requestPermission();
+    setState(() => _hasLocationPermission = hasPermission);
 
     if (hasPermission && mounted) {
       try {
@@ -70,313 +66,242 @@ class _ExplorePageState extends State<ExplorePage> {
           setState(() {
             _currentPosition = position;
           });
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              _mapController.move(
-                LatLng(position.latitude, position.longitude),
-                15.0,
-              );
-            }
-          });
+          
+          // Refresh workers with location context if needed (Nearby)
+          if (_currentFilter == WorkerFilter.nearby) {
+             _filterWorkers();
+          }
         }
-
-        _positionStreamSubscription = locationService
-            .getPositionStream()
-            .listen((position) {
-              if (mounted) {
-                setState(() {
-                  _currentPosition = position;
-                });
-                if (_followUser) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (mounted) {
-                      _mapController.move(
-                        LatLng(position.latitude, position.longitude),
-                        15.0,
-                      );
-                    }
-                  });
-                }
-              }
-            });
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to get location: ${e.toString()}')),
-          );
+          // debugPrint("Location Error: $e");
+          // Fail silently or show snackbar
         }
       }
     }
-  }
-
-  List<Marker> _buildMarkers(List<ExploreWorkerEntity> workers) {
-    final markers = <Marker>[];
-
-    for (final worker in workers) {
-      if (worker.coordinates != null) {
-        markers.add(
-          Marker(
-            width: 80.0,
-            height: 80.0,
-            point: worker.coordinates!,
-            child: GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => WorkerDetailPage(worker: worker),
-                  ),
-                );
-              },
-              child: Center(
-                child: SizedBox(
-                  width: 40,
-                  height: 40,
-                  child: const Icon(
-                    Icons.location_pin,
-                    color: Colors.purple,
-                    size: 35,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      }
-    }
-
-    if (_currentPosition != null) {
-      markers.add(
-        Marker(
-          width: 80.0,
-          height: 80.0,
-          point: LatLng(
-            _currentPosition!.latitude,
-            _currentPosition!.longitude,
-          ),
-          child: Center(
-            child: SizedBox(
-              width: 44,
-              height: 44,
-              child: const Icon(
-                Icons.person_pin_circle,
-                color: Colors.blue,
-                size: 40,
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-
-    return markers;
   }
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        body: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
-                    spreadRadius: 1,
-                    blurRadius: 3,
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ExploreSearchBar(
-                          onSearchChanged: (value) {
-                            _searchText = value;
-                            _filterWorkers();
-                          },
-                          onFilterPressed: () async {
-                            await _showFilterDialog();
-                          },
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Stack(
+        children: [
+          // 1. Map Layer (Full Screen Background)
+          // If permission denied, we won't show the map effectively (or just show default lat/long)
+          Positioned.fill(
+            child: BlocBuilder<ExploreBloc, ExploreState>(
+              builder: (context, state) {
+                List<ExploreWorkerEntity> markers = [];
+                if (state is ExploreLoaded) {
+                   markers = state.filteredWorkers;
+                }
+                
+                return OsmMapWidget(
+                   isPicker: false,
+                   initialLocation: _currentPosition != null 
+                     ? GeoPoint(latitude: _currentPosition!.latitude, longitude: _currentPosition!.longitude) 
+                     : null, // Will default to user loc in widget
+                   workerMarkers: markers,
+                   onMarkerTap: _showWorkerPreview,
+                 );
+              }
+            ),
+          ),
+
+          // 2. Filter & Search Header (Floating Top)
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 10,
+            left: 16,
+            right: 16,
+            child: Column(
+              children: [
+                ExploreSearchBar(
+                  onSearchChanged: (value) {
+                    _searchText = value;
+                     _filterWorkers();
+                  },
+                  onFilterPressed: () async {
+                    await _showFilterDialog();
+                  },
+                ),
+                const SizedBox(height: 8),
+                _buildFilterChips(),
+              ],
+            ),
+          ),
+          
+          // 3. Draggable List Sheet (Bottom)
+          DraggableScrollableSheet(
+            controller: _scrollSheetController,
+            initialChildSize: 0.4, // Map covers 60% initially
+            minChildSize: 0.15, // Just the handle visible
+            maxChildSize: 0.9, // Almost full screen
+            builder: (context, scrollController) {
+              return Container(
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                   borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                   boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, spreadRadius: 2)]
+                ),
+                child: Column(
+                  children: [
+                    // Handle
+                    Center(
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(vertical: 12),
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(2),
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      // Modern View Toggle Switch
-                      _buildViewToggleSwitch(),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  // Modern Segmented Control
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.grey[100],
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
                     ),
-                    padding: const EdgeInsets.all(4),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _buildFilterOption(
-                          label: 'all_workers_tab'.tr,
-                          icon: Icons.people_outline,
-                          isSelected: _currentFilter == WorkerFilter.all,
-                          onTap: () {
-                            setState(() {
-                              _currentFilter = WorkerFilter.all;
-                            });
-                            _filterWorkers();
-                          },
+                    
+                    if (!_hasLocationPermission && _currentFilter == WorkerFilter.nearby)
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          "Enable location to see nearby workers", 
+                          style: TextStyle(color: Colors.orange[800], fontWeight: FontWeight.bold)
                         ),
-                        const SizedBox(width: 4),
-                        _buildFilterOption(
-                          label: 'nearby_only'.tr,
-                          icon: Icons.location_on_outlined,
-                          isSelected: _currentFilter == WorkerFilter.nearby,
-                          onTap: () {
-                            setState(() {
-                              _currentFilter = WorkerFilter.nearby;
-                            });
-                            _filterWorkers();
-                          },
-                        ),
-                      ],
+                      ),
+                      
+                    // List
+                    Expanded(
+                      child: BlocBuilder<ExploreBloc, ExploreState>(
+                        builder: (context, state) {
+                          if (state is ExploreLoading) {
+                            return const Center(child: CircularProgressIndicator());
+                          } else if (state is ExploreError) {
+                            return Center(child: Text("${'error_loading_workers'.tr} ${state.message}"));
+                          } else if (state is ExploreLoaded) {
+                             if (state.filteredWorkers.isEmpty) {
+                               return Center(child: Text("no_workers_found".tr));
+                             }
+                             return ListView.builder(
+                               controller: scrollController,
+                               padding: const EdgeInsets.symmetric(horizontal: 16),
+                               itemCount: state.filteredWorkers.length,
+                               itemBuilder: (context, index) {
+                                  final worker = state.filteredWorkers[index];
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 16),
+                                    child: BlocProvider.value(
+                                      value: _cartBloc,
+                                      child: ExploreWorkerCard(
+                                        worker: worker,
+                                        onTap: () {
+                                           Navigator.push(context, MaterialPageRoute(builder: (_) => WorkerDetailPage(worker: worker)));
+                                        },
+                                      ),
+                                    ),
+                                  );
+                               },
+                             );
+                          }
+                          return const Center(child: SizedBox());
+                        },
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: BlocBuilder<ExploreBloc, ExploreState>(
-                builder: (context, state) {
-                  if (state is ExploreLoading) {
-                    return const Center(child: CircularProgressIndicator());
-                  } else if (state is ExploreError) {
-                    return Center(
-                      child: Text("${'error_loading_workers'.tr} ${state.message}"),
-                    );
-                  } else if (state is ExploreLoaded) {
-                    List<ExploreWorkerEntity> workersToDisplay = List.from(
-                      state.filteredWorkers,
-                    );
-
-                    // Always sort by distance if current position is available
-                    if (_currentPosition != null) {
-                      // First filter by 2km if "Nearby Only" is selected
-                      if (_currentFilter == WorkerFilter.nearby) {
-                        workersToDisplay =
-                            workersToDisplay.where((worker) {
-                              if (worker.coordinates == null) return false;
-                              final distance = Geolocator.distanceBetween(
-                                _currentPosition!.latitude,
-                                _currentPosition!.longitude,
-                                worker.coordinates!.latitude,
-                                worker.coordinates!.longitude,
-                              );
-                              return distance <= 2000; // 2km
-                            }).toList();
-                      }
-
-                      // Then sort by distance (Nearest first)
-                      workersToDisplay.sort((a, b) {
-                        if (a.coordinates == null && b.coordinates == null) {
-                          return 0;
-                        }
-                        if (a.coordinates == null) return 1;
-                        if (b.coordinates == null) return -1;
-
-                        final distanceA = Geolocator.distanceBetween(
-                          _currentPosition!.latitude,
-                          _currentPosition!.longitude,
-                          a.coordinates!.latitude,
-                          a.coordinates!.longitude,
-                        );
-                        final distanceB = Geolocator.distanceBetween(
-                          _currentPosition!.latitude,
-                          _currentPosition!.longitude,
-                          b.coordinates!.latitude,
-                          b.coordinates!.longitude,
-                        );
-                        return distanceA.compareTo(distanceB);
-                      });
-                    }
-
-                    if (_isMapView) {
-                      return FlutterMap(
-                        mapController: _mapController,
-                        options: MapOptions(
-                          initialCenter:
-                              _currentPosition != null
-                                  ? LatLng(
-                                    _currentPosition!.latitude,
-                                    _currentPosition!.longitude,
-                                  )
-                                  : const LatLng(27.7172, 85.3240), // Fallback
-                          initialZoom: 15.0,
-                        ),
-                        children: [
-                          TileLayer(
-                            urlTemplate:
-                                'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                            userAgentPackageName: 'com.example.skill_link',
-                          ),
-                          MarkerLayer(markers: _buildMarkers(workersToDisplay)),
-                        ],
-                      );
-                    }
-
-                    if (workersToDisplay.isEmpty) {
-                      return Center(
-                        child: Text("no_workers_found".tr),
-                      );
-                    }
-
-                    return ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: workersToDisplay.length,
-                      itemBuilder: (context, index) {
-                        final worker = workersToDisplay[index];
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          child: BlocProvider.value(
-                            value: _cartBloc,
-                            child: ExploreWorkerCard(
-                              worker: worker,
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder:
-                                        (_) => WorkerDetailPage(worker: worker),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  }
-                  return const Center(child: Text('No data available'));
-                },
-              ),
-            ),
-          ],
-        ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
       ),
     );
+  }
+
+  Widget _buildFilterChips() {
+    return Container(
+       height: 40,
+       child: ListView(
+         scrollDirection: Axis.horizontal,
+         children: [
+            _buildChip(
+              "All", 
+              _currentFilter == WorkerFilter.all, 
+              () {
+                setState(() => _currentFilter = WorkerFilter.all);
+                context.read<ExploreBloc>().add(const GetWorkersEvent()); // Fetch All
+              }
+            ),
+            const SizedBox(width: 8),
+            _buildChip(
+              "Nearby", 
+              _currentFilter == WorkerFilter.nearby, 
+              () {
+                 setState(() => _currentFilter = WorkerFilter.nearby);
+                 // Trigger geo-query
+                 if (_currentPosition != null) {
+                   context.read<ExploreBloc>().add(GetWorkersEvent(lat: _currentPosition!.latitude, long: _currentPosition!.longitude));
+                 } else {
+                   // Request permission again or show toast
+                   _initializeAndSubscribeToLocation();
+                 }
+              }
+            ),
+         ],
+       ),
+    );
+  }
+
+  Widget _buildChip(String label, bool isSelected, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+       child: Container(
+         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+         decoration: BoxDecoration(
+           color: isSelected ? Theme.of(context).primaryColor : Colors.white,
+           borderRadius: BorderRadius.circular(20),
+           boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4)],
+         ),
+         child: Text(
+           label, 
+           style: TextStyle(
+             color: isSelected ? Colors.white : Colors.black87, 
+             fontWeight: FontWeight.bold
+           )
+         ),
+       ),
+    );
+  }
+
+  void _showWorkerPreview(ExploreWorkerEntity worker) {
+     showModalBottomSheet(
+       context: context,
+       isScrollControlled: true,
+       backgroundColor: Colors.transparent,
+       builder: (context) {
+         return Container(
+           margin: const EdgeInsets.all(16),
+           decoration: BoxDecoration(
+             color: Colors.white,
+             borderRadius: BorderRadius.circular(16),
+             boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 10)]
+           ),
+           child: Column(
+             mainAxisSize: MainAxisSize.min,
+             children: [
+               // Use existing card structure for consistency but wrapped slightly differently
+               BlocProvider.value(
+                  value: _cartBloc,
+                  child: ExploreWorkerCard(
+                    worker: worker,
+                    onTap: () {
+                       Navigator.pop(context); // Close sheet
+                       Navigator.push(context, MaterialPageRoute(builder: (_) => WorkerDetailPage(worker: worker)));
+                    },
+                  ),
+               ),
+             ],
+           ),
+         );
+       }
+     );
   }
 
   void _filterWorkers() {
@@ -408,188 +333,5 @@ class _ExplorePageState extends State<ExplorePage> {
       });
       _filterWorkers();
     }
-  }
-
-  bool _hasActiveFilters() {
-    return _selectedCategory != null || _minPrice != null || _maxPrice != null;
-  }
-
-  void _clearAllFilters() {
-    setState(() {
-      _selectedCategory = null;
-      _minPrice = null;
-      _maxPrice = null;
-      _searchText = '';
-      _currentFilter = WorkerFilter.all;
-    });
-    _filterWorkers();
-  }
-
-  Widget _buildFilterOption({
-    required String label,
-    required IconData icon,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeInOut,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        decoration: BoxDecoration(
-          color:
-              isSelected ? Theme.of(context).primaryColor : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
-          boxShadow:
-              isSelected
-                  ? [
-                    BoxShadow(
-                      color: Theme.of(context).primaryColor.withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ]
-                  : [],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 18,
-              color: isSelected ? Colors.white : Colors.grey[700],
-            ),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                color: isSelected ? Colors.white : Colors.grey[700],
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                fontSize: 14,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildViewToggleSwitch() {
-    return Container(
-      height: 48,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.grey[100]!, Colors.grey[50]!],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.grey[300]!, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          // Animated background indicator
-          AnimatedPositioned(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOutCubic,
-            left: _isMapView ? 48 : 0,
-            top: 0,
-            bottom: 0,
-            child: Container(
-              width: 48,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Theme.of(context).primaryColor,
-                    Theme.of(context).primaryColor.withOpacity(0.8),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Theme.of(context).primaryColor.withOpacity(0.4),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          // Toggle buttons
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildToggleButton(
-                icon: Icons.view_list_rounded,
-                isActive: !_isMapView,
-                onTap: () {
-                  if (_isMapView) {
-                    setState(() {
-                      _isMapView = false;
-                    });
-                  }
-                },
-                tooltip: 'list_view'.tr,
-              ),
-              _buildToggleButton(
-                icon: Icons.map_rounded,
-                isActive: _isMapView,
-                onTap: () {
-                  if (!_isMapView) {
-                    setState(() {
-                      _isMapView = true;
-                    });
-                  }
-                },
-                tooltip: 'map_view'.tr,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildToggleButton({
-    required IconData icon,
-    required bool isActive,
-    required VoidCallback onTap,
-    required String tooltip,
-  }) {
-    return Tooltip(
-      message: tooltip,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(24),
-          child: Container(
-            width: 48,
-            height: 48,
-            alignment: Alignment.center,
-            child: AnimatedScale(
-              scale: isActive ? 1.1 : 0.9,
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOutCubic,
-              child: Icon(
-                icon,
-                size: 22,
-                color: isActive ? Colors.white : Colors.grey[600],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }
