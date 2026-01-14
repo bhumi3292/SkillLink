@@ -4,7 +4,7 @@ class ApiEndpoints {
   static const Duration connectionTimeout = Duration(seconds: 30);
   static const Duration receiveTimeout = Duration(seconds: 30);
 
-  static const String serverIp = "192.168.1.7";
+  static const String serverIp = "192.168.1.4";
 
   static const String baseUrl = "http://$serverIp:3001/api/";
   static const String imageUrl = "http://$serverIp:3001";

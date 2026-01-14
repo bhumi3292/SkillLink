@@ -20,6 +20,7 @@
     "crypto-js": "^4.2.0",
     "crypty": "^0.1.0",
     "dotenv": "^16.6.1",
+    "es-define-property": "^1.0.1",
     "express": "^5.1.0",
     "json2csv": "^6.0.0-alpha.2",
     "jsonwebtoken": "^9.0.2",

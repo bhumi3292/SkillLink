@@ -70,8 +70,7 @@ class NavigationBloc extends Bloc<NavigationEvent, NavigationState> {
       final response = await dio.get(url);
       if (response.statusCode == 200 && response.data['routes'] != null && response.data['routes'].isNotEmpty) {
         final geometry = response.data['routes'][0]['geometry'];
-        final polylinePoints = PolylinePoints();
-        final result = polylinePoints.decodePolyline(geometry);
+        final result = PolylinePoints.decodePolyline(geometry);
         return result.map((point) => LatLng(point.latitude, point.longitude)).toList();
       } else {
         throw Exception('Failed to fetch route from OSRM');

@@ -3,10 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/payment_bloc.dart';
 import '../bloc/payment_event.dart';
 import '../bloc/payment_state.dart';
-import 'package:esewa_flutter_sdk/esewa_flutter_sdk.dart';
-import 'package:esewa_flutter_sdk/esewa_config.dart';
-import 'package:esewa_flutter_sdk/esewa_payment.dart';
-import 'package:esewa_flutter_sdk/esewa_payment_success_result.dart';
+// import 'package:esewa_flutter_sdk/esewa_flutter_sdk.dart';
+// import 'package:esewa_flutter_sdk/esewa_config.dart';
+// import 'package:esewa_flutter_sdk/esewa_payment.dart';
+// import 'package:esewa_flutter_sdk/esewa_payment_success_result.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class PaymentOptionsDialog extends StatefulWidget {
@@ -139,7 +139,10 @@ class _PaymentOptionsDialogState extends State<PaymentOptionsDialog> {
                               if (_selectedGateway == 'Khalti') {
                                 _launchKhalti(context, _paymentData!);
                               } else if (_selectedGateway == 'eSewa') {
-                                _launchEsewa(context, _paymentData!);
+                                // _launchEsewa(context, _paymentData!); // SDK Unavailable
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('eSewa is temporarily unavailable.')),
+                                );
                               }
                             },
                             child: const Text('Confirm & Pay'),
@@ -354,6 +357,7 @@ class _PaymentOptionsDialogState extends State<PaymentOptionsDialog> {
     }
   }
 
+/*
   void _launchEsewa(BuildContext context, Map<String, dynamic> paymentData) {
     try {
       // Official eSewa Development Credentials for Mobile SDK
@@ -395,4 +399,5 @@ class _PaymentOptionsDialogState extends State<PaymentOptionsDialog> {
       debugPrint('eSewa SDK Error: $e');
     }
   }
+*/
 }
