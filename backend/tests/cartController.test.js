@@ -8,7 +8,7 @@ const app = require('../index');
 const User = require('../models/User');
 const Worker = require('../models/Worker');
 const Category = require('../models/Category');
-const Cart = require('../models/cart');
+const Cart = require('../models/Cart');
 
 let userToken, workerId, categoryId;
 
@@ -30,7 +30,7 @@ describe('Cart API', () => {
       fullName: 'Test User',
       email: 'user@cart.com',
       phoneNumber: '9000000016',
-      role: 'Hirer',
+      role: 'hirer',
       password: 'password123',
     });
     const jwt = require('jsonwebtoken');
@@ -38,10 +38,15 @@ describe('Cart API', () => {
     const worker = await Worker.create({
       title: 'Test Worker for Cart',
       description: 'A test worker for cart testing',
-      location: 'Test Location',
-      price: 50000,
-      bedrooms: 2,
-      bathrooms: 1,
+      location: {
+        type: 'Point',
+        coordinates: [85.3240, 27.7172]
+      },
+      minPrice: 1000,
+      maxPrice: 50000,
+      experience: 2,
+      licenseUrl: 'http://example.com/license.jpg',
+      identityCardUrl: 'http://example.com/id.jpg',
       categoryId: categoryId,
       images: ['test-image.jpg'],
       worker: user._id,

@@ -1,6 +1,3 @@
-process.env.NODE_ENV = 'test';
-process.env.MONGO_URI = 'mongodb://localhost:27017/SkillLink_test_booking';
-process.env.JWT_SECRET = 'test-secret-key';
 
 const request = require('supertest');
 const mongoose = require('mongoose');
@@ -10,88 +7,97 @@ const Worker = require('../models/Worker');
 const Category = require('../models/Category');
 const Booking = require('../models/Booking');
 
-let HirerToken, workerToken, workerId, categoryId;
+let hirerToken, workerToken, workerId, bookingId;
 
-describe('Booking API', () => {
+describe('Booking API Tests', () => {
   beforeAll(async () => {
-    if (mongoose.connection.readyState === 0) {
-      await mongoose.connect(process.env.MONGO_URI, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      });
+    process.env.MONGO_URI = 'mongodb://localhost:27017/SkillLink_test_booking_v2';
+    process.env.JWT_SECRET = "testsecretkey123";
+
+    if (mongoose.connection.readyState === 0 || mongoose.connection.name !== 'SkillLink_test_booking_v2') {
+      if (mongoose.connection.readyState === 1) await mongoose.disconnect();
+      await mongoose.connect(process.env.MONGO_URI);
     }
-    await User.deleteMany({ email: { $in: ['Hirer@booking.com', 'worker@booking.com'] } });
-    await Worker.deleteMany({ title: 'Test Worker for Booking' });
-    await Category.deleteMany({ category_name: 'Test Category for Booking' });
-    await Booking.deleteMany({ workerId: { $exists: true } });
-    const category = await Category.create({ category_name: 'Test Category for Booking' });
-    categoryId = category._id;
-    const worker = await User.create({
-      fullName: 'Test worker',
-      email: 'worker@booking.com',
-      phoneNumber: '9000000011',
-      role: 'worker',
-      password: 'password123',
+    await mongoose.connection.dropDatabase();
+
+    // Hirer
+    await request(app).post("/api/auth/register").send({
+      fullName: "Hirer Booking",
+      email: "hirer@book.com",
+      phoneNumber: "9800000001",
+      stakeholder: "hirer",
+      password: "password123",
+      confirmPassword: "password123",
     });
-    const jwt = require('jsonwebtoken');
-    workerToken = jwt.sign({ _id: worker._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    const worker = await Worker.create({
-      title: 'Test Worker for Booking',
-      description: 'A test worker for booking testing',
-      location: 'Test Location',
-      price: 50000,
-      bedrooms: 2,
-      bathrooms: 1,
-      categoryId: categoryId,
-      images: ['test-image.jpg'],
-      worker: worker._id,
+    const nirerLogin = await request(app).post("/api/auth/login").send({
+      email: "hirer@book.com",
+      password: "password123",
     });
-    workerId = worker._id;
-    const Hirer = await User.create({
-      fullName: 'Test Hirer',
-      email: 'Hirer@booking.com',
-      phoneNumber: '9000000012',
-      role: 'Hirer',
-      password: 'password123',
+    hirerToken = nirerLogin.body.token;
+
+    // Worker
+    await request(app).post("/api/auth/register").send({
+      fullName: "Worker Booking",
+      email: "worker@book.com",
+      phoneNumber: "9800000002",
+      stakeholder: "worker",
+      password: "password123",
+      confirmPassword: "password123",
     });
-    HirerToken = jwt.sign({ _id: Hirer._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const workerLogin = await request(app).post("/api/auth/login").send({
+      email: "worker@book.com",
+      password: "password123",
+    });
+    workerToken = workerLogin.body.token;
+
+    // Category & Listing
+    const cat = await Category.create({ category_name: "Booking Cat" });
+    const workerUser = await User.findOne({ email: "worker@book.com" });
+    const listing = await Worker.create({
+      title: "Booking Service",
+      description: "Service description",
+      price: 500,
+      minPrice: 500,
+      maxPrice: 1000,
+      experience: 2,
+      licenseUrl: "lic.jpg",
+      identityCardUrl: "id.jpg",
+      images: ["img.jpg"],
+      location: {
+        type: 'Point',
+        coordinates: [85.3240, 27.7172]
+      },
+      categoryId: cat._id,
+      worker: workerUser._id
+    });
+    workerId = listing._id;
   });
 
   afterAll(async () => {
-    await User.deleteMany({ email: { $in: ['Hirer@booking.com', 'worker@booking.com'] } });
-    await Worker.deleteMany({ title: 'Test Worker for Booking' });
-    await Category.deleteMany({ category_name: 'Test Category for Booking' });
-    await Booking.deleteMany({ workerId: { $exists: true } });
-    await mongoose.connection.close();
+    await mongoose.disconnect();
   });
 
-  test('should require authentication for booking operations', async () => {
-    const res = await request(app).get('/api/bookings');
-    expect(res.statusCode).toBe(404);
+  test('should create a booking', async () => {
+    const res = await request(app).post('/api/bookings')
+      .set('Authorization', `Bearer ${hirerToken}`)
+      .send({
+        workerListingId: workerId,
+        date: new Date().toISOString(),
+        timeSlot: "10:00 AM"
+      });
+
+    expect([200, 201]).toContain(res.statusCode);
+    bookingId = res.body.data._id;
   });
 
-  test('should require authentication for creating bookings', async () => {
-    const res = await request(app).post('/api/bookings');
-    expect(res.statusCode).toBe(404);
+  test('should get bookings for hirer', async () => {
+    const res = await request(app).get('/api/bookings')
+      .set('Authorization', `Bearer ${hirerToken}`);
+
+    expect(res.statusCode).toBe(200);
+    expect(Array.isArray(res.body.data)).toBe(true);
+    expect(res.body.data.length).toBeGreaterThan(0);
   });
 
-  test('should require authentication for worker bookings', async () => {
-    const res = await request(app).get('/api/bookings/worker');
-    expect(res.statusCode).toBe(404);
-  });
-
-  test('should require authentication for booking status updates', async () => {
-    const res = await request(app).put('/api/bookings/test-id/status');
-    expect(res.statusCode).toBe(404);
-  });
-
-  test('should require authentication for booking cancellation', async () => {
-    const res = await request(app).put('/api/bookings/test-id/cancel');
-    expect(res.statusCode).toBe(404);
-  });
-
-  test('should require authentication for booking deletion', async () => {
-    const res = await request(app).delete('/api/bookings/test-id');
-    expect(res.statusCode).toBe(404);
-  });
-}); 
+  // Check availability update or similar if applicable
+});

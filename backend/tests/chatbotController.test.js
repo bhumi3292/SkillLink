@@ -22,7 +22,7 @@ describe('Chatbot API', () => {
       fullName: 'Test User',
       email: 'test@chatbot.com',
       phoneNumber: '9000000006',
-      role: 'Hirer',
+      role: 'hirer',
       password: 'password123',
     });
     userId = user._id;
